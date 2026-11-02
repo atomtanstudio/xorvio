@@ -282,6 +282,8 @@ struct Children {
     by_url: HashMap<String, u64>,
     by_id: HashMap<u64, Child>,
     segments: VecDeque<u64>,
+    /// Playlists it lists, oldest first.
+    others: VecDeque<u64>,
     next: u64,
 }
 
@@ -300,15 +302,15 @@ impl Children {
         self.next += 1;
         self.by_url.insert(url.to_string(), n);
         self.by_id.insert(n, Child { url, kind });
-        // A live stream lists new segments forever; old ones are dropped.
-        if kind == ChildKind::Media {
-            self.segments.push_back(n);
-            while self.segments.len() > MAX_SEGMENTS {
-                if let Some(old) = self.segments.pop_front()
-                    && let Some(child) = self.by_id.remove(&old)
-                {
-                    self.by_url.remove(child.url.as_str());
-                }
+        // A live stream lists new segments forever (and a hostile one could
+        // list new playlists forever); the oldest are dropped.
+        let kept = if kind == ChildKind::Media { &mut self.segments } else { &mut self.others };
+        kept.push_back(n);
+        while kept.len() > MAX_SEGMENTS {
+            if let Some(old) = kept.pop_front()
+                && let Some(child) = self.by_id.remove(&old)
+            {
+                self.by_url.remove(child.url.as_str());
             }
         }
         n
@@ -1194,7 +1196,10 @@ fn trailer_page() -> Response<Body> {
 
 const TRAILER_PAGE: &str = include_str!("gateway/trailer.html");
 
-/// Lets the web view's player read everything, whatever its origin.
+/// Lets the web view's player read everything, whatever its origin. What a
+/// provider sends is media to play, never a page: one opened anyway can't
+/// run scripts as the gateway (the trailer page, which must, isn't sent
+/// through here).
 fn cors(mut response: Response<Body>) -> Response<Body> {
     let headers = response.headers_mut();
     let mut set = |name: &'static str, value: &'static str| {
@@ -1212,6 +1217,7 @@ fn cors(mut response: Response<Body>) -> Response<Body> {
     );
     set("access-control-allow-private-network", "true");
     set("cross-origin-resource-policy", "cross-origin");
+    set("content-security-policy", "sandbox");
     response
 }
 
@@ -1530,7 +1536,7 @@ async fn serve_timeshift(entry: &Entry, name: &str, method: &Method, incoming: &
 
 /// Where remuxed streams' subtitles are written while they play.
 fn subtitle_root() -> PathBuf {
-    std::env::temp_dir().join("xorvio-subtitles")
+    crate::scratch::temp_root().join("xorvio-subtitles")
 }
 
 /// An MPEG-TS file modified in the last few seconds: a recording in progress.
@@ -1619,5 +1625,11 @@ mod tests {
             children.register(Url::parse("https://a/v.m3u8").unwrap(), ChildKind::Playlist),
             playlist
         );
+        // Endless new variants are dropped the same way.
+        for n in 0..(MAX_SEGMENTS + 10) {
+            children.register(Url::parse(&format!("https://a/v{n}.m3u8")).unwrap(), ChildKind::Playlist);
+        }
+        assert_eq!(children.others.len(), MAX_SEGMENTS);
+        assert_eq!(children.by_id.len(), 2 * MAX_SEGMENTS);
     }
 }

@@ -28,7 +28,22 @@
       }
     ],
     "security": {
-      "csp": null,
+      "csp": {
+        "default-src": "'self'",
+        "script-src": "'self'",
+        "style-src": "'self' 'unsafe-inline'",
+        "font-src": "'self' data:",
+        "img-src": "'self' data: blob: https: http://127.0.0.1:* xorvio-image: xorvio-server: xorvio-folder: xorvio-still: xorvio-art: http://xorvio-image.localhost http://xorvio-server.localhost http://xorvio-folder.localhost http://xorvio-still.localhost",
+        "media-src": "'self' blob: data: http://127.0.0.1:* xorvio-folder: http://xorvio-folder.localhost",
+        "connect-src": "'self' ipc: http://ipc.localhost http://127.0.0.1:* xorvio-folder: http://xorvio-folder.localhost",
+        "worker-src": "'self' blob:",
+        "frame-src": "http://127.0.0.1:*",
+        "object-src": "'none'",
+        "base-uri": "'none'",
+        "form-action": "'none'"
+      },
+      "devCsp": null,
+      "dangerousDisableAssetCspModification": ["style-src"],
       "assetProtocol": { "enable": false }
     }
   },

@@ -241,6 +241,17 @@ impl Settings {
         self.recordings_folder.as_ref().map(PathBuf::from).unwrap_or_else(default_recordings_dir)
     }
 
+    /// The folders people chose here: for recordings (all and by source),
+    /// automatic backups and sync.
+    pub fn folders(&self) -> impl Iterator<Item = &str> {
+        self.recordings_folder
+            .iter()
+            .chain(self.source_recording_folders.values())
+            .chain(&self.auto_backup_folder)
+            .chain(&self.sync_folder)
+            .map(String::as_str)
+    }
+
     /// Every folder recordings can go to, for the recorder.
     pub fn recording_folders(&self) -> RecordingFolders {
         RecordingFolders {

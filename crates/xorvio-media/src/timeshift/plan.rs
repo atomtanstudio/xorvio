@@ -7,7 +7,7 @@ use xorvio_model::StreamTarget;
 
 use super::sniff::{Audio, Codecs, Track, Video};
 use crate::gateway::PlaybackSupport;
-use crate::process::header_args;
+use crate::process::web_input_args;
 
 /// Seconds per segment (ffmpeg cuts at the first keyframe after this).
 pub(crate) const SEGMENT_SECONDS: f64 = 2.0;
@@ -143,7 +143,7 @@ impl Plan {
                 args.extend(["-i", "pipe:0"].map(String::from));
             }
             Input::Playlist { url } => {
-                args.extend(header_args(target));
+                args.extend(web_input_args(target));
                 args.extend(
                     [
                         "-rw_timeout",

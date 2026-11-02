@@ -9,6 +9,7 @@ mod diagnostics;
 mod import;
 mod media_library;
 mod menu;
+mod picked;
 mod players;
 mod popout;
 mod reminders;
@@ -51,6 +52,9 @@ pub struct AppState {
     pub addon_metas: Mutex<HashMap<String, AddonMeta>>,
     /// Home's add-on rows, reused for a few minutes so Home opens quickly.
     pub discover_cache: Mutex<Option<(std::time::Instant, Vec<AddonCatalogRow>)>>,
+    /// Files and folders chosen in Xorvio's dialogs, the only new paths
+    /// commands take (picked.rs).
+    pub picked: picked::Picked,
 }
 
 /// Lets the recorder reopen a channel's stream (after a drop, or at the
@@ -160,7 +164,15 @@ pub fn run() {
         .setup(move |app| {
             let data_dir = app.path().app_data_dir()?;
             std::fs::create_dir_all(&data_dir)?;
-            let secrets: Arc<dyn SecretStore> = Arc::new(KeyringSecrets);
+            // A debug build run with XORVIO_MEMORY_SECRETS=1 keeps secrets in
+            // memory, for a throwaway copy that mustn't touch the keychain.
+            // Release builds always use the keychain.
+            let secrets: Arc<dyn SecretStore> = if cfg!(debug_assertions) && std::env::var_os("XORVIO_MEMORY_SECRETS").is_some() {
+                tracing::warn!("secrets are kept in memory for this run (XORVIO_MEMORY_SECRETS)");
+                Arc::new(xorvio_core::MemorySecrets::new())
+            } else {
+                Arc::new(KeyringSecrets)
+            };
             // A restore chosen before the restart goes in before anything opens the data.
             let restored = backup::apply_pending_restore(&data_dir, secrets.as_ref());
             let settings_path = data_dir.join("settings.json");
@@ -228,6 +240,7 @@ pub fn run() {
                 settings_path,
                 addon_metas: Mutex::new(HashMap::new()),
                 discover_cache: Mutex::new(None),
+                picked: picked::Picked::default(),
             });
             app.manage(backup::BackupService::new(data_dir.clone(), secrets.clone(), restored));
 

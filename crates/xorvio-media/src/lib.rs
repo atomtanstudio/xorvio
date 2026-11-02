@@ -24,6 +24,7 @@ mod probe;
 mod process;
 mod recorder;
 mod remux;
+mod scratch;
 mod stills;
 mod timeshift;
 mod tools;
@@ -36,5 +37,6 @@ pub use gateway::{Gateway, PlayHint, PlaybackSupport, StreamOptions};
 pub use recorder::{
     Airing, ChannelResolver, NewSeriesRule, Recorder, RecordingFolders, SeriesGuide,
 };
+pub use scratch::temp_root;
 pub use stills::{STILL_SCHEME, Stills, still_url};
 pub use tools::Tools;

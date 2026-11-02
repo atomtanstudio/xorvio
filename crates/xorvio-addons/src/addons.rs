@@ -605,10 +605,13 @@ impl Addons {
         let url = url::Url::parse(url)?;
         anyhow::ensure!(matches!(url.scheme(), "http" | "https"), "That isn't a web address.");
         // reqwest names the address in its errors; subtitle links stay out of them too.
-        let bytes = async { self.http.get(url).timeout(Duration::from_secs(20)).send().await?.error_for_status()?.bytes().await }
-            .await
-            .map_err(|error| anyhow::anyhow!("The subtitles couldn't be downloaded: {}", error.without_url()))?;
-        anyhow::ensure!(bytes.len() <= MAX_SUBTITLE_BYTES, "That subtitle file is too big.");
+        let bytes = async {
+            let response = self.http.get(url).timeout(Duration::from_secs(20)).send().await?.error_for_status()?;
+            crate::client::read_capped(response, MAX_SUBTITLE_BYTES).await
+        }
+        .await
+        .map_err(|error| anyhow::anyhow!("The subtitles couldn't be downloaded: {}", error.without_url()))?;
+        let Some(bytes) = bytes else { anyhow::bail!("That subtitle file is too big.") };
         Ok(subtitle_text::to_webvtt(&bytes))
     }
 

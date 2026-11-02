@@ -123,6 +123,8 @@ XORVIO_FFMPEG_DIR=$PWD/src-tauri/binaries cargo test -p xorvio-media   # the med
 
 GitHub Actions runs them on macOS, Ubuntu and Windows for every push and pull request, the tests against Xorvio's own ffmpeg (`.github/workflows/ci.yml`).
 
+To try a build without touching your own library or keychain, give it another identifier and keep its logins in memory (debug builds only): `npx tauri build --debug --bundles app --config '{"identifier":"com.xorvio.desktop.test","productName":"Xorvio Test"}'`, then `open -n --env XORVIO_MEMORY_SECRETS=1 "target/debug/bundle/macos/Xorvio Test.app"`. Delete its data folder (`com.xorvio.desktop.test`) afterwards.
+
 ### Releases
 
 1. Put the new version in `src-tauri/tauri.conf.json`, `package.json` (then `npm install` for the lock file) and `Cargo.toml`'s `[workspace.package]`, and commit.

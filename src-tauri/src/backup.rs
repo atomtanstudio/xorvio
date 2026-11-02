@@ -198,6 +198,7 @@ pub async fn choose_backup(app: AppHandle, state: State<'_, AppState>) -> CmdRes
         let _ = tx.send(file.and_then(|f| f.into_path().ok()));
     });
     let Some(path) = rx.await.map_err(fail)? else { return Ok(None) };
+    state.picked.add(&path.to_string_lossy());
     let read = path.clone();
     let manifest = tokio::task::spawn_blocking(move || backup::inspect_backup(&read)).await.map_err(fail)?.map_err(fail)?;
     let recordings = state.recorder.list().unwrap_or_default();
@@ -216,6 +217,7 @@ pub async fn choose_backup(app: AppHandle, state: State<'_, AppState>) -> CmdRes
 /// opens its logins; without one they stay as this computer has them.
 #[tauri::command]
 pub async fn restore_backup(app: AppHandle, state: State<'_, AppState>, service: State<'_, BackupService>, path: String, passphrase: Option<String>) -> CmdResult<()> {
+    state.picked.check([path.as_str()], &[])?;
     let recording = state.recorder.active_count() > 0
         || state.recorder.list().unwrap_or_default().iter().any(|recording| recording.status == RecordingStatus::Recording);
     if recording {

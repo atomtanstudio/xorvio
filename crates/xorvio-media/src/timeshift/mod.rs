@@ -74,7 +74,7 @@ const UNREADABLE_PLAYLIST: &str = "The channel's playlist couldn't be read.";
 
 /// Where buffers live: a folder per session.
 pub(crate) fn root() -> PathBuf {
-    std::env::temp_dir().join("xorvio-timeshift")
+    crate::scratch::temp_root().join("xorvio-timeshift")
 }
 
 /// Removes buffers a run that ended without cleaning up (a crash, a forced

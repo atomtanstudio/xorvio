@@ -48,7 +48,7 @@ use xorvio_model::{PlaybackMode, StreamTarget};
 pub(crate) use cache::Cache;
 
 use super::{Entry, Gateway, STREAM_GONE, Shared, lock, pass_through, plain, serve_file};
-use crate::process::{Input, background, drain_stderr, header_args};
+use crate::process::{Input, background, drain_stderr, web_input_args};
 use crate::remux::RemuxPlan;
 
 /// A title's thumbnails for the seek bar: sheets of small frames, each read
@@ -601,7 +601,7 @@ fn tile_args(target: &StreamTarget, input: &Input, video_map: &str, time: f64, p
         .map(String::from)
         .to_vec();
     if input.is_web() {
-        args.extend(header_args(target));
+        args.extend(web_input_args(target));
         args.extend(["-rw_timeout", "15000000"].map(String::from));
     }
     if keyframes {
@@ -740,7 +740,7 @@ mod tests {
         };
         let input = Input::of(&film).unwrap();
         let args = tile_args(&film, &input, "0:0", 75.0, &plan, true).join(" ");
-        assert!(args.contains("-threads 1 -user_agent UA -rw_timeout 15000000 -noaccurate_seek -skip_frame nokey -ss 75.000 -i https://a.example/movie/u/p/1.mkv"), "{args}");
+        assert!(args.contains("-threads 1 -protocol_whitelist http,https,tls,tcp,crypto,data,httpproxy -user_agent UA -rw_timeout 15000000 -noaccurate_seek -skip_frame nokey -ss 75.000 -i https://a.example/movie/u/p/1.mkv"), "{args}");
         assert!(args.ends_with("-map 0:0 -an -sn -dn -frames:v 1 -vf scale=160:90:flags=bicubic,setsar=1 -pix_fmt yuv420p -f rawvideo pipe:1"), "{args}");
         let show = if cfg!(windows) { r"C:\rec\show.ts" } else { "/rec/show.ts" };
         let recording = StreamTarget { url: show.into(), user_agent: None, headers: vec![], is_live: false };

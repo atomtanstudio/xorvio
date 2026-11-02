@@ -526,3 +526,25 @@ async fn subtitles_and_switched_off_addons() {
         AddonError::Disabled
     ));
 }
+
+/// An add-on whose reply never ends (or a small compressed one that unpacks
+/// to gigabytes) is given up on at the size cap, not read into memory until
+/// the request times out.
+#[tokio::test]
+async fn stops_reading_a_reply_that_never_ends() {
+    static CHUNK: [u8; 65536] = [b' '; 65536];
+    let endless = || async {
+        let chunks = futures_util::stream::repeat_with(|| Ok::<_, std::io::Error>(axum::body::Bytes::from_static(&CHUNK)));
+        axum::body::Body::from_stream(chunks)
+    };
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let base = format!("http://{}", listener.local_addr().unwrap());
+    tokio::spawn(async move { axum::serve(listener, Router::new().fallback(endless)).await });
+
+    let dir = tempfile::tempdir().unwrap();
+    let addons = Addons::open(dir.path(), Arc::new(MemorySecrets::default())).unwrap();
+    let started = std::time::Instant::now();
+    let error = addon_error(addons.install(&format!("{base}/endless/manifest.json")).await.unwrap_err());
+    assert!(matches!(error, AddonError::Unreadable(_)), "{error:?}");
+    assert!(started.elapsed() < std::time::Duration::from_secs(10));
+}
