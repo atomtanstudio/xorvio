@@ -80,6 +80,12 @@ const LAST_CHANNEL: Item = item("playback.lastChannel", "Last Channel", Some("Cm
 const MUTE: Item = item("playback.mute", "Mute", None, None);
 const MULTIVIEW: Item = item("playback.multiview", "Multiview", Some("Cmd+Shift+M"), Some("Ctrl+Shift+M"));
 const POP_OUT: Item = item("playback.popOut", "Pop Out Video", Some("Alt+Cmd+P"), Some("Ctrl+Alt+P"));
+// Something small in a corner of what's playing. X does both in the window;
+// a letter alone can't be a menu shortcut, as text fields need it.
+const INSET: Item = item("playback.inset", "Add an Inset…", None, None);
+const SWAP_INSET: Item = item("playback.swapInset", "Swap Inset", None, None);
+/// What's in Multiview, which is in the main window whatever's popped out.
+const MULTIVIEW_ITEMS: [&str; 3] = [MULTIVIEW.id, INSET.id, SWAP_INSET.id];
 
 /// Xorvio's own items, by id, to enable, disable and retitle.
 struct MenuItems(HashMap<&'static str, MenuItem<Wry>>);
@@ -100,6 +106,12 @@ struct AppMenuState {
     can_go_back: bool,
     sidebar_hidden: bool,
     multiview: bool,
+    /// Something plays in the main window's player, so an inset can be added to it.
+    can_add_inset: bool,
+    /// Multiview has two tiles, which can be an inset.
+    can_inset: bool,
+    /// The two are an inset: one small in a corner of the other.
+    inset: bool,
 }
 
 #[derive(Debug, Default, Deserialize)]
@@ -238,6 +250,8 @@ pub fn build(app: &AppHandle) -> tauri::Result<Menu<Wry>> {
             &own(&MUTE, false)?,
             &separator()?,
             &own(&MULTIVIEW, true)?,
+            &own(&INSET, false)?,
+            &own(&SWAP_INSET, false)?,
             &own(&POP_OUT, false)?,
         ],
     )?;
@@ -309,11 +323,11 @@ pub fn handle(app: &AppHandle, event: MenuEvent) {
                 let _ = window.set_fullscreen(!full);
             }
         }
-        _ if id.starts_with("playback.") && id != MULTIVIEW.id => {
+        _ if id.starts_with("playback.") && !MULTIVIEW_ITEMS.contains(&id) => {
             let _ = app.emit_to(playback_window(app), MENU_EVENT, id);
         }
         // Multiview is in the main window whatever's popped out.
-        _ if id == MULTIVIEW.id || ["app.", "file.", "view.", "go."].iter().any(|prefix| id.starts_with(prefix)) => {
+        _ if MULTIVIEW_ITEMS.contains(&id) || ["app.", "file.", "view.", "go."].iter().any(|prefix| id.starts_with(prefix)) => {
             // Settings, sources and going somewhere are the main window's,
             // which shows again if it was closed to the menu bar.
             crate::show_main_window(app);
@@ -335,6 +349,18 @@ fn focused_window(app: &AppHandle) -> Option<tauri::WebviewWindow> {
     app.webview_windows().into_values().find(|window| window.is_focused().unwrap_or(false))
 }
 
+/// The inset item for what's on: adding one to what's playing, or showing
+/// Multiview's two as one or side by side.
+fn inset_item(state: &AppMenuState) -> (bool, &'static str) {
+    if state.inset {
+        (true, "Show Side by Side")
+    } else if state.multiview {
+        (state.can_inset, "Show as Inset")
+    } else {
+        (state.can_add_inset, "Add an Inset…")
+    }
+}
+
 /// Enables and retitles items for what can act now, as the interface says.
 #[tauri::command]
 pub fn set_menu_state(app: AppHandle, window: Window, state: MenuState) {
@@ -352,6 +378,9 @@ pub fn set_menu_state(app: AppHandle, window: Window, state: MenuState) {
         set(BACK.id, app_state.can_go_back, None);
         set(SIDEBAR.id, true, Some(if app_state.sidebar_hidden { "Show Sidebar" } else { "Hide Sidebar" }));
         set(MULTIVIEW.id, true, Some(if app_state.multiview { "Close Multiview" } else { "Multiview" }));
+        let (inset_ok, inset_title) = inset_item(&app_state);
+        set(INSET.id, inset_ok, Some(inset_title));
+        set(SWAP_INSET.id, app_state.inset, None);
     }
     // Only the window the video is in says what Playback can do.
     if let Some(playback) = state.playback.filter(|_| window.label() == playback_window(&app)) {
@@ -369,5 +398,20 @@ pub fn set_menu_state(app: AppHandle, window: Window, state: MenuState) {
         set(LAST_CHANNEL.id, playback.last_channel, None);
         set(MUTE.id, playing, Some(if playback.muted { "Unmute" } else { "Mute" }));
         set(POP_OUT.id, playing, Some(if playback.popped_out { "Return Video to Main Window" } else { "Pop Out Video" }));
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{inset_item, AppMenuState};
+
+    #[test]
+    fn the_inset_item_follows_whats_on() {
+        let state = |multiview, can_add_inset, can_inset, inset| AppMenuState { multiview, can_add_inset, can_inset, inset, ..AppMenuState::default() };
+        assert_eq!(inset_item(&state(false, true, false, false)), (true, "Add an Inset…"));
+        assert_eq!(inset_item(&state(false, false, false, false)), (false, "Add an Inset…"), "nothing playing");
+        assert_eq!(inset_item(&state(true, false, true, false)), (true, "Show as Inset"));
+        assert_eq!(inset_item(&state(true, false, false, false)), (false, "Show as Inset"), "three or four tiles");
+        assert_eq!(inset_item(&state(true, false, true, true)), (true, "Show Side by Side"));
     }
 }
