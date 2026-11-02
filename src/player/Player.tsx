@@ -33,11 +33,11 @@ import {
   watchHighlighted,
 } from "./LiveOverlays";
 import { useMediaSession } from "./mediaSession";
-import { listenNext, setPaused as setMultiviewPaused, toggleMultiview, useMultiview } from "./multiviewStore";
+import { goLiveTile, heardTile, listenNext, skipTile, toggleAllPaused, toggleHeardPaused, toggleMultiview, useMultiview } from "./multiviewStore";
 import { playNextEpisode, useEpisodeExtras } from "./nextEpisode";
 import { pauseByPerson, takePausedByPerson } from "./pause";
 import { CornerButton, NextCountdown, StreamInfoPanel, SyncPanel } from "./PlayerPanels";
-import { audioFor, classifyFailure, withAudio, withSubtitles, type Problem } from "./playerRules";
+import { audioFor, bufferRange, classifyFailure, LIVE_EDGE, withAudio, withSubtitles, type Problem } from "./playerRules";
 import { FailureCard, ReconnectingCard } from "./PlayerStates";
 import { retry, streamFailed, streamPlaying, takeResumeSeek, titleHasPlayed, useRecovery } from "./recovery";
 import { DockedControls, MiniStrip, useMiniPlayerCorner } from "./SmallPlayers";
@@ -126,20 +126,6 @@ function useAirPlay(video: React.RefObject<HTMLVideoElement | null>, mounted: bo
   }, [video, mounted]);
   return state;
 }
-
-// MARK: Live buffer
-
-/** The buffered stretch of a live channel, in the stream's own seconds. Until the playlist loads, WebKit can report no range or an endless one. */
-function bufferRange(video: HTMLVideoElement) {
-  const s = video.seekable;
-  if (!s.length) return null;
-  const start = s.start(0);
-  const end = s.end(s.length - 1);
-  return Number.isFinite(start) && Number.isFinite(end) && end > start ? { start, end } : null;
-}
-
-/** Within this of the live edge counts as live. */
-const LIVE_EDGE = 8;
 
 // MARK: Player
 
@@ -587,24 +573,34 @@ function Player() {
   }, [close, moveWindow]);
 
   // The menu bar's Playback items, done as the player's own buttons and keys
-  // do them. Multiview, while it's open, has the play and channel items.
+  // do them. Multiview, while it's open, has the play, skip, Go Live and
+  // channel items, for the tile heard, and Pause All.
   const playback = useRef({ position, seekable: false, seek, goLive, close, moveWindow, back });
   playback.current = { position, seekable: !!stream && (!isLive || buffered), seek, goLive, close, moveWindow, back };
   useEffect(() => {
     const multiview = () => useMultiview.getState().open;
     const ifPlaying = (work: () => void) => () => useApp.getState().nowPlaying && work();
+    const heard = (work: (id: string) => void) => {
+      const tile = heardTile();
+      if (tile) work(tile.id);
+    };
+    const skip = (by: number) => {
+      if (multiview()) return heard((id) => skipTile(id, by));
+      if (useApp.getState().nowPlaying && playback.current.seekable) playback.current.seek(playback.current.position + by);
+    };
     return handleCommands({
       "playback.playPause": () => {
-        if (multiview()) return setMultiviewPaused(!useMultiview.getState().paused);
+        if (multiview()) return toggleHeardPaused();
         const el = video.current;
         if (!el || !useApp.getState().nowPlaying) return;
         if (el.paused) el.play().catch(() => {});
         else pauseByPerson(el);
       },
+      "playback.pauseAll": () => multiview() && toggleAllPaused(),
       "playback.stop": ifPlaying(() => playback.current.close()),
-      "playback.skipBack": ifPlaying(() => playback.current.seekable && playback.current.seek(playback.current.position - 10)),
-      "playback.skipForward": ifPlaying(() => playback.current.seekable && playback.current.seek(playback.current.position + 10)),
-      "playback.goLive": ifPlaying(() => playback.current.goLive()),
+      "playback.skipBack": () => skip(-10),
+      "playback.skipForward": () => skip(10),
+      "playback.goLive": () => (multiview() ? heard(goLiveTile) : useApp.getState().nowPlaying && playback.current.goLive()),
       // Next is channel up, as ↑ is in the player and on a remote.
       "playback.previousChannel": () => (multiview() ? listenNext(-1) : channelDown()),
       "playback.nextChannel": () => (multiview() ? listenNext(1) : channelUp()),

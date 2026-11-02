@@ -1,6 +1,7 @@
 // Multiview's rules, kept apart from React and the backend so they can be
 // checked on their own (`node src/player/multiviewRules.test.ts`): where
-// tiles go, which one is heard, and when Multiview gives way to the player.
+// tiles go, which one is heard, when Multiview gives way to the player, and
+// pausing and rewinding tiles.
 
 /** Tiles at once: four streams is about what a provider and a Mac manage. */
 export const MAX_TILES = 4;
@@ -127,4 +128,40 @@ export function tileToKeep(ids: string[], audio: string | null): string | null {
 /** Streams from a source playing in other tiles, for the provider's connection limit. */
 export function watchingFrom(tiles: { id: string; sourceId: string }[], sourceId: string, except?: string): number {
   return tiles.filter((t) => t.sourceId === sourceId && t.id !== except).length;
+}
+
+// MARK: Pausing and rewinding
+
+/** The live buffer setting: never, from a pause, or always. */
+export type LiveBufferSetting = "off" | "paused" | "always";
+
+/**
+ * Whether pausing a tile moves it onto a buffer of its own, from then on: a
+ * live channel playing directly, unless the live buffer is turned off. Tiles
+ * play directly until they're paused, so the buffer's ffmpeg and disk are
+ * spent only on paused tiles, whatever the setting is for the player.
+ */
+export function buffersOnPause(setting: LiveBufferSetting, stream: { isLive: boolean; timeshift?: unknown } | null): boolean {
+  return setting !== "off" && !!stream && stream.isLive && !stream.timeshift;
+}
+
+/** How far behind live a buffered tile is, to the second: none at the edge, or without a buffer. */
+export function secondsBehind(range: { start: number; end: number } | null, current: number): number {
+  return range ? Math.max(0, Math.round(range.end - current)) : 0;
+}
+
+/** Where a skip of `by` seconds lands in a buffer: within what's kept, short of its very end. */
+export function skipInBuffer(range: { start: number; end: number }, current: number, by: number): number {
+  return Math.min(Math.max(current + by, range.start), range.end - 1);
+}
+
+/** Where a buffered tile carries on from: where it was, unless it was paused for longer than the buffer keeps. */
+export function resumeAt(range: { start: number; end: number } | null, current: number): number {
+  return range && current < range.start ? range.start + 1 : current;
+}
+
+/** Pause All pauses every tile unless they're all paused already, when it plays them all. Tiles that failed don't count. */
+export function allPaused(tiles: { paused: boolean; error: string | null }[]): boolean {
+  const playing = tiles.filter((t) => !t.error);
+  return playing.length > 0 && playing.every((t) => t.paused);
 }

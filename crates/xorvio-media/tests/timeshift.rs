@@ -544,6 +544,64 @@ async fn pausing_a_channel_playing_directly_moves_it_to_a_buffer() {
     release_and_check(&gateway, &replaced, Some(&live)).await;
 }
 
+/// Multiview: four tiles playing directly, all paused at once (each moves
+/// onto a buffer of its own), then one back to live and the rest closed.
+/// Each channel's provider sees one connection at a time throughout, so
+/// pausing never takes a source past its limit, and nothing is left behind.
+#[tokio::test(flavor = "multi_thread")]
+async fn four_tiles_paused_at_once_keep_one_connection_each() {
+    let Some(tools) = tools() else { return };
+    if !has_encoder(&tools, "libx264") {
+        return;
+    }
+    let dir = tempfile::tempdir().unwrap();
+    let gateway = Gateway::start(Some(tools.clone())).await.unwrap();
+    let hint = PlayHint { live_format: Some(LiveStreamFormat::Mpegts), ..PlayHint::default() };
+    let mut tiles = Vec::new();
+    for _ in 0..4 {
+        let live = Live::new(&tools);
+        let origin = serve_watched(dir.path(), live.routes(), live.sockets.clone()).await;
+        let source = format!("{origin}/live/h264?token={KEY}");
+        let direct = gateway.prepare(target(&source, true), hint.clone()).await.unwrap();
+        let mut body = client().get(&direct.url).send().await.unwrap().bytes_stream();
+        assert_eq!(body.next().await.unwrap().unwrap()[0], 0x47);
+        let reading = tokio::spawn(async move { while let Some(Ok(_)) = body.next().await {} });
+        tiles.push((live, source, direct, reading));
+    }
+
+    // Pause All: every tile at once.
+    let paused = futures_util::future::join_all(tiles.iter().map(|(_, _, direct, _)| gateway.timeshift_playing(&direct.url, 600.0))).await;
+    let mut buffers = Vec::new();
+    for ((live, _, _, reading), buffered) in tiles.iter_mut().zip(paused) {
+        let buffered = buffered.unwrap();
+        check_resolved(&buffered, 600.0);
+        tokio::time::timeout(Duration::from_secs(2), reading).await.expect("the direct stream ends").unwrap();
+        assert_eq!(live.requests.load(Ordering::SeqCst), 2, "the buffer took over the tile's connection");
+        assert_eq!(live.most_open.load(Ordering::SeqCst), 1, "never two connections at once");
+        buffers.push(buffered);
+    }
+    for buffered in &buffers {
+        assert!(gateway.timeshift_folder(&buffered.url).is_some(), "four buffers at once: none was stopped for another");
+        assert!(!segments(&playlist(buffered).await.0).is_empty());
+    }
+
+    // Go Live on the first: its buffer goes, and the channel plays directly again.
+    let (first, source, _, _) = &tiles[0];
+    release_and_check(&gateway, &buffers[0], Some(first)).await;
+    let again = gateway.prepare(target(source, true), hint.clone()).await.unwrap();
+    let mut body = client().get(&again.url).send().await.unwrap().bytes_stream();
+    assert_eq!(body.next().await.unwrap().unwrap()[0], 0x47);
+    assert_eq!(first.most_open.load(Ordering::SeqCst), 1);
+    drop(body);
+    gateway.release(&again.url);
+
+    // Multiview closed: the other buffers go, with their ffmpegs, folders and connections.
+    for ((live, _, _, _), buffered) in tiles.iter().zip(&buffers).skip(1) {
+        release_and_check(&gateway, buffered, Some(live)).await;
+        assert_eq!(live.most_open.load(Ordering::SeqCst), 1);
+    }
+}
+
 #[tokio::test(flavor = "multi_thread")]
 async fn failures_come_back_as_plain_errors() {
     let Some(tools) = tools() else { return };

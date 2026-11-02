@@ -67,6 +67,7 @@ const GO: [Item; 8] = [
 const SEARCH: Item = item("go.search", "Search", Some("Cmd+F"), Some("Ctrl+F"));
 const BACK: Item = item("go.back", "Back", Some("Cmd+["), Some("Alt+Left"));
 const PLAY_PAUSE: Item = item("playback.playPause", "Play", Some("Alt+Space"), None);
+const PAUSE_ALL: Item = item("playback.pauseAll", "Pause All Tiles", Some("Alt+Shift+Space"), None);
 const STOP: Item = item("playback.stop", "Stop", None, None);
 const SKIP_BACK: Item = item("playback.skipBack", "Skip Back 10 Seconds", Some("Cmd+Left"), None);
 const SKIP_FORWARD: Item = item("playback.skipForward", "Skip Forward 10 Seconds", Some("Cmd+Right"), None);
@@ -116,8 +117,11 @@ struct PlaybackMenuState {
     channel: bool,
     /// There's a channel to go back to.
     last_channel: bool,
-    /// Multiview is open, whose tiles take Play/Pause and the channel items.
+    /// Multiview is open: Play/Pause, the skips and Go Live are for the tile
+    /// heard, and the channel items move the sound between tiles.
     multiview: bool,
+    /// Every Multiview tile is paused, so Pause All Tiles plays them.
+    all_paused: bool,
     /// This is the pop-out player's window.
     popped_out: bool,
 }
@@ -220,6 +224,7 @@ pub fn build(app: &AppHandle) -> tauri::Result<Menu<Wry>> {
         true,
         &[
             &own(&PLAY_PAUSE, false)?,
+            &own(&PAUSE_ALL, false)?,
             &own(&STOP, false)?,
             &separator()?,
             &own(&SKIP_BACK, false)?,
@@ -351,11 +356,14 @@ pub fn set_menu_state(app: AppHandle, window: Window, state: MenuState) {
     // Only the window the video is in says what Playback can do.
     if let Some(playback) = state.playback.filter(|_| window.label() == playback_window(&app)) {
         let playing = playback.playing;
-        set(PLAY_PAUSE.id, playing || playback.multiview, Some(if playing && !playback.paused { "Pause" } else { "Play" }));
+        // In Multiview the tile heard plays, pauses, skips and goes live.
+        let active = playing || playback.multiview;
+        set(PLAY_PAUSE.id, active, Some(if active && !playback.paused { "Pause" } else { "Play" }));
+        set(PAUSE_ALL.id, playback.multiview, Some(if playback.all_paused { "Play All Tiles" } else { "Pause All Tiles" }));
         set(STOP.id, playing, None);
-        set(SKIP_BACK.id, playing && playback.seekable, None);
-        set(SKIP_FORWARD.id, playing && playback.seekable, None);
-        set(GO_LIVE.id, playing && playback.behind_live, None);
+        set(SKIP_BACK.id, active && playback.seekable, None);
+        set(SKIP_FORWARD.id, active && playback.seekable, None);
+        set(GO_LIVE.id, active && playback.behind_live, None);
         set(PREVIOUS_CHANNEL.id, playback.channel || playback.multiview, None);
         set(NEXT_CHANNEL.id, playback.channel || playback.multiview, None);
         set(LAST_CHANNEL.id, playback.last_channel, None);

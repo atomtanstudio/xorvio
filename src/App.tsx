@@ -22,7 +22,9 @@ import type { AddonInfo, MenuState } from "./lib/types";
 import { reportPlaybackSupport } from "./player/engine";
 import { leavePlayerFullscreen } from "./player/fullscreen";
 import { MultiviewHost } from "./player/Multiview";
-import { closeMultiview, toggleExpand, toggleMultiview, useMultiview } from "./player/multiviewStore";
+import { allPaused } from "./player/multiviewRules";
+import { closeMultiview, heardTile, toggleExpand, toggleMultiview, useMultiview } from "./player/multiviewStore";
+import { LIVE_EDGE } from "./player/playerRules";
 import { PlayerHost } from "./player/Player";
 import { OnboardingHost } from "./screens/Onboarding";
 import { BrowseScreen } from "./screens/Browse";
@@ -497,6 +499,11 @@ function useShellCommands(toggleSidebar: () => void, sidebarHidden: boolean) {
       const multiview = useMultiview.getState();
       const report = usePlaybackReport.getState();
       const playing = report.playing && !!nowPlaying;
+      // In Multiview, Play/Pause, the skips and Go Live are the heard tile's.
+      const tile = multiview.open ? heardTile() : null;
+      const tileState = tile
+        ? { paused: tile.paused, seekable: !!tile.stream?.timeshift, behindLive: !!tile.stream?.timeshift && tile.behind >= LIVE_EDGE }
+        : {};
       return {
         app: {
           hasSources: !!useSources.getState().sources?.length,
@@ -504,7 +511,16 @@ function useShellCommands(toggleSidebar: () => void, sidebarHidden: boolean) {
           sidebarHidden: hidden.current,
           multiview: multiview.open,
         },
-        playback: { ...report, playing, channel: playing && report.channel, lastChannel: !!lastChannel(), multiview: multiview.open, poppedOut: false },
+        playback: {
+          ...report,
+          ...tileState,
+          playing,
+          channel: playing && report.channel,
+          lastChannel: !!lastChannel(),
+          multiview: multiview.open,
+          allPaused: multiview.open && allPaused(multiview.tiles),
+          poppedOut: false,
+        },
       };
     };
     return followMenuState(compute, (changed) => {
