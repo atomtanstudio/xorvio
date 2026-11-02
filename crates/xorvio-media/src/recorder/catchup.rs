@@ -19,7 +19,7 @@ use xorvio_model::{RecordingStatus, StreamTarget};
 use super::job::{duration_text, explain, finish};
 use super::store::{Progress, Row};
 use super::{Command, Recorder, files, folders};
-use crate::process::{Input, drain_stderr, header_args, redact, tool_command};
+use crate::process::{Input, drain_stderr, web_input_args, redact, tool_command};
 use crate::tools::Tools;
 
 /// Replays that give nothing are asked for this many times in a row.
@@ -234,7 +234,7 @@ pub(super) fn catchup_args(
     .map(String::from)
     .to_vec();
     if input.is_web() {
-        args.extend(header_args(target));
+        args.extend(web_input_args(target));
         // No reconnecting inside ffmpeg: a replay that's opened again starts
         // over, so a break is asked for again from where it stopped instead.
         args.extend(["-rw_timeout", "15000000"].map(String::from));

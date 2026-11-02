@@ -75,8 +75,19 @@ pub(crate) fn size_of(path: &str) -> i64 {
     std::fs::metadata(path).map_or(0, |m| m.len() as i64)
 }
 
+/// Recordings are always MPEG-TS files. A recording's list of files could
+/// hold any path (a backup made elsewhere, say), so only those are ever
+/// deleted or moved to the Trash.
+fn is_recording_file(path: &str) -> bool {
+    let keep = Path::new(path).extension().is_some_and(|ext| ext.eq_ignore_ascii_case("ts"));
+    if !keep {
+        tracing::warn!("a recording listed a file that isn't a recording, so it was left alone");
+    }
+    keep
+}
+
 pub(crate) fn remove(paths: &[String]) {
-    for path in paths {
+    for path in paths.iter().filter(|path| is_recording_file(path)) {
         if let Err(error) = std::fs::remove_file(path)
             && error.kind() != std::io::ErrorKind::NotFound
         {
@@ -90,7 +101,7 @@ pub(crate) fn remove(paths: &[String]) {
 /// Trash to move them to (some network drives), they're deleted, as
 /// deleting a recording by hand does.
 pub(crate) fn trash(paths: &[String]) {
-    for path in paths.iter().filter(|p| Path::new(p).exists()) {
+    for path in paths.iter().filter(|p| is_recording_file(p) && Path::new(p).exists()) {
         if let Err(error) = move_to_trash(Path::new(path)) {
             tracing::warn!("a recording couldn't go to the Trash, so it was deleted: {error}");
             remove(std::slice::from_ref(path));
@@ -186,5 +197,22 @@ mod tests {
         std::fs::write(&first, b"x").unwrap();
         assert!(next_part(dir.path(), "Show", 1).ends_with("Show (2).ts"));
         assert!(next_part(dir.path(), "Show", 2).ends_with("Show (part 2).ts"));
+    }
+
+    #[test]
+    fn deletes_only_recording_files() {
+        let dir = tempfile::tempdir().unwrap();
+        let recording = dir.path().join("Show.ts");
+        let other = dir.path().join("Holiday.mov");
+        std::fs::write(&recording, b"x").unwrap();
+        std::fs::write(&other, b"x").unwrap();
+        let paths = [&recording, &other].map(|p| p.to_string_lossy().into_owned());
+        remove(&paths);
+        assert!(!recording.exists());
+        assert!(other.exists());
+        std::fs::write(&recording, b"x").unwrap();
+        trash(&paths);
+        assert!(!recording.exists());
+        assert!(other.exists());
     }
 }

@@ -168,7 +168,7 @@ struct Work(PathBuf);
 
 impl Work {
     fn new() -> anyhow::Result<Work> {
-        let dir = std::env::temp_dir().join(format!("xorvio-comskip-{}", uuid::Uuid::new_v4().simple()));
+        let dir = crate::scratch::temp_root().join(format!("xorvio-comskip-{}", uuid::Uuid::new_v4().simple()));
         std::fs::create_dir_all(&dir).context("a folder for comskip couldn't be made")?;
         Ok(Work(dir))
     }

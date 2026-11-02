@@ -132,7 +132,7 @@ fn open_with(_bundle_id: &str, _argument: &str) -> anyhow::Result<()> {
 /// Writes a playlist into a folder of Xorvio's in the temporary folder,
 /// clearing out ones a day old.
 fn write_playlist(text: &str) -> anyhow::Result<PathBuf> {
-    let dir = std::env::temp_dir().join("xorvio-players");
+    let dir = xorvio_media::temp_root().join("xorvio-players");
     std::fs::create_dir_all(&dir)?;
     for entry in std::fs::read_dir(&dir)?.flatten() {
         let old = entry.metadata().and_then(|m| m.modified()).ok().and_then(|t| t.elapsed().ok()).is_some_and(|age| age > PLAYLIST_LIFETIME);

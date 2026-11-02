@@ -1,0 +1,27 @@
+# Weekly update pull requests, one per ecosystem, so pinned actions and
+# dependencies with security fixes don't fall behind.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directories: ["/", "/.github/actions/xorvio-ffmpeg"]
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]
+
+  - package-ecosystem: cargo
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      cargo:
+        patterns: ["*"]
+
+  - package-ecosystem: npm
+    directories: ["/", "/Website"]
+    schedule:
+      interval: weekly
+    groups:
+      npm:
+        patterns: ["*"]

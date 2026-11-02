@@ -9,5 +9,6 @@
   {"protocol":"https","address":"192.168.1.5","port":32400,"uri":"https://192-168-1-5.def456.plex.direct:32400","local":true,"relay":false,"IPv6":false}
  ]},
 {"name":"Old NAS","product":"Plex Media Server","clientIdentifier":"nas-machine","provides":"client,server","owned":"1","connections":[{"uri":"http://10.0.0.2:32400","local":"1","relay":"0"}]},
-{"name":"No Id","product":"Plex Media Server","provides":"server","owned":true,"accessToken":"x","connections":[]}
+{"name":"No Id","product":"Plex Media Server","provides":"server","owned":true,"accessToken":"x","connections":[]},
+{"name":"Neighbour's Server","product":"Plex Media Server","clientIdentifier":"neighbour-machine","provides":"server","owned":false,"connections":[{"uri":"https://203-0-113-50.ghi789.plex.direct:32400","local":false,"relay":false}]}
 ]

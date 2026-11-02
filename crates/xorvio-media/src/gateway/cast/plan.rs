@@ -17,7 +17,7 @@
 
 use xorvio_model::StreamTarget;
 
-use crate::process::{Input, header_args};
+use crate::process::{Input, web_input_args};
 use crate::probe::Probe;
 
 /// Taller than this is made 1080p when encoding, which keeps up in software.
@@ -164,7 +164,7 @@ impl CastPlan {
     pub fn args(&self, target: &StreamTarget, input: &Input, offset: f64) -> Vec<String> {
         let mut args: Vec<String> = ["-hide_banner", "-nostdin", "-nostats", "-loglevel", "error"].map(String::from).to_vec();
         if input.is_web() {
-            args.extend(header_args(target));
+            args.extend(web_input_args(target));
             args.extend(["-reconnect", "1", "-reconnect_delay_max", "5", "-rw_timeout", "15000000"].map(String::from));
         }
         if self.hls_input {

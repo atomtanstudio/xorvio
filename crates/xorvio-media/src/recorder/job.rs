@@ -14,7 +14,7 @@ use xorvio_model::{RecordingStatus, StreamTarget};
 
 use super::store::{Progress, Row};
 use super::{Command, Recorder, files, folders, unix_now};
-use crate::process::{Input, drain_stderr, header_args, redact, tool_command};
+use crate::process::{Input, drain_stderr, web_input_args, redact, tool_command};
 use crate::tools::Tools;
 
 const MIN_BACKOFF: Duration = Duration::from_secs(2);
@@ -240,7 +240,7 @@ fn record_args(target: &StreamTarget, input: &Input, path: &Path) -> Vec<String>
         .map(String::from)
         .to_vec();
     if input.is_web() {
-        args.extend(header_args(target));
+        args.extend(web_input_args(target));
         args.extend(
             [
                 "-reconnect",

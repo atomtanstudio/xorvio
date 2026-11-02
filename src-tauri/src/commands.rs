@@ -258,12 +258,14 @@ pub async fn list_sources(state: State<'_, AppState>) -> CmdResult<Vec<SourceSum
 
 #[tauri::command]
 pub async fn add_source(state: State<'_, AppState>, source: NewSource) -> CmdResult<SourceConfig> {
+    state.picked.check(source.file_path.as_deref(), &[])?;
     state.core.add_source(source).await.map_err(fail)
 }
 
 /// Adds a media folder source with the folders chosen. It's read by a refresh of its own.
 #[tauri::command]
 pub async fn add_folder_source(state: State<'_, AppState>, name: String, folders: Vec<String>) -> CmdResult<SourceConfig> {
+    state.picked.check(folders.iter().map(String::as_str), &[])?;
     state.core.add_folder_source(&name, &folders).map_err(fail)
 }
 
@@ -397,6 +399,10 @@ pub async fn replace_plex_sign_in(state: State<'_, AppState>, id: String, pin_id
 
 #[tauri::command]
 pub async fn update_source(state: State<'_, AppState>, config: SourceConfig, secrets: Option<SourceSecrets>) -> CmdResult<()> {
+    // Folders and playlist files it has already are fine; new ones must have been chosen.
+    let existing = state.core.list_sources().map_err(fail)?.into_iter().find(|s| s.config.id == config.id).map(|s| s.config);
+    let known: Vec<&str> = existing.iter().flat_map(|e| e.folders.iter().map(String::as_str).chain(e.file_path.as_deref())).collect();
+    state.picked.check(config.folders.iter().map(String::as_str).chain(config.file_path.as_deref()), &known)?;
     state.core.update_source(config, secrets).map_err(fail)
 }
 
@@ -455,7 +461,9 @@ pub fn xtream_login_in_link(link: String) -> Option<SourceSecrets> {
 /// interface as its text alone, and returns where for an M3U file source.
 #[tauri::command]
 pub async fn keep_dropped_playlist(state: State<'_, AppState>, name: String, contents: String) -> CmdResult<String> {
-    state.core.keep_playlist_copy(&name, contents.as_bytes()).map_err(fail)
+    let path = state.core.keep_playlist_copy(&name, contents.as_bytes()).map_err(fail)?;
+    state.picked.add(&path);
+    Ok(path)
 }
 
 #[tauri::command]
@@ -1404,6 +1412,12 @@ pub(crate) fn resolve(state: &AppState, request: PlayRequest) -> CmdResult<(Stre
             (target, PlayHint { extension: Some("ts".into()), live_format: None, duration_seconds: recording.recorded_seconds, ..Default::default() })
         }
         PlayRequest::Target { target } => {
+            // Only add-on copies come this way, and they're web addresses. Files
+            // on this computer play by their film, episode or recording, so the
+            // interface can't name one.
+            if !url::Url::parse(&target.url).is_ok_and(|url| matches!(url.scheme(), "http" | "https")) {
+                return Err("That isn't a web address.".into());
+            }
             let extension = extension_of(&target.url);
             (target, PlayHint { extension, live_format: None, duration_seconds: None, ..Default::default() })
         }
@@ -1869,6 +1883,10 @@ pub async fn settings(state: State<'_, AppState>) -> CmdResult<Settings> {
 
 #[tauri::command]
 pub async fn save_settings(state: State<'_, AppState>, log: State<'_, Arc<DiagnosticsLog>>, settings: Settings) -> CmdResult<()> {
+    {
+        let current = state.settings.lock().unwrap();
+        state.picked.check(settings.folders(), &current.folders().collect::<Vec<_>>())?;
+    }
     let folder_changed = state.settings.lock().unwrap().recordings_folder != settings.recordings_folder;
     if folder_changed {
         state.recorder.set_recordings_dir(settings.recordings_dir()).map_err(fail)?;
@@ -1904,14 +1922,14 @@ pub struct StorageUsage {
 /// a folder per stream named by its id (`subtitle_root` in xorvio-media's
 /// gateway.rs). The gateway clears it at launch and as streams are released.
 fn temporary_dir() -> std::path::PathBuf {
-    std::env::temp_dir().join("xorvio-subtitles")
+    xorvio_media::temp_root().join("xorvio-subtitles")
 }
 
 /// Where live TV buffers are written, a folder per buffer (`timeshift::root`
 /// in xorvio-media). Each goes when its channel stops; one left by a crash
 /// goes at the next launch.
 fn live_buffer_dir() -> std::path::PathBuf {
-    std::env::temp_dir().join("xorvio-timeshift")
+    xorvio_media::temp_root().join("xorvio-timeshift")
 }
 
 /// A buffer gets a segment every couple of seconds, so one nothing has
@@ -2023,33 +2041,39 @@ pub async fn show_recordings_folder(app: AppHandle, state: State<'_, AppState>) 
 }
 
 #[tauri::command]
-pub async fn choose_folder(app: AppHandle) -> CmdResult<Option<String>> {
+pub async fn choose_folder(app: AppHandle, state: State<'_, AppState>) -> CmdResult<Option<String>> {
     let (tx, rx) = tokio::sync::oneshot::channel();
     app.dialog().file().pick_folder(move |folder| {
         let _ = tx.send(folder.and_then(|f| f.into_path().ok()).map(|p| p.to_string_lossy().into_owned()));
     });
-    rx.await.map_err(fail)
+    let chosen = rx.await.map_err(fail)?;
+    chosen.iter().for_each(|path| state.picked.add(path));
+    Ok(chosen)
 }
 
 #[tauri::command]
-pub async fn choose_file(app: AppHandle, extensions: Vec<String>) -> CmdResult<Option<String>> {
+pub async fn choose_file(app: AppHandle, state: State<'_, AppState>, extensions: Vec<String>) -> CmdResult<Option<String>> {
     let (tx, rx) = tokio::sync::oneshot::channel();
     let extensions: Vec<&str> = extensions.iter().map(String::as_str).collect();
     app.dialog().file().add_filter("Playlist", &extensions).pick_file(move |file| {
         let _ = tx.send(file.and_then(|f| f.into_path().ok()).map(|p| p.to_string_lossy().into_owned()));
     });
-    rx.await.map_err(fail)
+    let chosen = rx.await.map_err(fail)?;
+    chosen.iter().for_each(|path| state.picked.add(path));
+    Ok(chosen)
 }
 
 /// Asks for one or more folders of films or series; empty when none were chosen.
 #[tauri::command]
-pub async fn choose_media_folders(app: AppHandle) -> CmdResult<Vec<String>> {
+pub async fn choose_media_folders(app: AppHandle, state: State<'_, AppState>) -> CmdResult<Vec<String>> {
     let (tx, rx) = tokio::sync::oneshot::channel();
     app.dialog().file().set_title("Choose folders with films or series").set_can_create_directories(false).pick_folders(move |folders| {
         let paths = folders.unwrap_or_default().into_iter().filter_map(|f| f.into_path().ok()).map(|p| p.to_string_lossy().into_owned()).collect();
         let _ = tx.send(paths);
     });
-    rx.await.map_err(fail)
+    let chosen: Vec<String> = rx.await.map_err(fail)?;
+    chosen.iter().for_each(|path| state.picked.add(path));
+    Ok(chosen)
 }
 
 #[tauri::command]

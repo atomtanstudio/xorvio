@@ -196,19 +196,10 @@ impl AddonClient {
         if !status.is_success() {
             return Err(AddonError::Status(host(), status.as_u16()));
         }
-        if response
-            .content_length()
-            .is_some_and(|len| len as usize > MAX_RESPONSE_BYTES)
-        {
-            return Err(AddonError::Unreadable(host()));
-        }
-        let body = response
-            .bytes()
+        let body = read_capped(response, MAX_RESPONSE_BYTES)
             .await
-            .map_err(|error| self.transport_error(error))?;
-        if body.len() > MAX_RESPONSE_BYTES {
-            return Err(AddonError::Unreadable(host()));
-        }
+            .map_err(|error| self.transport_error(error))?
+            .ok_or_else(|| AddonError::Unreadable(host()))?;
         serde_json::from_slice(&body).map_err(|_| AddonError::Unreadable(host()))
     }
 
@@ -222,6 +213,29 @@ impl AddonClient {
             AddonError::Unreachable(self.host.clone())
         }
     }
+}
+
+/// A reply's body, or None once it passes `limit`. It's read as it arrives
+/// and stops there, because a compressed reply's length says nothing about
+/// what it unpacks to: a few kilobytes can unpack to gigabytes.
+pub(crate) async fn read_capped(
+    response: reqwest::Response,
+    limit: usize,
+) -> Result<Option<Vec<u8>>, reqwest::Error> {
+    use futures_util::StreamExt;
+    if response.content_length().is_some_and(|len| len > limit as u64) {
+        return Ok(None);
+    }
+    let mut body = Vec::new();
+    let mut stream = response.bytes_stream();
+    while let Some(chunk) = stream.next().await {
+        let chunk = chunk?;
+        if body.len() + chunk.len() > limit {
+            return Ok(None);
+        }
+        body.extend_from_slice(&chunk);
+    }
+    Ok(Some(body))
 }
 
 #[cfg(test)]

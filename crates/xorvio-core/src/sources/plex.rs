@@ -228,14 +228,16 @@ fn parse_servers(reply: &Value, account_token: &str) -> Vec<PlexServer> {
                     })
                 })
                 .collect();
-            Some(PlexServer {
-                name: text(device.get("name")).unwrap_or_else(|| "Plex".into()),
-                owned: flag(device.get("owned")),
-                // An owned server's token is the account's own when plex.tv leaves it out.
-                access_token: text(device.get("accessToken")).unwrap_or_else(|| account_token.to_string()),
-                connections,
-                id,
-            })
+            let owned = flag(device.get("owned"));
+            // An owned server's token is the account's own when plex.tv leaves it
+            // out. A shared server's owner never gets the account's token, so one
+            // without a token of its own can't be used.
+            let access_token = match text(device.get("accessToken")) {
+                Some(token) => token,
+                None if owned => account_token.to_string(),
+                None => return None,
+            };
+            Some(PlexServer { name: text(device.get("name")).unwrap_or_else(|| "Plex".into()), owned, access_token, connections, id })
         })
         .collect();
     servers.sort_by_key(|server| !server.owned);
@@ -1641,7 +1643,7 @@ mod tests {
                 ("nas-machine", "Old NAS", true, "account-token"),
                 ("shared-machine", "Friend's Server", false, "shared-server-token"),
             ],
-            "the account's own first; players and devices without an id left out"
+            "the account's own first; players, devices without an id and shared servers without a token left out"
         );
         assert_eq!(servers[0].connections.len(), 3);
         assert_eq!(
