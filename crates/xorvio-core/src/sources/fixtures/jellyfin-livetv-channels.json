@@ -1,0 +1,63 @@
+{
+  "Items": [
+    {
+      "Name": "North Test News",
+      "ServerId": "f509df84f9ea447da68868a9fa6964c2",
+      "Id": "b3237568e82c476ca89e17a3ff6a1fee",
+      "ChannelId": null,
+      "Number": "2",
+      "ChannelNumber": "2",
+      "IsFolder": false,
+      "Type": "TvChannel",
+      "ImageTags": {
+        "Primary": "18d9b64b912f464cb9ffcc2835842786"
+      },
+      "ImageBlurHashes": {
+        "Primary": {
+          "18d9b64b912f464cb9ffcc2835842786": "e82h-zb4nyW|R%fSjfbJbBWWjrjTjYjej[jvfNjsf9jta}n%bIfhay"
+        }
+      },
+      "LocationType": "Remote",
+      "MediaType": "Video",
+      "ChannelType": "TV"
+    },
+    {
+      "Name": "Harbor Test One",
+      "ServerId": "f509df84f9ea447da68868a9fa6964c2",
+      "Id": "8257e7e68de2a0b6ab2f9d5837674226",
+      "ChannelId": null,
+      "Number": "5",
+      "ChannelNumber": "5",
+      "IsFolder": false,
+      "Type": "TvChannel",
+      "ImageTags": {
+        "Primary": "85ac4a8c7672f47cce84e66b5defe62c"
+      },
+      "ImageBlurHashes": {
+        "Primary": {
+          "85ac4a8c7672f47cce84e66b5defe62c": "e1F^%Sak[SG5Nw$PJC2WFqSh#-AU;%5=WV$6oI$5n,jZJ*[t2Wslsp"
+        }
+      },
+      "LocationType": "Remote",
+      "MediaType": "Video",
+      "ChannelType": "TV"
+    },
+    {
+      "Name": "Meadow Test Radio",
+      "ServerId": "f509df84f9ea447da68868a9fa6964c2",
+      "Id": "2ba279fd1349e1be62846298d5eb757f",
+      "ChannelId": null,
+      "Number": "9",
+      "ChannelNumber": "9",
+      "IsFolder": false,
+      "Type": "TvChannel",
+      "ImageTags": {},
+      "ImageBlurHashes": {},
+      "LocationType": "Remote",
+      "MediaType": "Video",
+      "ChannelType": "TV"
+    }
+  ],
+  "TotalRecordCount": 3,
+  "StartIndex": 0
+}

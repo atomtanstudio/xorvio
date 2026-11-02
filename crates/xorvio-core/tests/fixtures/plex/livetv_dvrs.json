@@ -1,0 +1,38 @@
+{
+  "MediaContainer": {
+    "size": 1,
+    "Dvr": [
+      {
+        "key": "2",
+        "uuid": "4f1c2a90-7d3e-4b52-9a61-0c8e5d2b7f13",
+        "language": "eng",
+        "lineupTitle": "Test Guide",
+        "lineup": "lineup://tv.plex.providers.epg.xmltv/data/livetv/guide.xml#Test%20Guide",
+        "country": "gbr",
+        "refreshedAt": 1793454568,
+        "epgIdentifier": "tv.plex.providers.epg.xmltv:2",
+        "Device": [
+          {
+            "parentID": 2,
+            "key": "1",
+            "uuid": "device://tv.plex.grabbers.hdhomerun/10A0B0C0",
+            "uri": "http://192.168.1.30:5004",
+            "protocol": "livetv",
+            "status": "alive",
+            "state": "enabled",
+            "make": "Silicondust",
+            "model": "Test tuner",
+            "modelNumber": "HDTC-2US",
+            "title": "Test Guide",
+            "tuners": "2",
+            "ChannelMapping": [
+              { "channelKey": "2", "deviceIdentifier": "2", "enabled": "1", "lineupIdentifier": "2" },
+              { "channelKey": "5.1", "deviceIdentifier": "5.1", "enabled": "1", "lineupIdentifier": "5.1" },
+              { "channelKey": "9", "deviceIdentifier": "9", "enabled": "0", "lineupIdentifier": "9" }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

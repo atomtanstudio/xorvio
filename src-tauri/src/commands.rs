@@ -1584,19 +1584,13 @@ fn check_connections(state: &AppState, request: &ScheduleRequest) -> CmdResult<(
 
 /// The same for a recording that holds a stream from `from` to `to`.
 fn check_streams(state: &AppState, source_id: &str, from: Timestamp, to: Timestamp) -> CmdResult<()> {
-    let limit = state
-        .core
-        .list_sources()
-        .ok()
-        .and_then(|list| list.into_iter().find(|s| s.config.id == source_id))
-        .and_then(|s| s.status.max_connections);
-    let Some(limit) = limit else { return Ok(()) };
+    let Some((limit, server)) = stream_limit(state, source_id) else { return Ok(()) };
     // Saving from catch-up holds a stream now, whenever its programme aired.
     let overlapping = state.recorder.streams_in_use(source_id, from, to).unwrap_or(0) as i64;
     if overlapping + 1 > limit {
         return Err(format!(
-            "Your provider allows {limit} stream{} at a time, and {overlapping} other recording{} already overlap{} this one.",
-            if limit == 1 { "" } else { "s" },
+            "{}, and {overlapping} other recording{} already overlap{} this one.",
+            allowance(limit, server),
             if overlapping == 1 { "" } else { "s" },
             if overlapping == 1 { "s" } else { "" },
         ));
@@ -1604,10 +1598,23 @@ fn check_streams(state: &AppState, source_id: &str, from: Timestamp, to: Timesta
     Ok(())
 }
 
+/// How many streams a source allows at once, when it says, and whether
+/// that's a media server's tuners rather than a provider's connections.
+fn stream_limit(state: &AppState, source_id: &str) -> Option<(i64, bool)> {
+    let source = state.core.list_sources().ok()?.into_iter().find(|s| s.config.id == source_id)?;
+    Some((source.status.max_connections?, source.config.kind.is_media_server()))
+}
+
+/// "Your provider allows 2 streams at a time", or a server's "Your server has 2 tuners".
+fn allowance(limit: i64, server: bool) -> String {
+    let plural = if limit == 1 { "" } else { "s" };
+    if server { format!("Your server has {limit} tuner{plural}") } else { format!("Your provider allows {limit} stream{plural} at a time") }
+}
+
 /// What to say when one more stream from a source would go over its
-/// provider's limit, with `watching` streams of it playing and `recording`
-/// being recorded; nothing when it fits or there's no limit.
-fn connections_warning(limit: Option<i64>, watching: i64, recording: i64) -> Option<String> {
+/// provider's limit (or its server's tuners), with `watching` streams of it
+/// playing and `recording` being recorded; nothing when it fits or there's no limit.
+fn connections_warning(limit: Option<i64>, server: bool, watching: i64, recording: i64) -> Option<String> {
     let limit = limit.filter(|l| *l > 0)?;
     let in_use = watching + recording;
     if in_use < limit {
@@ -1619,11 +1626,7 @@ fn connections_warning(limit: Option<i64>, watching: i64, recording: i64) -> Opt
         .map(|(n, doing)| format!("{n} {doing}"))
         .collect::<Vec<_>>()
         .join(" and ");
-    Some(format!(
-        "Your provider allows {limit} stream{} at a time, and {in_use} {} already in use: {what}.",
-        if limit == 1 { "" } else { "s" },
-        if in_use == 1 { "is" } else { "are" },
-    ))
+    Some(format!("{}, and {in_use} {} already in use: {what}.", allowance(limit, server), if in_use == 1 { "is" } else { "are" }))
 }
 
 /// Before Multiview adds a tile: the warning when it would go over the
@@ -1631,12 +1634,7 @@ fn connections_warning(limit: Option<i64>, watching: i64, recording: i64) -> Opt
 /// interface has playing and the recordings running on it now.
 #[tauri::command]
 pub async fn connection_warning(state: State<'_, AppState>, source_id: String, watching: i64) -> CmdResult<Option<String>> {
-    let limit = state
-        .core
-        .list_sources()
-        .ok()
-        .and_then(|list| list.into_iter().find(|s| s.config.id == source_id))
-        .and_then(|s| s.status.max_connections);
+    let (limit, server) = stream_limit(&state, &source_id).map_or((None, false), |(limit, server)| (Some(limit), server));
     let recording = state
         .recorder
         .list()
@@ -1644,7 +1642,7 @@ pub async fn connection_warning(state: State<'_, AppState>, source_id: String, w
         .into_iter()
         .filter(|r| r.source_id == source_id && r.status == RecordingStatus::Recording)
         .count() as i64;
-    Ok(connections_warning(limit, watching.max(0), recording))
+    Ok(connections_warning(limit, server, watching.max(0), recording))
 }
 
 #[tauri::command]
@@ -2165,21 +2163,27 @@ mod tests {
 
     #[test]
     fn warns_only_past_the_limit() {
-        assert_eq!(connections_warning(None, 3, 1), None);
-        assert_eq!(connections_warning(Some(0), 3, 1), None);
-        assert_eq!(connections_warning(Some(2), 1, 0), None);
+        assert_eq!(connections_warning(None, false, 3, 1), None);
+        assert_eq!(connections_warning(Some(0), false, 3, 1), None);
+        assert_eq!(connections_warning(Some(2), false, 1, 0), None);
         assert_eq!(
-            connections_warning(Some(2), 1, 1).as_deref(),
+            connections_warning(Some(2), false, 1, 1).as_deref(),
             Some("Your provider allows 2 streams at a time, and 2 are already in use: 1 playing and 1 recording.")
         );
         assert_eq!(
-            connections_warning(Some(1), 1, 0).as_deref(),
+            connections_warning(Some(1), false, 1, 0).as_deref(),
             Some("Your provider allows 1 stream at a time, and 1 is already in use: 1 playing.")
         );
         assert_eq!(
-            connections_warning(Some(3), 0, 4).as_deref(),
+            connections_warning(Some(3), false, 0, 4).as_deref(),
             Some("Your provider allows 3 streams at a time, and 4 are already in use: 4 recording.")
         );
+        // A media server's limit is its tuners.
+        assert_eq!(
+            connections_warning(Some(2), true, 1, 1).as_deref(),
+            Some("Your server has 2 tuners, and 2 are already in use: 1 playing and 1 recording.")
+        );
+        assert_eq!(connections_warning(Some(2), true, 1, 0), None);
     }
 }
 

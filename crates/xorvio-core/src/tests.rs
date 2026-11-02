@@ -17,6 +17,7 @@ use crate::{BrowseQuery, BrowseSort, ChannelFilter, Core, MemorySecrets, now};
 mod home;
 mod profiles;
 mod titles;
+mod server_live_tv;
 mod source_controls;
 
 // MARK: Test server
