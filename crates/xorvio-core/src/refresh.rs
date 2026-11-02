@@ -20,7 +20,7 @@ use xorvio_model::{
 
 use crate::error::{SourceError, describe};
 use crate::http::Downloaded;
-use crate::snapshot::{CatalogSnapshot, EMPTY_LIST_THRESHOLD};
+use crate::snapshot::{CatalogSnapshot, EMPTY_LIST_THRESHOLD, Listings};
 use crate::sources::xmltv::{ChannelName, XmltvParser};
 use crate::sources::xtream::{XtreamClient, XtreamCredentials};
 use crate::sources::{demo, m3u, phase, xtream};
@@ -143,7 +143,8 @@ impl Core {
             }
         };
         match fetched {
-            Ok(snapshot) => {
+            Ok(mut snapshot) => {
+                let listings = snapshot.listings.take();
                 report(phase::ORGANIZING);
                 match self.store_snapshot(&config, snapshot).await {
                     Ok(snapshot) => {
@@ -158,8 +159,15 @@ impl Core {
                             tracing::warn!("what Trakt says was watched could not be applied: {error}");
                         }
                         report(phase::LOADING_GUIDE);
-                        let guide = self.import_guide(&config, &secrets, snapshot.discovered_epg_url.as_deref(), now, &stop).await;
-                        record_guide(&mut status, guide, now, &hidden);
+                        match listings {
+                            // A media server's guide came with its channels.
+                            Some(listings) => self.record_listings(id, &mut status, listings, now).await,
+                            None => {
+                                let guide =
+                                    self.import_guide(&config, &secrets, snapshot.discovered_epg_url.as_deref(), now, &stop).await;
+                                record_guide(&mut status, guide, now, &hidden);
+                            }
+                        }
                         if let Err(error) = self.reconcile_watchlist(id, now) {
                             tracing::warn!("saved programmes could not follow the new guide: {error}");
                         }
@@ -202,6 +210,23 @@ impl Core {
         let mut status = self.catalog.status(id)?.unwrap_or_default();
         let secrets = self.load_secrets(id)?;
         let hidden = redact::secret_values(&secrets);
+        // A media server's guide is read from the server, for the channels it has now.
+        if config.kind.is_media_server() {
+            let fetched = match stop.unless_stopped(self.fetch_server_listings(&config, &secrets)).await {
+                Some(fetched) => fetched,
+                None => return Ok(self.catalog.status(id)?.unwrap_or_default()),
+            };
+            match fetched {
+                Ok(Some(listings)) => self.record_listings(id, &mut status, listings, now).await,
+                Ok(None) => {}
+                Err(error) => status.guide_last_error = Some(redact::redact(&error.to_string(), &hidden)),
+            }
+            if let Err(error) = self.reconcile_watchlist(id, now) {
+                tracing::warn!("saved programmes could not follow the new guide: {error}");
+            }
+            self.catalog.save_status(id, &status)?;
+            return Ok(status);
+        }
         // A playlist names its guide in its header, which isn't kept (it can
         // carry a login), so it's read again when no guide link is set.
         let discovered = match config.kind {
@@ -373,7 +398,8 @@ impl Core {
             SourceKind::Plex | SourceKind::Jellyfin | SourceKind::Emby => {
                 let session = crate::servers::session_for(config, secrets, &self.device_id())?;
                 // Refused here means the token went, not that a password was wrong.
-                crate::sources::server::fetch_catalog(&self.http, &session, &config.id, report).await.map_err(|error| match error {
+                let live_tv = config.include_live_tv;
+                crate::sources::server::fetch_catalog(&self.http, &session, &config.id, live_tv, report).await.map_err(|error| match error {
                     SourceError::AuthenticationFailed => SourceError::SignedOut,
                     other => other,
                 })?
@@ -452,6 +478,45 @@ impl Core {
         status.account_expires = snapshot.account_expires;
         status.server_time_zone = snapshot.server_time_zone.clone();
         Ok(())
+    }
+
+    /// A media server's live channels' guide, read afresh; `None` when it
+    /// has no live TV, or it isn't included.
+    async fn fetch_server_listings(
+        &self,
+        config: &SourceConfig,
+        secrets: &SourceSecrets,
+    ) -> std::result::Result<Option<Listings>, SourceError> {
+        if !config.include_live_tv {
+            return Ok(None);
+        }
+        let session = crate::servers::session_for(config, secrets, &self.device_id())?;
+        crate::sources::server::fetch_listings(&self.http, &session, &config.id).await
+    }
+
+    /// Imports the guide a media server sent with its channels as the
+    /// source's own, and notes it in the status. A server without channels
+    /// (or with live TV left out) has its guide emptied.
+    async fn record_listings(&self, source_id: &str, status: &mut SourceStatus, listings: Listings, now: Timestamp) {
+        let catalog = self.catalog.clone();
+        let guide_id = source_id.to_string();
+        let empty = listings.channels.is_empty();
+        let imported = match self.guide_links() {
+            Ok(links) => tokio::task::spawn_blocking(move || {
+                catalog.import_guide(&guide_id, &links, |import| {
+                    import.insert_channel_names(&listings.channels)?;
+                    import.insert_programs(&listings.programs)
+                })
+            })
+            .await
+            .map_err(anyhow::Error::from)
+            .and_then(|count| count),
+            Err(error) => Err(error),
+        };
+        record_guide(status, imported.map(Some), now, &[]);
+        if empty {
+            status.capabilities.guide = false;
+        }
     }
 
     /// Downloads and imports a guide. `Ok(None)` means the source has no

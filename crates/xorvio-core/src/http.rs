@@ -28,6 +28,9 @@ const DEFAULT_USER_AGENT: &str = concat!("Xorvio/", env!("CARGO_PKG_VERSION"));
 #[derive(Clone)]
 pub(crate) struct Http {
     client: reqwest::Client,
+    /// For live streams, which run for as long as they're read: no limit on
+    /// the whole request, only on connecting (and each wait, see [`Http::open_live`]).
+    live: reqwest::Client,
 }
 
 impl Http {
@@ -37,7 +40,18 @@ impl Http {
             .connect_timeout(IDLE_TIMEOUT)
             .timeout(TOTAL_TIMEOUT)
             .build()?;
-        Ok(Self { client })
+        let live = reqwest::Client::builder().user_agent(DEFAULT_USER_AGENT).connect_timeout(IDLE_TIMEOUT).build()?;
+        Ok(Self { client, live })
+    }
+
+    /// A live stream's reply, once its status says it's coming. The caller
+    /// reads the body, bounding each wait for more itself.
+    pub async fn open_live(&self, url: &str, headers: &[(String, String)]) -> Result<reqwest::Response, SourceError> {
+        let mut request = self.live.get(url);
+        for (name, value) in headers {
+            request = request.header(name.as_str(), value.as_str());
+        }
+        self.dispatch(request).await.map_err(Failure::into_error)
     }
 
     /// The whole reply as bytes, retried once after a dropped connection or a
@@ -240,7 +254,12 @@ impl<'a> ApiCall<'a> {
 
     pub fn put(url: &'a str, headers: &'a [(String, String)]) -> Self {
         Self { method: reqwest::Method::PUT, url, headers, json: None }
-    }}
+    }
+
+    pub fn delete(url: &'a str, headers: &'a [(String, String)]) -> Self {
+        Self { method: reqwest::Method::DELETE, url, headers, json: None }
+    }
+}
 
 /// What [`Http::api`] got back.
 pub(crate) struct ApiReply {

@@ -39,6 +39,7 @@ impl Core {
             created_at: now(),
             sort_index: self.next_sort_index(),
             guide_offset_minutes: 0,
+            include_live_tv: true,
         };
         self.save_configs(|configs| configs.push(config.clone()))?;
         Ok(config)

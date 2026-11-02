@@ -329,6 +329,7 @@ if (typeof location !== "undefined" && new URLSearchParams(location.search).has(
       createdAt: Math.floor(Date.now() / 1000),
       sortIndex: 1,
       guideOffsetMinutes: 0,
+      includeLiveTv: true,
     },
     status: emptyStatus(),
     refreshing: false,
@@ -1213,7 +1214,7 @@ const plainStream: ResolvedStream = {
 
 export function createMockBackend(): Backend {
   const demoSource: SourceSummary = {
-    config: { id: S, name: "Demo Library", kind: "demo", displayHost: null, filePath: null, isPaused: false, liveFormat: "hls", refreshInterval: "manual", userAgent: null, createdAt: now() - 30 * day, sortIndex: 0, guideOffsetMinutes: 0 },
+    config: { id: S, name: "Demo Library", kind: "demo", displayHost: null, filePath: null, isPaused: false, liveFormat: "hls", refreshInterval: "manual", userAgent: null, createdAt: now() - 30 * day, sortIndex: 0, guideOffsetMinutes: 0, includeLiveTv: true },
     status: {
       lastSuccess: now() - 3600,
       lastAttempt: now() - 3600,
@@ -1293,6 +1294,7 @@ export function createMockBackend(): Backend {
         createdAt: now(),
         sortIndex: folderSources.length + 1,
         guideOffsetMinutes: 0,
+        includeLiveTv: true,
       };
       folderSources.push({ config, status: emptyStatus(), refreshing: false });
       // The demo's last few films move into the first folder added, so its row on Home has something to show.
