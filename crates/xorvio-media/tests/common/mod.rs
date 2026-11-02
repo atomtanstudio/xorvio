@@ -5,7 +5,7 @@
 
 use std::path::{Path, PathBuf};
 use std::process::Command;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::Duration;
 
@@ -16,6 +16,7 @@ use axum::http::StatusCode;
 use axum::middleware::{self, Next};
 use axum::response::{IntoResponse, Response};
 use axum::routing::get;
+use axum::serve::ListenerExt;
 use bytes::Bytes;
 use tower_http::services::ServeDir;
 use xorvio_media::Tools;
@@ -196,14 +197,61 @@ async fn require_headers(request: Request, next: Next) -> Response {
 /// Serves `dir` under `/files/` (with ranges) and `extra` routes, all behind
 /// the header check. Returns the server's origin.
 pub async fn serve(dir: &Path, extra: Router) -> String {
-    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
-    let origin = format!("http://{}", listener.local_addr().unwrap());
-    let app = Router::new()
-        .nest_service("/files", ServeDir::new(dir))
-        .merge(extra)
-        .layer(middleware::from_fn(require_headers));
+    let (listener, origin) = listen().await;
+    let app = app(dir, extra);
     tokio::spawn(async move { axum::serve(listener, app).await.unwrap() });
     origin
+}
+
+/// `serve`, telling `sockets` of each connection.
+pub async fn serve_watched(dir: &Path, extra: Router, sockets: Sockets) -> String {
+    let (listener, origin) = listen().await;
+    let listener = listener.tap_io(move |stream| sockets.accepted(stream));
+    let app = app(dir, extra);
+    tokio::spawn(async move { axum::serve(listener, app).await.unwrap() });
+    origin
+}
+
+async fn listen() -> (tokio::net::TcpListener, String) {
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let origin = format!("http://{}", listener.local_addr().unwrap());
+    (listener, origin)
+}
+
+fn app(dir: &Path, extra: Router) -> Router {
+    Router::new()
+        .nest_service("/files", ServeDir::new(dir))
+        .merge(extra)
+        .layer(middleware::from_fn(require_headers))
+}
+
+/// Another handle on each connection a test server accepts, to ask whether
+/// the client has closed it. The server itself only finds out when it next
+/// writes, which a busy machine can put off for a while.
+#[derive(Clone, Default)]
+pub struct Sockets(Arc<Mutex<Vec<std::net::TcpStream>>>);
+
+impl Sockets {
+    pub fn accepted(&self, stream: &tokio::net::TcpStream) {
+        #[cfg(unix)]
+        let handle = std::os::fd::AsFd::as_fd(stream).try_clone_to_owned();
+        #[cfg(windows)]
+        let handle = std::os::windows::io::AsSocket::as_socket(stream).try_clone_to_owned();
+        let socket = std::net::TcpStream::from(handle.unwrap());
+        socket.set_nonblocking(true).unwrap();
+        self.0.lock().unwrap().push(socket);
+    }
+
+    /// The connections the client still has open.
+    pub fn connected(&self) -> usize {
+        let mut sockets = self.0.lock().unwrap();
+        // Nothing to read, or a request not read yet: open. Its end, or a reset: closed.
+        sockets.retain(|socket| match socket.peek(&mut [0]) {
+            Ok(read) => read > 0,
+            Err(error) => error.kind() == std::io::ErrorKind::WouldBlock,
+        });
+        sockets.len()
+    }
 }
 
 /// A recorded stream played out at its real pace, as a live channel sends it.

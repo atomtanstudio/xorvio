@@ -51,8 +51,12 @@ fn encoding(kind: &str) -> &'static [&'static str] {
 struct Live {
     ffmpeg: PathBuf,
     requests: Arc<AtomicUsize>,
+    /// Requests the server is still answering.
     open: Arc<AtomicUsize>,
+    /// The most connections the client had open at once, when served with
+    /// `serve_watched` and these `sockets`.
     most_open: Arc<AtomicUsize>,
+    sockets: Sockets,
 }
 
 impl Live {
@@ -62,6 +66,7 @@ impl Live {
             requests: Arc::default(),
             open: Arc::default(),
             most_open: Arc::default(),
+            sockets: Sockets::default(),
         }
     }
 
@@ -92,8 +97,8 @@ struct LiveQuery {
 
 async fn live(State(live): State<Live>, UrlPath(kind): UrlPath<String>, Query(query): Query<LiveQuery>) -> Response {
     live.requests.fetch_add(1, Ordering::SeqCst);
-    let now = live.open.fetch_add(1, Ordering::SeqCst) + 1;
-    live.most_open.fetch_max(now, Ordering::SeqCst);
+    live.open.fetch_add(1, Ordering::SeqCst);
+    live.most_open.fetch_max(live.sockets.connected(), Ordering::SeqCst);
     let open = Open(live.open.clone());
     let mut args: Vec<&str> = vec!["-hide_banner", "-loglevel", "error", "-re"];
     args.extend(["-f", "lavfi", "-i", "testsrc2=size=320x240:rate=25"]);
@@ -493,7 +498,7 @@ async fn pausing_a_channel_playing_directly_moves_it_to_a_buffer() {
     }
     let live = Live::new(&tools);
     let dir = tempfile::tempdir().unwrap();
-    let origin = serve(dir.path(), live.routes()).await;
+    let origin = serve_watched(dir.path(), live.routes(), live.sockets.clone()).await;
     let gateway = Gateway::start(Some(tools.clone())).await.unwrap();
     let source = format!("{origin}/live/h264?token={KEY}");
     let hint = PlayHint { live_format: Some(LiveStreamFormat::Mpegts), ..PlayHint::default() };

@@ -8,7 +8,7 @@ mod common;
 use std::path::Path;
 use std::process::Command;
 use std::sync::atomic::{AtomicUsize, Ordering};
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 use axum::Router;
@@ -190,31 +190,7 @@ struct Counter {
     /// Requests the server is still answering, for waiting until they're done.
     open: Arc<AtomicUsize>,
     most: Arc<AtomicUsize>,
-    /// Another handle on each connection's socket, to ask whether the client has closed it.
-    sockets: Arc<Mutex<Vec<std::net::TcpStream>>>,
-}
-
-impl Counter {
-    fn accepted(&self, stream: &tokio::net::TcpStream) {
-        #[cfg(unix)]
-        let handle = std::os::fd::AsFd::as_fd(stream).try_clone_to_owned();
-        #[cfg(windows)]
-        let handle = std::os::windows::io::AsSocket::as_socket(stream).try_clone_to_owned();
-        let socket = std::net::TcpStream::from(handle.unwrap());
-        socket.set_nonblocking(true).unwrap();
-        self.sockets.lock().unwrap().push(socket);
-    }
-
-    /// The connections the client still has open.
-    fn connected(&self) -> usize {
-        let mut sockets = self.sockets.lock().unwrap();
-        // Nothing to read, or a request not read yet: open. Its end, or a reset: closed.
-        sockets.retain(|socket| match socket.peek(&mut [0]) {
-            Ok(read) => read > 0,
-            Err(error) => error.kind() == std::io::ErrorKind::WouldBlock,
-        });
-        sockets.len()
-    }
+    sockets: Sockets,
 }
 
 struct Closing(Counter);
@@ -228,7 +204,7 @@ impl Drop for Closing {
 async fn count(State(counter): State<Counter>, request: Request, next: Next) -> Response {
     counter.total.fetch_add(1, Ordering::SeqCst);
     counter.open.fetch_add(1, Ordering::SeqCst);
-    counter.most.fetch_max(counter.connected(), Ordering::SeqCst);
+    counter.most.fetch_max(counter.sockets.connected(), Ordering::SeqCst);
     let closing = Closing(counter.clone());
     let response = next.run(request).await;
     let (parts, body) = response.into_parts();
@@ -242,7 +218,7 @@ async fn count(State(counter): State<Counter>, request: Request, next: Next) -> 
 async fn provider(dir: &Path, counter: Counter) -> String {
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
     let origin = format!("http://{}", listener.local_addr().unwrap());
-    let watching = counter.clone();
+    let watching = counter.sockets.clone();
     let listener = listener.tap_io(move |stream| watching.accepted(stream));
     let app = Router::new()
         .nest_service("/movie", ServeDir::new(dir))
@@ -338,11 +314,17 @@ async fn remote_titles_never_cost_a_connection_the_provider_doesnt_allow() {
     let stream = gateway.prepare(film, PlayHint::default()).await.unwrap();
     let started = start_making(&gateway, &stream.url, "src|movie|3", &counter).await;
     gateway.external(&stream.url, "Film").unwrap();
-    let stopped = settled(&counter).await;
-    assert!((stopped - started) * 2 < full, "they stopped rather than finishing: {} of {full} requests", stopped - started);
     match once_let_go(&gateway, &stream.url, "src|movie|3").await {
         Thumbnails::Unavailable { reason } => assert!(reason.contains("Something else is playing"), "{reason}"),
         other => panic!("expected none while another player has it, got {other:?}"),
+    }
+    // Counted once they've let go: a quiet moment alone could fall between
+    // a slow machine starting ffmpeg and its first request.
+    let stopped = settled(&counter).await;
+    assert!((stopped - started) * 2 < full, "they stopped rather than finishing: {} of {full} requests", stopped - started);
+    match gateway.thumbnails(&stream.url, "src|movie|3", allowed()) {
+        Thumbnails::Unavailable { reason } => assert!(reason.contains("Something else is playing"), "{reason}"),
+        other => panic!("asking again shouldn't start them, got {other:?}"),
     }
     assert_eq!(settled(&counter).await, stopped);
 }
