@@ -32,6 +32,7 @@ export type Command =
   | "go.search"
   | "go.back"
   | "playback.playPause"
+  | "playback.pauseAll"
   | "playback.stop"
   | "playback.skipBack"
   | "playback.skipForward"
@@ -81,6 +82,7 @@ const SHORTCUTS: Shortcut[] = isMac
       { command: "go.search", key: "f", code: "KeyF", primary: true },
       { command: "go.back", key: "[", code: "BracketLeft", primary: true },
       { command: "playback.playPause", key: " ", code: "Space", alt: true, editing: true },
+      { command: "playback.pauseAll", key: " ", code: "Space", alt: true, shift: true, editing: true },
       { command: "playback.skipBack", key: "arrowleft", code: "ArrowLeft", primary: true, editing: true },
       { command: "playback.skipForward", key: "arrowright", code: "ArrowRight", primary: true, editing: true },
       { command: "playback.goLive", key: "l", code: "KeyL", primary: true, shift: true },

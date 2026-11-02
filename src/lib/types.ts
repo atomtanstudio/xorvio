@@ -606,6 +606,8 @@ export interface MenuState {
     channel: boolean;
     lastChannel: boolean;
     multiview: boolean;
+    /** Every Multiview tile is paused, so Pause All plays them. */
+    allPaused: boolean;
     poppedOut: boolean;
   };
 }

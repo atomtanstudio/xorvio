@@ -2,14 +2,16 @@
 // their controls, and the channel picker for adding and swapping. Where tiles
 // go and who's heard are multiviewRules; the tiles' streams are multiviewStore.
 
-import { ArrowLeft, ArrowLeftRight, ChevronLeft, ChevronRight, CircleDot, CircleStop, Ellipsis, Grid2x2Plus, Maximize, Maximize2, Minimize, Minimize2, Pause, Play, Plus, Search, Star, Tv, Volume2, VolumeX, X } from "lucide-react";
+import { ArrowLeft, ArrowLeftRight, ChevronLeft, ChevronRight, CircleDot, CircleStop, Ellipsis, Grid2x2Plus, Maximize, Maximize2, Minimize, Minimize2, Pause, Play, Plus, RotateCcw, RotateCw, Search, Star, Tv, Volume2, VolumeX, X } from "lucide-react";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { ChannelLogo } from "../components/Artwork";
 import { openMenu, type MenuEntry } from "../components/Menu";
 import { Sheet } from "../components/Sheet";
 import { cancelOrStopRecording, channelItem, recordChannelNow } from "../lib/actions";
+import { shortcutLabel } from "../lib/commands";
 import { api } from "../lib/api";
-import { nowSeconds } from "../lib/format";
+import { nowSeconds, playerClock } from "../lib/format";
+import { isMac } from "../lib/platform";
 import { useApp } from "../lib/store";
 import type { Channel, Program, Recording } from "../lib/types";
 import { sameChannel, versionIds } from "../lib/versions";
@@ -20,23 +22,35 @@ import {
   choose,
   closeMultiview,
   failTile,
+  goLiveTile,
+  heardTile,
   listen,
   listenNext,
   moveTile,
   picked,
+  registerTileVideo,
   removeTile,
+  reportBehind,
   retryTile,
-  setPaused,
+  setTilePaused,
+  skipTile,
+  tileVideo,
+  toggleAllPaused,
   toggleExpand,
+  toggleHeardPaused,
   useMultiview,
   watchInPlayer,
   type Picker,
   type Tile,
 } from "./multiviewStore";
-import { fitGrid, layoutFor, MAX_TILES, tileForKey, type TilePlace } from "./multiviewRules";
+import { allPaused, fitGrid, layoutFor, MAX_TILES, resumeAt, secondsBehind, tileForKey, type TilePlace } from "./multiviewRules";
+import { bufferRange, LIVE_EDGE } from "./playerRules";
 
 /** Between tiles, in points. */
 const GAP = 6;
+
+/** Pause All's key, as tooltips show it. */
+const PAUSE_ALL_KEY = isMac ? "⇧Space" : "Shift+Space";
 
 export function MultiviewHost() {
   const open = useMultiview((s) => s.open);
@@ -56,7 +70,6 @@ function Multiview() {
   const tiles = useMultiview((s) => s.tiles);
   const audio = useMultiview((s) => s.audio);
   const expanded = useMultiview((s) => s.expanded);
-  const paused = useMultiview((s) => s.paused);
   const recordings = useApp((s) => s.recordings);
   const stage = useRef<HTMLDivElement>(null);
   const space = useSize(stage);
@@ -73,21 +86,26 @@ function Multiview() {
   }, []);
   const toggleFullscreen = useCallback(async () => setFullscreen(await togglePlayerFullscreen()), []);
 
-  // Keys, ahead of the rest of the window's: 1–4 to hear a tile, Esc to go back.
+  // Keys, ahead of the rest of the window's: 1–4 to hear a tile, Esc to go
+  // back. Play/pause and skipping act on the tile heard, as the player's
+  // keys do on its channel; ⇧Space pauses or plays them all.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
       // A sheet or menu over Multiview has the keys.
       if (document.querySelector(".sheet-backdrop, .menu")) return;
-      const { tiles, expanded, paused } = useMultiview.getState();
+      const { tiles, expanded } = useMultiview.getState();
       const plain = !e.metaKey && !e.ctrlKey && !e.altKey;
       const tile = plain ? tileForKey(tiles.map((t) => t.id), e.key) : null;
+      const heard = heardTile();
       if (tile) listen(tile);
       // ⌘[ is Go › Back in the menu bar, which does the same.
       else if (e.key === "Escape") {
         if (expanded) toggleExpand(expanded);
         else closeMultiview();
-      } else if (plain && (e.key === " " || e.key === "k")) setPaused(!paused);
+      } else if (plain && e.shiftKey && e.key === " ") toggleAllPaused();
+      else if (plain && !e.shiftKey && (e.key === " " || e.key === "k")) toggleHeardPaused();
+      else if (plain && heard && (e.key === "ArrowLeft" || e.key === "ArrowRight")) skipTile(heard.id, (e.key === "ArrowLeft" ? -1 : 1) * (e.shiftKey ? 60 : 10));
       else if (plain && e.key === "f") toggleFullscreen();
       // Last Channel is the player's; here it would end Multiview, so it does nothing.
       else if (!(plain && e.key.toLowerCase() === "l")) return;
@@ -100,18 +118,13 @@ function Multiview() {
   }, [poke, toggleFullscreen]);
 
   // Now Playing and the media keys follow the tile heard; next and previous move the sound along.
-  const videos = useRef(new Map<string, HTMLVideoElement>());
-  const onVideo = useCallback((id: string, el: HTMLVideoElement | null) => {
-    if (el) videos.current.set(id, el);
-    else videos.current.delete(id);
-  }, []);
   const heard = tiles.find((t) => t.id === audio) ?? null;
   const heardChannel = heard?.channel;
   const item = useMemo(() => (heardChannel ? channelItem(heardChannel) : null), [heardChannel]);
   const heardVideo = useMemo(
     () => ({
       get current() {
-        return videos.current.get(audio ?? "") ?? null;
+        return tileVideo(audio);
       },
     }),
     [audio],
@@ -121,18 +134,19 @@ function Multiview() {
     item,
     video: heardVideo,
     isLive: true,
-    paused,
+    paused: !!heard?.paused,
     position: 0,
     duration: 0,
     speed: 1,
     onSeek: () => {},
     onNext: several ? () => listenNext(1) : null,
     onPrevious: several ? () => listenNext(-1) : null,
-    onPlay: () => setPaused(false),
-    onPause: () => setPaused(true),
+    onPlay: () => audio && setTilePaused(audio, false),
+    onPause: () => audio && setTilePaused(audio, true),
   });
 
-  const shown = active || paused;
+  const everyPaused = allPaused(tiles);
+  const shown = active || everyPaused;
   const hint = expanded ? `Esc shows all ${tiles.length} again` : several ? `Click a tile or press 1–${tiles.length} to hear it` : "Add a channel to watch two at once";
 
   return (
@@ -149,8 +163,8 @@ function Multiview() {
         <button className="btn btn-glass btn-small" disabled={tiles.length >= MAX_TILES} onClick={() => choose({ purpose: "add" })} title={tiles.length >= MAX_TILES ? "Multiview shows up to four channels" : undefined}>
           <Plus size={15} /> Add Channel
         </button>
-        <button className="player-round glass" onClick={() => setPaused(!paused)} aria-label={paused ? "Play all" : "Pause all"}>
-          {paused ? <Play size={16} fill="currentColor" strokeWidth={0} /> : <Pause size={16} fill="currentColor" strokeWidth={0} />}
+        <button className="player-round glass" onClick={toggleAllPaused} aria-label={everyPaused ? "Play all" : "Pause all"} title={`${everyPaused ? "Play all" : "Pause all"} (${PAUSE_ALL_KEY})`}>
+          {everyPaused ? <Play size={16} fill="currentColor" strokeWidth={0} /> : <Pause size={16} fill="currentColor" strokeWidth={0} />}
         </button>
         <button className="player-round glass" onClick={toggleFullscreen} aria-label="Full screen">
           {fullscreen ? <Minimize size={16} /> : <Maximize size={16} />}
@@ -170,10 +184,8 @@ function Multiview() {
                 place={places.get(tile.id)}
                 audible={tile.id === audio}
                 expanded={tile.id === expanded}
-                paused={paused}
                 programme={programmes ? (programmes.get(tile.channel.id) ?? null) : undefined}
                 recording={recordingOn(recordings, tile.channel)}
-                onVideo={onVideo}
               />
             ))}
           {layout.invite && (
@@ -204,24 +216,27 @@ interface TileProps {
   place: TilePlace | undefined;
   audible: boolean;
   expanded: boolean;
-  paused: boolean;
   /** What's on now: null when the guide has nothing, undefined until it's been asked. */
   programme: Program | null | undefined;
   recording: Recording | null;
-  onVideo: (id: string, el: HTMLVideoElement | null) => void;
 }
 
-function TileView({ tile, index, count, place, audible, expanded, paused, programme, recording, onVideo }: TileProps) {
+function TileView({ tile, index, count, place, audible, expanded, programme, recording }: TileProps) {
   const video = useRef<HTMLVideoElement>(null);
   const [buffering, setBuffering] = useState(true);
   const audibleNow = useRef(audible);
   audibleNow.current = audible;
-  const { id, stream, attempt, channel } = tile;
+  const { id, stream, attempt, channel, paused, behind } = tile;
+  const pausedNow = useRef(paused);
+  pausedNow.current = paused;
+  const holdNow = useRef(tile.holdAtStart);
+  holdNow.current = tile.holdAtStart;
+  const buffered = !!stream?.timeshift;
 
   useLayoutEffect(() => {
-    onVideo(id, video.current);
-    return () => onVideo(id, null);
-  }, [id, onVideo]);
+    registerTileVideo(id, video.current);
+    return () => registerTileVideo(id, null);
+  }, [id]);
 
   // Attach each stream, as the player does; one that fails is this tile's alone.
   useEffect(() => {
@@ -238,18 +253,30 @@ function TileView({ tile, index, count, place, audible, expanded, paused, progra
     }).then((handle) => {
       if (cancelled) return handle.destroy();
       engine = handle;
-      if (!useMultiview.getState().paused) el.play().catch((e: Error) => api.log("warn", `multiview play() refused: ${e.name} ${e.message}`).catch(() => {}));
+      if (!pausedNow.current) el.play().catch((e: Error) => api.log("warn", `multiview play() refused: ${e.name} ${e.message}`).catch(() => {}));
     });
     const onPlaying = () => (started = true);
     el.addEventListener("playing", onPlaying);
+    // Paused into a buffer: wait at its start, which is where the pause was
+    // (WebKit knows the buffer's range a little after its metadata).
+    const rangeEvents = ["loadedmetadata", "durationchange", "progress", "canplay"];
+    const toStart = () => {
+      const range = bufferRange(el);
+      if (!range) return;
+      el.currentTime = range.start;
+      rangeEvents.forEach((name) => el.removeEventListener(name, toStart));
+    };
+    if (stream.timeshift && holdNow.current) rangeEvents.forEach((name) => el.addEventListener(name, toStart));
+    // A paused tile needn't play, only load.
     const watchdog = setTimeout(() => {
-      if (cancelled || started || el.readyState >= el.HAVE_FUTURE_DATA) return;
+      if (cancelled || started || el.readyState >= (pausedNow.current ? el.HAVE_METADATA : el.HAVE_FUTURE_DATA)) return;
       failTile(id, attempt, "This channel didn't start. It may be offline.");
     }, 45_000);
     return () => {
       cancelled = true;
       clearTimeout(watchdog);
       el.removeEventListener("playing", onPlaying);
+      rangeEvents.forEach((name) => el.removeEventListener(name, toStart));
       engine?.destroy();
     };
   }, [id, stream, attempt]);
@@ -262,10 +289,30 @@ function TileView({ tile, index, count, place, audible, expanded, paused, progra
     const el = video.current;
     if (!el || !el.currentSrc) return;
     if (paused) el.pause();
-    else if (el.paused) el.play().catch(() => {});
+    else if (el.paused) {
+      // Paused for longer than its buffer keeps: carry on from the oldest part still kept.
+      const at = stream?.timeshift ? resumeAt(bufferRange(el), el.currentTime) : el.currentTime;
+      if (at !== el.currentTime) el.currentTime = at;
+      el.play().catch(() => {});
+    }
+    // The stream is read when it's played or paused, not when it changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [paused]);
 
+  // How far behind live it plays from its buffer: growing while it's paused.
+  useEffect(() => {
+    if (!stream?.timeshift) return;
+    const measure = () => {
+      const el = video.current;
+      if (el) reportBehind(id, secondsBehind(bufferRange(el), el.currentTime));
+    };
+    measure();
+    const timer = setInterval(measure, 1000);
+    return () => clearInterval(timer);
+  }, [id, stream]);
+
   const menu = (e: React.MouseEvent, below = false) => openMenu(e, tileMenu(tile, { index, count, audible, expanded, programme, recording }), below);
+  const behindLive = buffered && behind >= LIVE_EDGE;
   const style: React.CSSProperties = place ? { gridColumn: `${place.column} / span ${place.span}`, gridRow: `${place.row} / span ${place.span}` } : { display: "none" };
   const stop = (e: React.SyntheticEvent) => e.stopPropagation();
 
@@ -311,6 +358,12 @@ function TileView({ tile, index, count, place, audible, expanded, paused, progra
             <Volume2 size={13} />
           </span>
         )}
+        {(paused || behindLive) && (
+          <span className="mv-behind-badge" title={behindLive ? `${playerClock(behind)} behind live` : "Paused"}>
+            {paused && <Pause size={10} fill="currentColor" strokeWidth={0} />}
+            {behindLive ? `−${playerClock(behind)}` : "Paused"}
+          </span>
+        )}
         {recording && (
           <span className="rec-badge active">
             <span className="dot" />
@@ -330,6 +383,14 @@ function TileView({ tile, index, count, place, audible, expanded, paused, progra
           </div>
         </div>
         <div className="mv-tile-actions" onClick={stop} onDoubleClick={stop}>
+          {(paused || buffered) && (
+            <button className="live-pill behind" onClick={() => goLiveTile(id)} title={audible ? `Back to live (${shortcutLabel("playback.goLive")})` : "Back to live"}>
+              Go Live
+            </button>
+          )}
+          <button className="player-round small glass" onClick={() => setTilePaused(id, !paused)} aria-label={paused ? "Play" : "Pause"} title={paused ? "Play" : "Pause, to carry on from here"}>
+            {paused ? <Play size={12} fill="currentColor" strokeWidth={0} /> : <Pause size={12} fill="currentColor" strokeWidth={0} />}
+          </button>
           <button className={`player-round small glass ${audible ? "on" : ""}`} onClick={() => listen(id)} aria-label={audible ? "You're hearing this one" : "Listen to this one"} title={audible ? "You're hearing this one" : `Listen to this one (${index + 1})`}>
             {audible ? <Volume2 size={13} /> : <VolumeX size={13} />}
           </button>
@@ -355,10 +416,21 @@ const icon = { size: 15, strokeWidth: 1.8 };
 
 /** A tile's "…" and right-click menu. */
 function tileMenu(tile: Tile, at: { index: number; count: number; audible: boolean; expanded: boolean; programme: Program | null | undefined; recording: Recording | null }): MenuEntry[] {
-  const { id, channel } = tile;
+  const { id, channel, paused } = tile;
   const { index, count, audible, expanded, programme, recording } = at;
+  const buffered = !!tile.stream?.timeshift;
   const items: MenuEntry[] = [{ heading: channel.name }];
   if (!audible) items.push({ label: "Listen to This One", icon: <Volume2 {...icon} />, shortcut: String(index + 1), onSelect: () => listen(id) });
+  // The keys act on the tile heard.
+  const key = (shortcut: string) => (audible ? shortcut : undefined);
+  items.push({ label: paused ? "Play" : "Pause", icon: paused ? <Play {...icon} /> : <Pause {...icon} />, shortcut: key("Space"), onSelect: () => setTilePaused(id, !paused) });
+  if (buffered)
+    items.push(
+      { label: "Skip Back 10 Seconds", icon: <RotateCcw {...icon} />, shortcut: key("←"), onSelect: () => skipTile(id, -10) },
+      { label: "Skip Forward 10 Seconds", icon: <RotateCw {...icon} />, shortcut: key("→"), onSelect: () => skipTile(id, 10) },
+    );
+  if (buffered || paused) items.push({ label: "Go Live", icon: <Tv {...icon} />, onSelect: () => goLiveTile(id) });
+  items.push({ separator: true });
   items.push(
     { label: expanded ? "Show All" : "Fill the View", icon: expanded ? <Minimize2 {...icon} /> : <Maximize2 {...icon} />, onSelect: () => toggleExpand(id) },
     { label: "Swap Channel…", icon: <ArrowLeftRight {...icon} />, onSelect: () => choose({ purpose: "swap", tileId: id }) },
