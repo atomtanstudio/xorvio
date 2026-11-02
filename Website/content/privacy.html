@@ -1,0 +1,195 @@
+<h1>Privacy policy</h1>
+<p class="lede">Xorvio keeps what you watch on your computer. Here's exactly what that means.</p>
+<p>Effective <time datetime="2026-11-01">November 1, 2026</time></p>
+
+<h2 id="at-a-glance">At a glance</h2>
+<ul>
+  <li><strong>No account.</strong> There's nothing to sign up for and nothing to sign in to.</li>
+  <li><strong>We collect no data from the app.</strong> No analytics, no crash reports, no tracking, no advertising, and no servers of ours that the app reports to. It doesn't even check for updates.</li>
+  <li><strong>Your things stay on your computer.</strong> Your sources, library, viewing progress, watchlist, recordings and settings are stored on your computer, not with us. If you turn on sync, they also go to a folder you choose.</li>
+  <li><strong>Logins go in your system's keychain.</strong> Passwords, playlist links, server tokens and keys are kept in the macOS Keychain, Windows Credential Manager or your Linux desktop's keyring.</li>
+  <li><strong>Xorvio connects to your sources and a few services.</strong> The services fill in details such as artwork, cast and trailers. Each one is listed below, with what it receives and how to turn it off where you can.</li>
+  <li><strong>Logs stay put.</strong> The diagnostic log leaves your computer only if you export it, and logins are removed first. Logins are masked in the console output too.</li>
+  <li><strong>You can check all of this.</strong> Xorvio is open source, so anyone can read the code that does what this page describes.</li>
+  <li><strong>This website is just as quiet.</strong> No cookies of our own, no analytics, no ads.</li>
+</ul>
+
+<h2 id="who-we-are">Who we are</h2>
+<p><a href="https://atomtan.studio">Atom Tan Studio</a> makes Xorvio and runs this website. Xorvio is free, open-source software for macOS, Windows and Linux. In this policy, “we” and “us” mean Atom Tan Studio, and “you” means anyone who uses the app or visits the site. This policy covers both.</p>
+<p>It describes Xorvio as we publish it. If you use a copy someone else has changed, it may behave differently.</p>
+<p>Questions about privacy go to <a href="mailto:privacy@xorvio.com">privacy@xorvio.com</a>.</p>
+
+<h2 id="what-we-collect">What we collect</h2>
+<p>From the app: nothing. Xorvio has no account system, no analytics, no crash reporting, no advertising and no tracking, and it never sends us anything. We can't see your sources, what you watch, when you watch it, or how you use the app.</p>
+<p>The only personal information we ever receive is what you choose to send us, such as an email to support. We use it to reply to you and to fix what you've reported, and for nothing else.</p>
+
+<h3>When you download Xorvio or report a bug</h3>
+<p>Xorvio's code, downloads and issue tracker are on <a href="{{github}}">GitHub</a>. GitHub sees your visits and downloads like any website, and gives project owners only overall figures, such as how many times each download was fetched. If you open an issue or comment on one, it's public, under your GitHub account. GitHub's <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement">privacy statement</a> covers what GitHub does.</p>
+
+<h2 id="on-your-computer">What stays on your computer</h2>
+<p>Everything Xorvio needs to work is kept on your computer, in its data folder:</p>
+<ul>
+  <li><strong>macOS:</strong> <code>~/Library/Application Support/com.xorvio.desktop</code></li>
+  <li><strong>Windows:</strong> <code>%APPDATA%\com.xorvio.desktop</code></li>
+  <li><strong>Linux:</strong> <code>~/.local/share/com.xorvio.desktop</code></li>
+</ul>
+<p>We never receive a copy. Inside it:</p>
+<ul>
+  <li><strong>Your sources and add-ons:</strong> their names and settings. Their links, server addresses, usernames, passwords and sign-in tokens aren't here. They're in your system's keychain, described below.</li>
+  <li><strong>The catalog:</strong> channels, films, series and guide listings from your sources, with details from the services below. Xorvio can rebuild it by refreshing.</li>
+  <li><strong>Your library:</strong> viewing progress, Continue Watching, viewing history, your watchlist and reminders, favorites and channel groups, renames, hidden and locked items, library profiles and Home layouts, and a scrambled form of your parental PIN, never the PIN itself.</li>
+  <li><strong>Recording schedules</strong> and the list of your recordings.</li>
+  <li><strong>Your settings.</strong></li>
+  <li><strong>Pictures Xorvio makes:</strong> frames from videos that have no artwork of their own, and the thumbnails shown when you scrub through a film. Thumbnails take up to 300 MB, and the oldest go first.</li>
+  <li><strong>Automatic backups,</strong> if you turn them on and don't choose another folder.</li>
+  <li><strong>Playlist files</strong> you drop onto Add a Source, kept until you remove the source.</li>
+</ul>
+
+<h3>Your keychain</h3>
+<p>Playlist and guide links, server addresses, Xtream usernames and passwords, media server tokens, add-on links, your TMDB key and your Trakt connection are kept in your system's keychain: the Keychain on a Mac, Windows Credential Manager on Windows, and the Secret Service on Linux, which GNOME Keyring or KWallet provides. They stay on this computer unless you put them in a backup sealed with a passphrase.</p>
+
+<h3>Recordings and temporary files</h3>
+<p>Recordings are saved in the folder you choose in Settings › Recording, or else in Movies › Xorvio on a Mac and Videos › Xorvio on Windows and Linux. They stay there until you delete them.</p>
+<p>When you pause or rewind live TV, the channel is kept in your system's temporary folder and deleted when you change channel. Subtitles for converted streams go there too. Settings › Storage › Clear Temporary Files… removes anything left over.</p>
+
+<h3>Your media folders</h3>
+<p>Xorvio reads the folders you add, wherever they are: on your computer, a drive or a network share. It reads each video once in the background to learn its length, picture size and sound, and keeps those facts in the catalog.</p>
+<p>It changes your folders only when you ask it to, with Edit on a folder's library page: moving, renaming and deleting. Deleted files go to Recently Deleted, a hidden folder (<code>.xorvio-recently-deleted</code>) inside the media folder, and are deleted for good after 30 days. Nothing outside the folders you added is ever touched.</p>
+
+<h3>Backups and sync</h3>
+<p>A backup is one file, saved where you choose. It holds your library, recording schedules, settings, sources and add-ons, and the name of the computer it came from, but no recordings. Logins and links go in only if you set a passphrase for that backup, which seals them. Xorvio never keeps the passphrase. Automatic backups never include logins.</p>
+<p>Sync goes through a folder you choose and share between your computers, such as one in iCloud Drive or Dropbox, a Syncthing folder or a network share. Each computer writes a compressed file there with its name and your watchlist, progress, history, favorites and channel groups, library profiles and changes to channels. There's no Xorvio server. Logins, sources, settings and your PIN stay on each computer. The service behind the shared folder holds those files under its own privacy policy.</p>
+
+<h3>The earlier Xorvio for Mac</h3>
+<p>If the earlier Xorvio for Mac is on your Mac, Xorvio offers to bring over your sources and watch history from it. It only reads that app's data, and only when you click Import.</p>
+
+<h2 id="connections">Where Xorvio connects, and what it sends</h2>
+<p>Xorvio connects straight from your computer to the places below, and only when a feature needs them. Like any internet request, each one shows the server that receives it your IP address and basic technical details. Xorvio's requests name the app and its version, unless you give a source a user agent of its own.</p>
+<p>Xorvio never adds an advertising or tracking identifier. Media servers and Trakt know your account because you sign in to them, and media servers are also told a random id made for this copy of Xorvio, as their own apps are.</p>
+
+<h3>Your sources</h3>
+<p>Xorvio contacts the playlists, guides and Xtream Codes servers you add. It loads your channels, films, series and guide from them on the schedule you choose, checks the series you follow for new episodes every six hours, and plays what you choose. Your login is sent only to the server it belongs to.</p>
+<p>Your provider can see that you're connecting and what you play, just as it could with any other player. Your provider's own privacy policy covers that. We have no relationship with any provider and receive nothing from them.</p>
+<p>On macOS 15 and later, macOS asks before Xorvio reaches devices on your local network, such as a media server or a TV. You can change your answer in System Settings › Privacy &amp; Security › Local Network.</p>
+
+<h3>Plex, Jellyfin and Emby</h3>
+<p>When you add a media server, Xorvio signs in and keeps the sign-in token it's given, never your password. For Plex, you sign in on plex.tv in your web browser, and Xorvio asks plex.tv which servers your account can reach. You can also connect to a Plex server by its address.</p>
+<p>After that, Xorvio talks to the server directly. If Plex can reach your server only through its relay, that traffic passes through Plex's servers, as it does in Plex's own apps. Each request tells the server Xorvio's name and version, the kind of computer, and this copy's random id, so the server can list Xorvio among your devices. Xorvio reads the server's libraries, plays files from it, and tells it what you've watched and where you stopped, so its own apps stay in step. Whoever runs the server can see that, as with any app connected to it. Plex's <a href="https://www.plex.tv/about/privacy-legal/">privacy policy</a> covers plex.tv.</p>
+
+<h3>Media folders</h3>
+<p>Folders you add are read straight from your computer, a drive or a network share. Nothing in them is uploaded. If a folder's <code>.nfo</code> files link to pictures online, those pictures load from the addresses in the files.</p>
+<p>When TMDB is in use (below), Xorvio looks up the films and series it finds in your folders there by name and year, as it does for any source. Videos with no year and no id aren't looked up.</p>
+
+<h3>Add-ons</h3>
+<p>Xorvio comes with no add-ons, and we don't recommend any. If you install one by pasting its link in Settings › Add-ons, Xorvio sends it requests when you use what it adds: its catalogs as you browse, your search text if it offers search, and a title's id (usually its IMDb id) when you open it, play it or look for its subtitles. Copies it offers play from wherever the add-on says.</p>
+<p>Add-ons are run by others, under their own terms and privacy policies, and they see your requests like any website. Add-on links can hold account keys, so Xorvio keeps them in your keychain and shows only the host.</p>
+
+<h3>Artwork</h3>
+<p>Channel logos, posters and backdrops load from wherever your sources say they are. Some providers link to image services run by others. Many image servers only offer plain http, which the window that draws Xorvio won't load itself, so Xorvio fetches those images for it, exactly as given. A media server's artwork is fetched from the server with its token. Xorvio only fetches the pictures. It sends nothing else.</p>
+
+<h3>TMDB, for film and series details</h3>
+<p>The Movie Database (TMDB) adds title logos, backdrops, cast, trailers, episode details and people's pages. Xorvio uses it when there's a TMDB key: your own, added in Settings › Details, or one built into your copy of Xorvio. Settings › Details says which.</p>
+<p>For each film or series, Xorvio sends the TMDB id its source gives, or else its IMDb id, or else its name and year. When you open a person's page, it sends their TMDB id or name. It never sends which source a title came from, and never anything from the demo library. Requests carry the key, images load from TMDB's servers, and answers are kept in the catalog for 30 days, so titles aren't asked about each time.</p>
+<p>TMDB is on by default. To stop it, switch off TMDB (“Look up details, artwork and cast”) in Settings › Details: Xorvio then asks TMDB nothing at all, whichever key it has, and details it fetched before still show. To stop using only your own key, click Remove next to it, and Xorvio goes back to the built-in key if your copy has one. See TMDB's <a href="https://www.themoviedb.org/privacy-policy">privacy policy</a>.</p>
+
+<h3>TVmaze, for series details</h3>
+<p>When TMDB can't fill in a series' details, Xorvio looks it up on <a href="https://www.tvmaze.com">TVmaze</a>. It sends only the series title. Images and cast photos then load from TVmaze's servers.</p>
+<p>This is on by default. To turn it off, switch off TVmaze (“Look up missing series details”) in Settings › Details. TVmaze's <a href="https://www.tvmaze.com/site/privacy">privacy policy</a> covers its servers.</p>
+
+<h3>Wikidata, for people's pages</h3>
+<p>When you open a person's page and TMDB can't help, Xorvio looks up their films and series on <a href="https://www.wikidata.org">Wikidata</a>, run by the Wikimedia Foundation. It sends only the person's name, and never for the demo library. If Wikidata has their photo, Xorvio asks Wikimedia Commons who took it and under what licence, sending only the photo's file name, and shows the photo with that credit; a photo Commons can't credit isn't shown. The photo itself loads from Wikimedia Commons. See the Wikimedia Foundation's <a href="https://foundation.wikimedia.org/wiki/Policy:Privacy_policy">privacy policy</a>.</p>
+
+<h3>IntroDB, for skipping intros</h3>
+<p>When you play an episode of a series that has an IMDb id, Xorvio asks <a href="https://introdb.app">IntroDB</a>, a free database timed by its community, where the intro, recap and end credits are, so it can offer to skip them. It sends only the series' IMDb id and the season and episode numbers.</p>
+<p>This is on by default. To turn it off, switch off Skip times (“Find intros, recaps and credits on IntroDB”) in Settings › Playback, and Xorvio asks IntroDB nothing.</p>
+
+<h3>YouTube, for trailers</h3>
+<p>Film and series pages with a trailer play it behind the title, muted until you turn the sound on. It plays in YouTube's embedded player, which loads from YouTube and is given the video's id. The only page address it's told is Xorvio's own, on your computer. Like any YouTube player, it may keep storage of its own in Xorvio's window.</p>
+<p>Trailers are on by default. To turn them off, switch off Trailers (“Play trailers behind film and series pages”) in Settings › Profiles and Home. They also stay off while your system's setting to reduce motion is on.</p>
+<p>Some pages also list videos, whose preview images load from YouTube's image server. Choosing one, or clicking Trailer, opens it on YouTube in your web browser. Google's <a href="https://policies.google.com/privacy">privacy policy</a> covers YouTube.</p>
+
+<h3>Trakt, only if you connect it</h3>
+<p>Connecting Trakt in Settings › Trakt uses a code you enter on trakt.tv in your browser. Xorvio keeps the connection in your keychain, never a password.</p>
+<p>Once you're connected, Xorvio tells Trakt what you're watching as it plays, and how far in you are. It sends films and episodes you mark watched or unwatched, and titles you take off Continue Watching. It keeps your watched history, the places you left off and your watchlist the same in both places, syncing shortly after Xorvio opens and every 15 minutes. For each title it sends its IMDb or TMDB id, or its title and year when it has neither. It never sends which source a title came from, and never anything from the demo library. Choose what's shared with While watching, History and Watchlist in Settings › Trakt, or click Disconnect to stop.</p>
+<p>Home's Trakt rows, such as “Top 10 Movies on Trakt”, ask Trakt nothing until you connect, unless you choose to see them before connecting with “Show Trakt's charts and lists before connecting” (On Home) in Settings › Trakt. Then they ask Trakt for its charts and lists with only the app's id, nothing about you. Browsing Trakt's lists in Customize Home… asks Trakt for them too. You can also hide each row in Customize Home…, in Settings › Profiles and Home. Posters in Trakt rows load from Trakt's servers. See Trakt's <a href="https://trakt.tv/privacy">privacy policy</a>.</p>
+
+<h3>Chromecast, Google TV and AirPlay</h3>
+<p>When the player first opens, Xorvio looks for Chromecast and Google TV devices on your local network. Nothing connects to a device until you choose one.</p>
+<p>When you cast, Xorvio sends the TV the title's name, the episode or program, its artwork (only web addresses that need no login) and where to start. It opens a connection that only the TV can use to fetch the video from your computer, and closes it when you stop. Your provider's address and login never go to the TV. The TV plays the video in Google's standard media receiver, which it loads from Google, so Google's terms cover what the TV does.</p>
+<p>On a Mac, AirPlay sends video only to the device you choose.</p>
+
+<h3>Notifications</h3>
+<p>Reminders and new-episode alerts are notifications made on your computer while Xorvio is open, or running in the menu bar or system tray. There's no push server. You can change how they appear in your system's notification settings.</p>
+
+<h3>The demo library</h3>
+<p>The demo library's channels, films and series are fictional, and its artwork is drawn on your computer. Its videos stream from public test servers run by Apple, Unified Streaming, Mux and Test Videos, which receive the same basic details as any website you visit.</p>
+
+<h3>Pages that open in your browser</h3>
+<p>Some buttons open a page in your web browser instead: Plex's and Trakt's sign-in pages, TMDB's page for getting a key, YouTube videos, and Help › Xorvio Documentation, which opens Xorvio's page on GitHub. Your browser's settings and those sites' own policies apply there.</p>
+
+<h3>Your system's web view</h3>
+<p>Xorvio's windows are drawn by the web view your system provides: WebKit on macOS and Linux, and Microsoft Edge WebView2 on Windows. It's part of your system and follows its privacy settings. On Windows 10, Xorvio's installer downloads WebView2 from Microsoft if your PC doesn't have it yet.</p>
+
+<h3>No update checks</h3>
+<p>Xorvio doesn't check for updates, so it never contacts GitHub or us on its own. New versions are published on GitHub, and you download them when you choose.</p>
+
+<h2 id="diagnostics">Diagnostics</h2>
+<p>Xorvio keeps a log of warnings and errors in memory, so you can see why a source, guide or stream failed. It holds the latest 2,000 events and is cleared when Xorvio quits. More detail is kept only if you switch on Detailed events (“Keep everything, not only warnings and errors”) in Settings › Privacy &amp; Diagnostics.</p>
+<p>Before an event is kept, Xorvio removes logins in web addresses, the values of URL parameters, and the usernames and passwords providers put in their links. When you export the log, it removes every source's login once more. Xorvio also writes its log to the console (its standard error output), which some desktops keep; it's masked the same way there, and Xorvio writes no log file of its own.</p>
+<p>The log leaves your computer only if you click Export… and save it yourself. It can still include server names and the names of channels or titles, so read it before you share it. We see it only if you send it to us.</p>
+
+<h2 id="sharing">Sharing and third parties</h2>
+<p>We don't sell, rent or share personal information, and we don't use it for advertising. Xorvio contains no analytics tools, advertising networks or data-collecting SDKs. The open-source software built into it, such as FFmpeg for playback and recording, doesn't collect or report anything.</p>
+<p>The services listed above receive requests straight from your computer when you use the features that need them. We don't give them anything about you, and their own privacy policies cover how they handle those requests.</p>
+<p>Two companies handle information for us: Cloudflare, which hosts this website, and our email provider, which stores the messages you send us. We use them only under terms that require them to protect that information at least as well as this policy does. GitHub hosts Xorvio's code, downloads and issue tracker under its own privacy statement.</p>
+
+<h2 id="your-controls">Your controls</h2>
+<p>Here's where to find each control. Settings is under Xorvio › Settings… (<kbd>⌘</kbd><kbd>,</kbd>) on a Mac, and File › Settings… (<kbd>Ctrl</kbd>+<kbd>,</kbd>) on Windows and Linux.</p>
+<ul>
+  <li><strong>TVmaze lookups:</strong> Settings › Details › TVmaze.</li>
+  <li><strong>TMDB:</strong> Settings › Details › TMDB, or Remove beside your own key.</li>
+  <li><strong>IntroDB skip times:</strong> Settings › Playback › Skip times.</li>
+  <li><strong>Trailers behind title pages:</strong> Settings › Profiles and Home › Trailers.</li>
+  <li><strong>Trakt:</strong> Settings › Trakt, to choose what's shared or to Disconnect.</li>
+  <li><strong>Trakt rows on Home:</strong> Settings › Trakt › On Home (before connecting), or Settings › Profiles and Home › Customize Home….</li>
+  <li><strong>An add-on:</strong> Settings › Add-ons, to switch it off or remove it.</li>
+  <li><strong>A source:</strong> in Sources, click ••• on the source and choose Remove…. This deletes its catalog and its saved logins from your computer. A media folder's files stay where they are.</li>
+  <li><strong>Viewing history:</strong> Settings › Privacy &amp; Diagnostics › Viewing history › Show… › Clear History….</li>
+  <li><strong>Diagnostic log:</strong> Settings › Privacy &amp; Diagnostics › Clear.</li>
+  <li><strong>Guide listings and temporary files:</strong> Settings › Storage › Clear Guide Listings… and Clear Temporary Files….</li>
+  <li><strong>Automatic backups:</strong> Settings › Backup › Back up automatically.</li>
+  <li><strong>Sync:</strong> Settings › Sync › Sync this computer.</li>
+  <li><strong>Parental PIN:</strong> Settings › Parental Controls › Remove PIN….</li>
+  <li><strong>Notifications:</strong> your system's notification settings, which Settings › Reminders › Notification Settings… opens.</li>
+  <li><strong>Local network access on a Mac:</strong> System Settings › Privacy &amp; Security › Local Network.</li>
+</ul>
+<p>To remove everything, remove each source and add-on, disconnect Trakt and remove your TMDB key, which takes their entries out of your keychain. Then delete Xorvio and its data folder, listed above. Recordings and backups stay where they were saved until you delete them.</p>
+
+<h2 id="retention">How long data is kept</h2>
+<ul>
+  <li><strong>Data in the app</strong> stays on your computer, and in your sync folder if you use one, until you delete it. We have no copy, so there's nothing for us to delete.</li>
+  <li><strong>Services Xorvio connects to</strong> keep what they receive under their own policies.</li>
+  <li><strong>Support emails</strong> are kept only as long as we need them to help you and follow up on what you reported, then deleted. Ask us and we'll delete yours sooner.</li>
+  <li><strong>GitHub issues and comments</strong> are public and stay until you or we delete them.</li>
+  <li><strong>Website request logs</strong> are kept by Cloudflare under its own policy. We don't download or keep them.</li>
+</ul>
+
+<h2 id="your-rights">Your rights</h2>
+<p>Depending on where you live, laws such as the EU and UK General Data Protection Regulation and US state privacy laws give you rights over your personal information. These include the right to see it, correct it, have it deleted and object to how it's used. Because the app sends us nothing, these rights mostly concern emails you've sent us.</p>
+<p>To make a request, write to <a href="mailto:privacy@xorvio.com">privacy@xorvio.com</a>. We'll reply within one month. You can also complain to your local data protection authority.</p>
+<p>When we do handle your information, it's because you contacted us: we use your email to answer you and to improve Xorvio based on what you report.</p>
+
+<h2 id="children">Children</h2>
+<p>Xorvio isn't directed at children, and we don't knowingly collect personal information from anyone, children included. If you think a child has emailed us, let us know and we'll delete the message.</p>
+
+<h2 id="website">This website</h2>
+<p>This site is a set of static pages. It has no accounts, forms, comments, advertising, analytics or tracking pixels, and we don't set cookies.</p>
+<p>The site is hosted by Cloudflare. To deliver pages and protect the site from attacks, Cloudflare processes standard request information: your IP address, browser type, the page you asked for, the page that linked to it, and the time. Cloudflare handles this under its own <a href="https://www.cloudflare.com/privacypolicy/">privacy policy</a>. We don't use it to identify visitors, and we don't combine it with anything else.</p>
+<p>If Cloudflare's security checks ever need to tell a person from an automated program, Cloudflare may set a short-lived security cookie that's strictly necessary for that check. It isn't used for tracking or advertising.</p>
+<p>Links to other sites, including GitHub, lead to places with their own privacy policies.</p>
+
+<h2 id="changes">Changes to this policy</h2>
+<p>If we change this policy, we'll update this page and the date at the top. If a change affects what the app does with your information, we'll also say so in the release notes on GitHub.</p>
+
+<h2 id="contact">Contact</h2>
+<p>Email <a href="mailto:privacy@xorvio.com">privacy@xorvio.com</a> with any question about privacy. For help with the app, see <a href="/support">Support</a>.</p>

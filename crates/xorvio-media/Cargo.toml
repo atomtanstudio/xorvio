@@ -1,0 +1,33 @@
+[package]
+name = "xorvio-media"
+description = "The local media gateway (proxy, HLS rewriting, ffmpeg remux) and the recorder."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+xorvio-model.workspace = true
+anyhow.workspace = true
+thiserror.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tokio.workspace = true
+reqwest.workspace = true
+rusqlite.workspace = true
+url.workspace = true
+uuid.workspace = true
+tracing.workspace = true
+futures-util.workspace = true
+bytes.workspace = true
+chrono.workspace = true
+regex.workspace = true
+axum = "0.8.9"
+tower = { version = "0.5.3", features = ["util"] }
+tower-http = { version = "0.6.11", features = ["fs"] }
+# Recordings a series clears out go to the Trash rather than being deleted.
+trash = "5.2.9"
+# Naming the frames taken for videos' cards (stills.rs).
+sha2 = "0.10.9"
+
+[dev-dependencies]
+tempfile = "3.27.0"

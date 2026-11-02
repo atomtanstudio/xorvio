@@ -1,0 +1,88 @@
+<h1>Acknowledgements</h1>
+<p class="lede">Xorvio is built on generous work by others, and we're grateful for it.</p>
+
+<h2 id="xorvio">Xorvio itself</h2>
+<p>Xorvio is free software, copyright its contributors, under the <a href="https://www.gnu.org/licenses/gpl-3.0.html">GNU General Public License, version 3 or later</a>. Its source code is on <a href="{{github}}">GitHub</a>, with a list of everything its downloads carry from others, and under what license, in <a href="{{github}}/blob/HEAD/THIRD-PARTY.md"><code>THIRD-PARTY.md</code></a>.</p>
+
+<h2 id="ffmpeg">FFmpeg</h2>
+<p>Every download of Xorvio includes its own copies of FFmpeg's ffmpeg and ffprobe tools, named <code>xorvio-ffmpeg</code> and <code>xorvio-ffprobe</code>. Xorvio uses them to play formats its window can't play by itself, to pause and rewind live TV, to record, to cast to a TV, and to read what a video holds. They're built from the upstream source releases below, with only the parts Xorvio uses.</p>
+<table>
+  <thead>
+    <tr><th scope="col">Software</th><th scope="col">Version</th><th scope="col">License</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><a href="https://ffmpeg.org">FFmpeg</a>, its libraries and its ffmpeg and ffprobe tools</td><td>9.0.2</td><td>LGPL-2.1-or-later, with GPL-2.0-or-later parts; GPL as built</td></tr>
+    <tr><td><a href="https://code.videolan.org/videolan/x264">x264</a>, the H.264 encoder</td><td>Stable branch, commit b35605a</td><td>GPL-2.0-or-later</td></tr>
+    <tr><td><a href="https://code.videolan.org/videolan/dav1d">dav1d</a>, the AV1 decoder</td><td>1.5.4</td><td>BSD-2-Clause</td></tr>
+    <tr><td><a href="https://www.openssl.org">OpenSSL</a> (Linux only)</td><td>3.5.9</td><td>Apache-2.0</td></tr>
+    <tr><td><a href="https://zlib.net">zlib</a> (Windows only)</td><td>As packaged by MSYS2</td><td>Zlib</td></tr>
+    <tr><td><a href="https://www.mingw-w64.org">MinGW-w64</a> runtime, winpthreads and <a href="https://gcc.gnu.org">GCC</a>'s libgcc (Windows only)</td><td>As packaged by MSYS2</td><td>ZPL-2.1 and public domain; MIT; GPL-3.0-or-later with the GCC Runtime Library Exception</td></tr>
+  </tbody>
+</table>
+<p>Built with x264, each copy as a whole is under the GNU GPL, version 2 or later, on macOS and Windows, and version 3 or later on Linux, where OpenSSL's Apache license joins it. Both fit Xorvio's own license. On macOS and Linux, FFmpeg uses the system's zlib, and on macOS and Windows, the system's own secure connections.</p>
+<p>Every release on GitHub carries the exact source code of each of these beside its downloads, with notes on how each copy was built. <code>Scripts/build-ffmpeg.sh</code> in the release's source builds them again, and <code>xorvio-ffmpeg -buildconf</code> prints how any copy was configured.</p>
+<p>If you've installed comskip, Xorvio uses it to find ad breaks in recordings. It's a separate GPL program that doesn't come with Xorvio.</p>
+<p>Xorvio isn't affiliated with or endorsed by the FFmpeg project or VideoLAN.</p>
+
+<h2 id="libraries">Libraries in the app</h2>
+<p>These are the most significant. Each is under its own license, which its source carries. The full lists are <code>Cargo.lock</code> and <code>package-lock.json</code> in Xorvio's repository.</p>
+<ul>
+  <li><a href="https://tauri.app">Tauri</a>, which makes Xorvio a desktop app on every platform. Apache-2.0 or MIT.</li>
+  <li><a href="https://react.dev">React</a> and React DOM, for the interface. MIT.</li>
+  <li><a href="https://github.com/video-dev/hls.js">hls.js</a>, which plays HLS streams. Apache-2.0.</li>
+  <li><a href="https://github.com/xqq/mpegts.js">mpegts.js</a>, which plays MPEG-TS streams and the video FFmpeg repackages. Apache-2.0.</li>
+  <li>Zustand and TanStack Virtual, for the interface. MIT.</li>
+  <li><a href="https://lucide.dev">Lucide</a> icons. ISC.</li>
+  <li>The <a href="https://rsms.me/inter/">Inter</a> typeface, by Rasmus Andersson. SIL Open Font License 1.1.</li>
+  <li><a href="https://www.sqlite.org">SQLite</a>, built in through rusqlite, which keeps the catalog and your library. SQLite is in the <a href="https://www.sqlite.org/copyright.html">public domain</a>; rusqlite is MIT.</li>
+  <li>Tokio, hyper and axum (MIT) and reqwest (MIT or Apache-2.0), for networking and the small media server Xorvio runs on your computer.</li>
+  <li>Rustls (Apache-2.0, ISC or MIT) and ring (Apache-2.0 and ISC), for secure connections, with Mozilla's root certificates through webpki-roots (CDLA-Permissive-2.0).</li>
+  <li>keyring, which keeps logins in your system's keychain. MIT or Apache-2.0.</li>
+  <li>mdns-sd, which finds TVs on your network. MIT or Apache-2.0.</li>
+  <li>RustCrypto's argon2 and chacha20poly1305, which seal logins in backups. MIT or Apache-2.0.</li>
+  <li>serde, chrono, quick-xml, flate2, zip, trash and many more, under the MIT or Apache-2.0 licenses.</li>
+</ul>
+<p>Xorvio's windows are drawn by your system's own web view: WebKit on macOS, WebKitGTK on Linux, and Microsoft Edge WebView2 on Windows. They're part of your system, not of Xorvio.</p>
+
+<h2 id="services">Details and services</h2>
+
+<h3>TMDB</h3>
+<p>When there's a TMDB key, film and series details, images, cast, trailers and people's pages come from <a href="https://www.themoviedb.org">The Movie Database (TMDB)</a>.</p>
+<p>This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
+
+<h3>TVmaze</h3>
+<p>Series information, including descriptions, cast and images, comes from <a href="https://www.tvmaze.com">TVmaze</a> when TMDB can't help. It's licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">Creative Commons Attribution-ShareAlike 4.0 (CC BY-SA)</a>. Xorvio shows it with its formatting removed, and it stays under the same license.</p>
+
+<h3>Wikidata and Wikimedia Commons</h3>
+<p>Credits on people's pages, when TMDB can't help, come from <a href="https://www.wikidata.org">Wikidata</a>, which publishes its data under <a href="https://creativecommons.org/publicdomain/zero/1.0/">CC0</a>. Their photos come from <a href="https://commons.wikimedia.org">Wikimedia Commons</a>, each under the license its page there gives.</p>
+
+<h3>IntroDB</h3>
+<p>The times of intros, recaps and end credits come from <a href="https://introdb.app">IntroDB</a>, a free database timed by its community.</p>
+
+<h3>Trakt</h3>
+<p>Watch history sync, charts and lists come from <a href="https://trakt.tv">Trakt</a>, through its API. Xorvio isn't affiliated with or endorsed by Trakt.</p>
+
+<h3>Plex, Jellyfin and Emby</h3>
+<p>Xorvio connects to <a href="https://www.plex.tv">Plex</a>, <a href="https://jellyfin.org">Jellyfin</a> and <a href="https://emby.media">Emby</a> servers through their published interfaces. It isn't affiliated with or endorsed by Plex, the Jellyfin project or Emby.</p>
+
+<h3>Google Cast and YouTube</h3>
+<p>Casting uses Google Cast and Google's Default Media Receiver on your TV. Trailers play in YouTube's embedded player, under YouTube's terms of service. Xorvio isn't affiliated with or endorsed by Google.</p>
+
+<h3>Add-ons</h3>
+<p>Add-ons speak the Stremio add-on protocol, which Stremio publishes openly. Xorvio comes with no add-ons and isn't affiliated with Stremio.</p>
+
+<!-- Update this section if the demo library's media changes. -->
+<h2 id="demo-media">Demo library</h2>
+<p>The demo library uses fictional titles. Some of its videos are open films by the Blender Foundation, <i>Big Buck Bunny</i> (© 2008 Blender Foundation, <a href="https://peach.blender.org">peach.blender.org</a>) and <i>Tears of Steel</i> (© Blender Foundation, <a href="https://mango.blender.org">mango.blender.org</a>), licensed under <a href="https://creativecommons.org/licenses/by/3.0/">Creative Commons Attribution 3.0</a>. The others are public test streams published for testing players by Apple, Unified Streaming, Mux and Test Videos.</p>
+
+<h2 id="screenshots">The screenshots on this site</h2>
+<p>The screenshots show Xorvio with a library that doesn't exist. Every title, channel and person in them is fictional, and all the artwork was made for this site.</p>
+
+<h2 id="trademarks">Trademarks</h2>
+<p>Apple, Mac, macOS, AirPlay, Apple TV, Finder, iCloud and Keychain are trademarks of Apple Inc., registered in the U.S. and other countries and regions.</p>
+<p>Microsoft, Windows, Microsoft Edge, PowerShell and SmartScreen are trademarks of the Microsoft group of companies.</p>
+<p>Linux is the registered trademark of Linus Torvalds in the U.S. and other countries.</p>
+<p>Google, Chromecast, Google TV, Google Cast and YouTube are trademarks of Google LLC.</p>
+<p>FFmpeg is a trademark of Fabrice Bellard, originator of the FFmpeg project.</p>
+<p>Plex, Emby, Jellyfin, Trakt, TMDB, TVmaze, Stremio, GitHub, Dropbox, IINA, VLC and Infuse are trademarks of their respective owners.</p>
+<p>Xorvio is an independent project. It isn't affiliated with, sponsored by or endorsed by any of these companies or projects. Other product and company names mentioned on this site may be trademarks of their respective owners.</p>

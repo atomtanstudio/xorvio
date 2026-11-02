@@ -1,0 +1,93 @@
+# Tests, lints and type-checks every push and pull request on the three
+# platforms Xorvio ships on. The media tests run against the ffmpeg each
+# release bundles (Scripts/build-ffmpeg.sh, through XORVIO_FFMPEG_DIR), and
+# make their test media with one from the platform's package manager.
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  test:
+    name: ${{ matrix.name }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: macOS
+            os: macos-latest
+            target: aarch64-apple-darwin
+          # Releases for Linux are built on 22.04, for its older glibc; test there too.
+          - name: Linux
+            os: ubuntu-22.04
+            target: x86_64-unknown-linux-gnu
+          - name: Windows
+            os: windows-latest
+            target: x86_64-pc-windows-msvc
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v5
+
+      # WebKitGTK and the rest Tauri 2 builds against, D-Bus for the
+      # keyring's Secret Service, and ffmpeg for making test media.
+      - name: Install Linux packages
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev \
+            libssl-dev libxdo-dev libdbus-1-dev pkg-config ffmpeg
+
+      - name: Install ffmpeg for test media (macOS)
+        if: runner.os == 'macOS'
+        run: brew install ffmpeg
+
+      - name: Install ffmpeg for test media (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          choco install ffmpeg --yes --no-progress
+          # The real executables ahead of Chocolatey's shims: stopping a shim
+          # leaves the ffmpeg behind it running.
+          $bin = (Get-ChildItem C:\ProgramData\chocolatey\lib\ffmpeg -Recurse -Filter ffmpeg.exe | Select-Object -First 1).DirectoryName
+          $bin | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
+
+      - uses: ./.github/actions/xorvio-ffmpeg
+        with:
+          target: ${{ matrix.target }}
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Type-check the interface
+        run: |
+          npm ci
+          npm run typecheck
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+
+      - uses: Swatinem/rust-cache@v2
+
+      # Any warning fails the build: the code is clean, and stays so.
+      - name: Clippy
+        run: cargo clippy --workspace --tests -- -D warnings
+
+      # Every crate's tests, even after one fails, so a run shows them all.
+      - name: Tests
+        env:
+          XORVIO_FFMPEG_DIR: ${{ github.workspace }}/src-tauri/binaries
+        run: cargo test --workspace --no-fail-fast

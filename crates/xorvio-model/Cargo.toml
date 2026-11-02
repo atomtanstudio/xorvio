@@ -1,0 +1,9 @@
+[package]
+name = "xorvio-model"
+description = "Shared data types for Xorvio: sources, catalog, guide, library and playback."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+serde.workspace = true

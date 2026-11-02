@@ -1,0 +1,350 @@
+---
+title: Xorvio — Everything you watch, in its best light
+ogTitle: Xorvio — free and open source, for Mac, Windows and Linux
+description: Xorvio brings your live channels, films, series, media servers and your own video folders into one calm, fast app, with a full guide and recording built in. Free and open source for Mac, Windows and Linux.
+path: /
+bodyClass: home
+preloadShot: home
+---
+<section class="hero" aria-labelledby="hero-title">
+  <div class="hero__wall" aria-hidden="true">
+    <x-wall></x-wall>
+  </div>
+  <div class="hero__copy">
+    <p class="eyebrow reveal">Free and open source · Mac, Windows and Linux</p>
+    <h1 id="hero-title" class="hero__title reveal">Everything you watch,<br> in its best light.</h1>
+    <p class="hero__lede reveal">Xorvio brings your live channels, films, series, media servers and your own video folders into one calm, fast app, with a full guide and recording built in.</p>
+    <div class="hero__actions reveal">
+      <a class="button button--primary" href="#download">Download Xorvio</a>
+      <a class="button button--ghost" href="{{github}}"><x-github></x-github> View on GitHub</a>
+    </div>
+    <p class="hero__note reveal">Free, with no account, ads or tracking. Xorvio doesn't include any channels or content.</p>
+  </div>
+  <figure class="hero__shot reveal reveal--late">
+    <div class="glow" aria-hidden="true"></div>
+    <x-shot name="home" alt="Xorvio's Home screen: the featured film The Long Quiet fills the window, an astronaut at a space station's round window above the Earth, with its rating, 4K, HDR and 5.1 badges, Resume and More Info, and Continue Watching below." loading="eager" zoom></x-shot>
+  </figure>
+</section>
+
+<section class="numbers" aria-label="Xorvio at a glance">
+  <ul class="numbers__list">
+    <li class="reveal"><strong>3</strong><span>platforms: macOS, Windows and Linux</span></li>
+    <li class="reveal"><strong>2<span> hours</span></strong><span>of live TV you can pause and rewind</span></li>
+    <li class="reveal"><strong>4</strong><span>live channels side by side in Multiview</span></li>
+    <li class="reveal"><strong>0</strong><span>accounts, ads, trackers or data collected</span></li>
+  </ul>
+</section>
+
+<section class="chapter" id="tour" aria-labelledby="tour-title">
+  <header class="chapter__head">
+    <p class="eyebrow reveal">The tour</p>
+    <h2 id="tour-title" class="display reveal">One window. Your whole library.</h2>
+    <p class="lede reveal">Live TV, films, series, recordings and your watchlist share one window, one search and one player. Pick a screen to look around.</p>
+  </header>
+  <div class="tour reveal" data-tour>
+    <div class="tour__tabs" role="tablist" aria-label="Screens">
+      <button role="tab" aria-selected="true" aria-controls="tour-movies" id="tab-movies">Movies</button>
+      <button role="tab" aria-selected="false" aria-controls="tour-series" id="tab-series" tabindex="-1">Series</button>
+      <button role="tab" aria-selected="false" aria-controls="tour-search" id="tab-search" tabindex="-1">Search</button>
+      <button role="tab" aria-selected="false" aria-controls="tour-light" id="tab-light" tabindex="-1">Light mode</button>
+    </div>
+    <div class="tour__stage">
+      <div class="tour__panel is-active" role="tabpanel" id="tour-movies" aria-labelledby="tab-movies">
+        <x-shot name="movies" alt="The Movies screen: a grid of film posters with category, genre, watched and sort controls along the top." zoom></x-shot>
+      </div>
+      <div class="tour__panel" role="tabpanel" id="tour-series" aria-labelledby="tab-series" hidden>
+        <x-shot name="series-hero" alt="The page for the series Harbor Lights: a foggy harbor at night fills the window behind the title, rating, seasons and a Resume button." zoom></x-shot>
+      </div>
+      <div class="tour__panel" role="tabpanel" id="tour-search" aria-labelledby="tab-search" hidden>
+        <x-shot name="search" alt="Search results for harbor: live and upcoming programs from the guide, each with its channel and Watch, Show in Guide and Record buttons." zoom></x-shot>
+      </div>
+      <div class="tour__panel" role="tabpanel" id="tour-light" aria-labelledby="tab-light" hidden>
+        <x-shot name="light" alt="The Movies screen in the light appearance, with posters on a white background." zoom></x-shot>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="feature" id="features" aria-labelledby="home-title">
+  <div class="feature__copy">
+    <div class="feature__title">
+      <p class="eyebrow reveal">Home</p>
+      <h2 id="home-title" class="display reveal">It knows what's next.</h2>
+    </div>
+    <div class="feature__text">
+      <p class="lede reveal">Pick up exactly where you stopped. Continue Watching keeps your place in every film and lines up the next episode of every series, with your watchlist, your recordings and tonight's best on TV right below.</p>
+      <ul class="points reveal">
+        <li><strong>Up Next, automatically.</strong> Finish an episode and the next one is waiting, with new episodes flagged as they arrive.</li>
+        <li><strong>Charts and lists from Trakt.</strong> What's trending, the week's most watched, any public list and your own, shown as the copies you can actually play.</li>
+        <li><strong>A row for every library.</strong> Each media folder and media server gets its own row, and every row can be shown, hidden or moved.</li>
+      </ul>
+    </div>
+  </div>
+  <figure class="feature__shot reveal">
+    <x-shot name="home-rows" alt="Home scrolled down: a Recordings row, Tonight on TV with a programme marked Will Record, and Top 10 Movies on Trakt with large ranking numerals." zoom></x-shot>
+  </figure>
+</section>
+
+<section class="cinema" aria-labelledby="film-title">
+  <figure class="cinema__shot reveal">
+    <x-shot name="film" alt="The page for the film Halcyon: a floating city of white towers above golden clouds fills the window behind the title, with its tagline, rating, 4K, HDR and 5.1 badges, and Resume and Restart buttons." zoom></x-shot>
+  </figure>
+  <div class="cinema__copy">
+    <p class="eyebrow reveal">Films &amp; series</p>
+    <h2 id="film-title" class="display reveal">Pages worth lingering on.</h2>
+    <p class="lede reveal">Every title gets a full-window page: artwork edge to edge, the story, the people who made it, and exactly what you're about to play.</p>
+  </div>
+  <div class="cinema__grid">
+    <article class="tile reveal">
+      <h3>Measured, not guessed</h3>
+      <p>4K, HDR and surround badges come from the stream itself, so you know what you'll get before you press Play.</p>
+    </article>
+    <article class="tile reveal">
+      <h3>One poster, every copy</h3>
+      <p>A film several sources carry is one title. Its page lists every version, from your provider, your server or your folders.</p>
+    </article>
+    <article class="tile reveal">
+      <h3>Richer with TMDB</h3>
+      <p>Title logos, wordless backdrops, cast photos, episode stills and More Like This, when you'd like them.</p>
+    </article>
+    <article class="tile reveal">
+      <h3>Your languages, remembered</h3>
+      <p>Choose audio and subtitles once. Xorvio remembers them for the series and applies them to the next episode.</p>
+    </article>
+  </div>
+  <figure class="cinema__second reveal">
+    <x-shot name="series" alt="The series page for Harbor Lights, scrolled to its seasons and a row of episodes with stills, titles and descriptions." zoom></x-shot>
+  </figure>
+</section>
+
+<section class="feature" id="live" aria-labelledby="live-title">
+  <div class="feature__copy">
+    <div class="feature__title">
+      <p class="eyebrow reveal">Live TV</p>
+      <h2 id="live-title" class="display reveal">A guide that feels like home.</h2>
+    </div>
+    <div class="feature__text">
+      <p class="lede reveal">A preview that keeps playing while you browse, the program in detail beside it, and a guide that reaches eight days back and as far ahead as your listings go.</p>
+      <ul class="points reveal">
+        <li><strong>Pause and rewind live TV.</strong> Keep up to two hours of a channel on your computer, and step back to what you missed.</li>
+        <li><strong>Catch-up and replay.</strong> Play what already aired wherever your provider keeps an archive.</li>
+        <li><strong>Zap like a remote.</strong> ↑ and ↓ change channel, numbers tune one, L jumps back to the last.</li>
+      </ul>
+    </div>
+  </div>
+  <figure class="feature__shot reveal">
+    <x-shot name="live" alt="Live TV: a live football match plays in the guide's header beside the program details and its Record button, above a guide of channels and listings." zoom></x-shot>
+  </figure>
+</section>
+
+<section class="feature" id="recording" aria-labelledby="rec-title">
+  <div class="feature__copy">
+    <div class="feature__title">
+      <p class="eyebrow reveal">Recording</p>
+      <h2 id="rec-title" class="display reveal">Your own DVR, built in.</h2>
+    </div>
+    <div class="feature__text">
+      <p class="lede reveal">Record what's on now, or anything coming up from the guide, your watchlist or a search. Recordings play in the same player and keep your place.</p>
+      <ul class="points reveal">
+        <li><strong>Series recordings.</strong> New episodes only, on one channel or any, keeping all of them or just the latest few.</li>
+        <li><strong>Save from catch-up.</strong> Missed it? Save a program your provider still has in its archive.</li>
+        <li><strong>Skip the ad breaks.</strong> Breaks are found after recording, marked on the timeline and skipped with one press, or automatically.</li>
+      </ul>
+    </div>
+  </div>
+  <figure class="feature__shot reveal">
+    <x-shot name="recordings" alt="The Recordings screen: a news program being saved from catch-up under Recording Now, and scheduled episodes of a drama and a sports show under Scheduled." zoom></x-shot>
+  </figure>
+</section>
+
+<section class="stage" id="player" aria-labelledby="player-title">
+  <header class="chapter__head">
+    <p class="eyebrow reveal">The player</p>
+    <h2 id="player-title" class="display reveal">Plays right where you are.</h2>
+    <p class="lede reveal">Video opens inside the window, not in another one. Shrink it to a mini player while you browse, pop it out to float above your work, send it to the TV, or go full screen.</p>
+  </header>
+  <figure class="stage__shot reveal">
+    <x-shot name="player" alt="The film Neon Requiem paused inside the Xorvio window, with its title, the timeline at 47 minutes, and playback, volume, subtitle, AirPlay, Chromecast and Picture in Picture controls." zoom></x-shot>
+  </figure>
+  <ul class="chips reveal" aria-label="Player features">
+    <li>Mini player</li><li>Pop-out window</li><li>Picture in Picture</li><li>AirPlay</li><li>Chromecast and Google TV</li><li>Previews while scrubbing</li><li>Audio and subtitle tracks</li><li>Blu-ray and DVD subtitles</li><li>Open in IINA, VLC or Infuse</li><li>Automatic reconnect</li>
+  </ul>
+</section>
+
+<section class="feature" aria-labelledby="multi-title">
+  <div class="feature__copy">
+    <div class="feature__title">
+      <p class="eyebrow reveal">Multiview</p>
+      <h2 id="multi-title" class="display reveal">Four at once.</h2>
+    </div>
+    <div class="feature__text">
+      <p class="lede reveal">Put up to four live channels side by side. Sound follows whichever one you click or the number you press, and Xorvio tells you before you go past the connections your provider allows.</p>
+    </div>
+  </div>
+  <figure class="feature__shot reveal">
+    <x-shot name="multiview" alt="Multiview with four live channels in a grid: football, motor racing, a news studio and a coastline documentary." zoom></x-shot>
+  </figure>
+</section>
+
+<section class="feature" aria-labelledby="watch-title">
+  <div class="feature__copy">
+    <div class="feature__title">
+      <p class="eyebrow reveal">Watchlist</p>
+      <h2 id="watch-title" class="display reveal">One list for everything.</h2>
+    </div>
+    <div class="feature__text">
+      <p class="lede reveal">Save films, series and upcoming live programs to the same list. Xorvio reminds you before a program starts, and one click takes you to the channel. Connect Trakt and it stays in step everywhere you watch.</p>
+      <div class="notice reveal" aria-label="Example reminder">
+        <span class="notice__icon" aria-hidden="true"><x-icon></x-icon></span>
+        <span class="notice__body">
+          <span class="notice__app">Xorvio <span>now</span></span>
+          <strong>Starting in 5 minutes</strong>
+          <span>Atlas of Silence on Wild Atlas</span>
+        </span>
+      </div>
+    </div>
+  </div>
+  <figure class="feature__shot reveal">
+    <x-shot name="watchlist" alt="The watchlist: today's live programs with reminders, and posters of saved films and series below." zoom></x-shot>
+  </figure>
+</section>
+
+<section class="sources" id="sources" aria-labelledby="sources-title">
+  <header class="chapter__head">
+    <p class="eyebrow reveal">Your sources</p>
+    <h2 id="sources-title" class="display reveal">Bring everything you have.</h2>
+    <p class="lede reveal">Your provider's channels, your media server, the folders on your drives: Xorvio puts them in one library, with one search and one watchlist across all of them.</p>
+  </header>
+  <figure class="sources__shot reveal">
+    <x-shot name="sources" alt="The Add a Source sheet: Xtream Codes, M3U link and M3U file under IPTV provider; Plex, Jellyfin and Emby under media server; and Media Folder for videos on this computer." zoom></x-shot>
+  </figure>
+  <ul class="sources__list">
+    <li class="reveal"><span class="sources__tag">IPTV</span><strong>Playlists and providers</strong><span>M3U and M3U8 playlists from an address or a file, and Xtream Codes logins with your provider's details, artwork and replay.</span></li>
+    <li class="reveal"><span class="sources__tag">EPG</span><strong>XMLTV guides</strong><span>Plain or compressed, added to any source, matched to channels by ID or by name.</span></li>
+    <li class="reveal"><span class="sources__tag">SERVER</span><strong>Plex, Jellyfin and Emby</strong><span>Sign in to Plex or connect a server by address. Libraries play straight from the server, and what you've watched goes both ways.</span></li>
+    <li class="reveal"><span class="sources__tag">FOLDER</span><strong>Your own videos</strong><span>Folders on your computer, a drive or a network share, with artwork and details read from beside your files, and a library page to tidy them up.</span></li>
+    <li class="reveal"><span class="sources__tag">ADD-ON</span><strong>Add-ons</strong><span>Catalog and stream add-ons that speak the open Stremio add-on protocol. Xorvio ships with none and recommends none: paste the link of one you trust.</span></li>
+    <li class="reveal"><span class="sources__tag">DEMO</span><strong>Demo library</strong><span>Clearly labeled sample channels, films and series, built in, to look around before you add anything.</span></li>
+  </ul>
+  <p class="sources__note reveal">Xorvio doesn't include, sell or recommend any channels, content or add-ons. Use only sources you have the right to use.</p>
+</section>
+
+<section class="bento" aria-labelledby="more-title">
+  <header class="chapter__head">
+    <p class="eyebrow reveal">And so much more</p>
+    <h2 id="more-title" class="display reveal">Thought through, down to the details.</h2>
+  </header>
+  <div class="bento__grid">
+    <article class="card card--wide reveal">
+      <x-shot name="mini" alt="A film playing in the mini player in the corner while the Series screen is browsed." class="card__shot"></x-shot>
+      <div class="card__text">
+        <h3>Keep watching while you browse</h3>
+        <p>Shrink what's playing to a mini player in any corner, and keep exploring. Click it to bring the picture back.</p>
+      </div>
+    </article>
+    <article class="card reveal">
+      <div class="card__glyph"><x-glyph name="play"></x-glyph></div>
+      <h3>Plays the hard ones</h3>
+      <p>Xorvio carries its own FFmpeg, so MKV, HEVC, AV1, DTS and Dolby audio play without installing anything else.</p>
+    </article>
+    <article class="card reveal">
+      <div class="card__glyph"><x-glyph name="sync"></x-glyph></div>
+      <h3>Backup and sync</h3>
+      <p>Back up your library, with logins sealed by a passphrase if you like, and keep computers in step through a folder you already share. No server.</p>
+    </article>
+    <article class="card reveal">
+      <div class="card__glyph"><x-glyph name="profiles"></x-glyph></div>
+      <h3>Library profiles</h3>
+      <p>Cut a huge catalog down to the languages and genres each person actually watches, each with its own Home.</p>
+    </article>
+    <article class="card reveal">
+      <div class="card__glyph"><x-glyph name="lock"></x-glyph></div>
+      <h3>Parental controls</h3>
+      <p>Lock categories behind a PIN everywhere they appear: browsing, Home, search and channel changes.</p>
+    </article>
+    <article class="card reveal">
+      <div class="card__glyph"><x-glyph name="keyboard"></x-glyph></div>
+      <h3>Keyboard first</h3>
+      <p>Browse, zap, seek in 10 or 60 seconds, open Multiview and start Picture in Picture, all from the keyboard.</p>
+    </article>
+    <article class="card reveal">
+      <div class="card__glyph"><x-glyph name="sparkle"></x-glyph></div>
+      <h3>Tidy names</h3>
+      <p>Prefixes, tags and clutter are cleaned from channel and title names for display. Your source is never changed.</p>
+    </article>
+    <article class="card card--wide card--light reveal">
+      <x-shot name="light" alt="Xorvio's Movies screen in the light appearance." class="card__shot"></x-shot>
+      <div class="card__text">
+        <h3>Dark, light, or both</h3>
+        <p>A carefully tuned dark palette for movie nights and a light one for daytime, following your computer or set by hand.</p>
+      </div>
+    </article>
+  </div>
+</section>
+
+<section class="opensource" id="open-source" aria-labelledby="os-title">
+  <div class="opensource__copy">
+    <p class="eyebrow reveal">Open source</p>
+    <h2 id="os-title" class="display reveal">Free. Open. Yours.</h2>
+    <p class="lede reveal">Xorvio is free software under the GNU General Public License. Every line is on GitHub to read, build and improve, and every release is built in the open, its bundled FFmpeg included.</p>
+    <div class="opensource__actions reveal">
+      <a class="button button--primary" href="{{github}}"><x-github></x-github> View on GitHub</a>
+      <a class="button button--ghost" href="{{github}}/blob/HEAD/LICENSE">GPL-3.0 license</a>
+    </div>
+  </div>
+  <ul class="opensource__list" aria-label="What open source means for Xorvio">
+    <li class="reveal"><strong>Every feature, free</strong><span>No trial, no subscription, no locked extras.</span></li>
+    <li class="reveal"><strong>Built in Rust</strong><span>A fast, careful core with a native window on every platform.</span></li>
+    <li class="reveal"><strong>Bring a fix</strong><span>Report bugs, suggest features and send pull requests on GitHub.</span></li>
+    <li class="reveal"><strong>Nothing hidden</strong><span>No telemetry to switch off, because there isn't any.</span></li>
+  </ul>
+</section>
+
+<section class="privacy" id="privacy" aria-labelledby="privacy-title">
+  <div class="privacy__copy">
+    <p class="eyebrow reveal">Privacy</p>
+    <h2 id="privacy-title" class="display reveal">Your library stays yours.</h2>
+    <p class="lede reveal">No account. No ads. No analytics. Your sources, history and watchlist live on your computer, and your logins are kept in your system's own keychain.</p>
+    <a class="textlink reveal" href="/privacy">Read the privacy policy <span aria-hidden="true">→</span></a>
+  </div>
+  <div class="label reveal" aria-label="Privacy summary">
+    <div class="label__head">
+      <span class="label__check" aria-hidden="true"></span>
+      <div>
+        <strong>No data collected</strong>
+        <span>We don't collect any data from Xorvio.</span>
+      </div>
+    </div>
+    <ul class="label__list">
+      <li><span>Account required</span><b>None</b></li>
+      <li><span>Tracking and analytics</span><b>None</b></li>
+      <li><span>Ads</span><b>None</b></li>
+      <li><span>Where your library lives</span><b>On your computer</b></li>
+      <li><span>Where your logins live</span><b>Your keychain</b></li>
+    </ul>
+  </div>
+</section>
+
+<section class="get" id="download" aria-labelledby="get-title">
+  <div class="get__icon reveal"><x-appicon></x-appicon></div>
+  <h2 id="get-title" class="get__title reveal">Xorvio</h2>
+  <p class="get__lede reveal">Free for Mac, Windows and Linux.</p>
+  <ul class="platforms reveal" aria-label="Downloads">
+    <li>
+      <a class="platform" href="{{download}}/Xorvio_aarch64.dmg"><x-glyph name="apple"></x-glyph><strong>macOS</strong><span>Apple silicon · macOS 12 or later</span></a>
+      <a class="platform__alt" href="{{download}}/Xorvio_x64.dmg">For a Mac with Intel</a>
+    </li>
+    <li>
+      <a class="platform" href="{{download}}/Xorvio_x64-setup.exe"><x-glyph name="windows"></x-glyph><strong>Windows</strong><span>Installer · Windows 10 or later</span></a>
+      <a class="platform__alt" href="{{download}}/Xorvio_x64.msi">MSI package</a>
+    </li>
+    <li>
+      <a class="platform" href="{{download}}/Xorvio_amd64.AppImage"><x-glyph name="linux"></x-glyph><strong>Linux</strong><span>AppImage · Ubuntu 22.04 or later</span></a>
+      <a class="platform__alt" href="{{download}}/Xorvio_amd64.deb">.deb for Debian and Ubuntu</a>
+    </li>
+  </ul>
+  <p class="get__meta reveal">Downloads come from the project's <a href="{{github}}/releases">releases on GitHub</a>, with the source code beside them.</p>
+  <div class="get__actions reveal">
+    <a class="button button--ghost" href="/support">Questions? Visit support</a>
+  </div>
+</section>

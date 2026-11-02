@@ -1,0 +1,6 @@
+{"MediaContainer":{"size":1,"totalSize":1,"offset":0,"allowSync":true,"identifier":"com.plexapp.plugins.library","librarySectionID":2,"librarySectionTitle":"Shows","viewGroup":"show","Metadata":[
+{"ratingKey":"201","key":"/library/metadata/201/children","guid":"plex://show/5d9c086c46115600200aa2fe","studio":"Northwind TV","type":"show","title":"Harbour Lights","contentRating":"TV-14","summary":"A lighthouse keeper's family runs the harbour town.","index":1,"audienceRating":7.9,"year":2021,"thumb":"/library/metadata/201/thumb/1790003333","art":"/library/metadata/201/art/1790003333","duration":2640000,"originallyAvailableAt":"2021-09-24","leafCount":3,"viewedLeafCount":1,"childCount":2,"addedAt":1702000000,"updatedAt":1790003333,
+ "Image":[{"alt":"Harbour Lights","type":"coverPoster","url":"/library/metadata/201/thumb/1790003333"},{"alt":"Harbour Lights","type":"background","url":"/library/metadata/201/art/1790003333"}],
+ "Genre":[{"tag":"Drama"},{"tag":"Mystery"}],"Role":[{"tag":"Mara Ellison"}],
+ "Guid":[{"id":"imdb://tt0000201"},{"id":"tmdb://7701"},{"id":"tvdb://99"}]}
+]}}

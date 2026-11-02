@@ -1,0 +1,53 @@
+{
+  "Items": [
+    {
+      "Name": "Test Show",
+      "Id": "3964b139df4c37d43b8d949fbbc17af9",
+      "DateCreated": "2026-10-30T23:45:59.3585145Z",
+      "PremiereDate": "2019-01-07T00:00:00.0000000Z",
+      "OfficialRating": "TV-14",
+      "Overview": "A small-town radio station stays on the air through one long winter.",
+      "Taglines": [],
+      "Genres": [
+        "Drama",
+        "Comedy"
+      ],
+      "CommunityRating": 8.1,
+      "ProductionYear": 2019,
+      "RemoteTrailers": [],
+      "ProviderIds": {
+        "Imdb": "tt9900010",
+        "Tmdb": "990010"
+      },
+      "IsFolder": true,
+      "Type": "Series",
+      "Studios": [
+        {
+          "Name": "Northwind Broadcasting",
+          "Id": "2f357d0b1048b58aab9b6314d2af2083"
+        }
+      ],
+      "UserData": {
+        "PlayedPercentage": 25,
+        "UnplayedItemCount": 3,
+        "PlaybackPositionTicks": 0,
+        "PlayCount": 0,
+        "IsFavorite": false,
+        "Played": false,
+        "Key": "tt9900010",
+        "ItemId": "3964b139df4c37d43b8d949fbbc17af9"
+      },
+      "AirDays": [],
+      "ImageTags": {
+        "Primary": "1356910d5c30f60d4c3d3a033e682dde"
+      },
+      "BackdropImageTags": [
+        "d506f460821d9c1ba3f1ed08dbc8d13c"
+      ],
+      "LocationType": "FileSystem",
+      "MediaType": "Unknown"
+    }
+  ],
+  "TotalRecordCount": 1,
+  "StartIndex": 0
+}

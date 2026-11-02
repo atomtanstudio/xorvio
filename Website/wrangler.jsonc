@@ -1,0 +1,22 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  // The Xorvio website: static pages from ./dist, plus a small Worker that sends
+  // www to the bare domain and adds security headers.
+  "name": "xorvio-web",
+  "main": "worker/index.js",
+  "compatibility_date": "2026-10-20",
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [
+    { "pattern": "xorvio.com/*", "zone_name": "xorvio.com" },
+    { "pattern": "www.xorvio.com/*", "zone_name": "xorvio.com" }
+  ],
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "html_handling": "drop-trailing-slash",
+    "not_found_handling": "404-page",
+    "run_worker_first": true
+  },
+  "observability": { "enabled": true }
+}

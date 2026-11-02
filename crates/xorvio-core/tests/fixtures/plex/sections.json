@@ -1,0 +1,6 @@
+{"MediaContainer":{"size":4,"allowSync":false,"title1":"Plex Library","Directory":[
+{"allowSync":true,"art":"/:/resources/movie-fanart.jpg","key":"1","type":"movie","title":"Films","agent":"tv.plex.agents.movie","scanner":"Plex Movie","language":"en-US","uuid":"a1910c71-683a-4730-9f33-dde03df4983e","updatedAt":1793403733,"createdAt":1793403561,"content":true,"directory":true,"hidden":0,"Location":[{"id":1,"path":"/data/Movies"}]},
+{"allowSync":true,"key":"2","type":"show","title":"Shows","agent":"tv.plex.agents.series","scanner":"Plex TV Series","language":"en-US","uuid":"177435b8-8343-4b5d-be80-58957306b42e","content":true,"directory":true,"hidden":0,"Location":[{"id":2,"path":"/data/TV Shows"}]},
+{"allowSync":true,"key":"3","type":"artist","title":"Music","agent":"tv.plex.agents.music","scanner":"Plex Music","language":"en-US","content":true,"directory":true,"Location":[{"id":3,"path":"/data/Music"}]},
+{"allowSync":true,"key":"4","type":"photo","title":"Photos","agent":"com.plexapp.agents.none","scanner":"Plex Photo Scanner","language":"xn","content":true,"directory":true,"Location":[{"id":4,"path":"/data/Photos"}]}
+]}}

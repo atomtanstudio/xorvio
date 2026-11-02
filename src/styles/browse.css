@@ -1,0 +1,387 @@
+/* Movies and Series (badges, the category list, the list layout's columns),
+   the title pages' ratings, videos and versions, and search's tags. */
+
+/* MARK: Posters */
+
+.poster-card .poster-chips {
+  position: absolute;
+  z-index: 2;
+  top: 8px;
+  left: 8px;
+  right: 30px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.chip.watched {
+  color: #fff;
+  background: color-mix(in srgb, var(--success) 72%, rgba(10, 12, 16, 0.4));
+}
+
+/* MARK: The category list */
+
+.category-picker {
+  position: relative;
+}
+.category-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 260px;
+  min-width: 160px;
+  padding-right: 10px;
+  background-image: none;
+  text-align: left;
+}
+.category-button .category-name {
+  flex: 1;
+}
+.category-chevron {
+  flex: 0 0 auto;
+  color: var(--text-secondary);
+}
+.category-name {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.category-marks {
+  display: inline-flex;
+  gap: 4px;
+  color: var(--text-tertiary);
+  flex: 0 0 auto;
+}
+.category-popover {
+  position: absolute;
+  z-index: 60;
+  top: calc(100% + 6px);
+  left: 0;
+  width: 320px;
+  padding: 6px;
+  border-radius: 12px;
+  background: var(--glass-strong);
+  backdrop-filter: blur(30px) saturate(180%);
+  -webkit-backdrop-filter: blur(30px) saturate(180%);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+  animation: menu-in 0.12s var(--ease-out);
+}
+.category-filter {
+  margin: 2px 0 6px;
+}
+.category-options {
+  max-height: min(420px, calc(100vh - 220px));
+  overflow-y: auto;
+}
+.category-option {
+  width: 100%;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  border-radius: 7px;
+  font-size: 13px;
+  text-align: left;
+  color: var(--text-primary);
+}
+.category-option .category-name {
+  flex: 1;
+}
+.category-option:hover {
+  background: var(--accent-strong);
+  color: #fff;
+}
+.category-option:hover .category-marks,
+.category-option:hover .category-check {
+  color: #fff;
+}
+.category-option.selected {
+  font-weight: 600;
+}
+.category-option.dimmed .category-name {
+  opacity: 0.5;
+}
+.category-check {
+  color: var(--accent);
+  flex: 0 0 auto;
+}
+.category-empty {
+  padding: 8px 10px;
+  margin: 0;
+}
+.category-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+  padding: 8px 6px 2px;
+  border-top: 1px solid var(--separator);
+}
+.category-footer-buttons {
+  display: flex;
+  gap: 6px;
+}
+.category-footer-buttons:empty {
+  display: none;
+}
+
+/* MARK: The list layout */
+
+.list-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.list-mark.saved {
+  color: var(--accent);
+}
+.list-mark.watched {
+  color: var(--success);
+}
+.list-versions {
+  color: var(--text-tertiary);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.list-rating {
+  width: 56px;
+  text-align: right;
+}
+.list-source,
+.source-tag {
+  display: inline-flex;
+  align-items: center;
+  height: 18px;
+  padding: 0 7px;
+  border-radius: 9px;
+  background: var(--surface-raised);
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.list-source {
+  width: 150px;
+  justify-content: center;
+}
+.list-source:empty {
+  visibility: hidden;
+}
+
+/* MARK: Title pages */
+
+.rating-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+}
+.rating-chip strong {
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+}
+.ratings-row {
+  display: flex;
+  gap: 32px;
+  margin-top: 12px;
+}
+.rating-block .rating-source {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+.rating-block .rating-value {
+  font-size: 22px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  margin-top: 2px;
+}
+.rating-block .rating-votes {
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+.video-card {
+  width: 280px;
+  flex: 0 0 auto;
+  text-align: left;
+}
+.video-thumb {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+.video-thumb .video-play {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+}
+.video-thumb .video-play span {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.45);
+}
+.video-card:hover .video-play span {
+  background: rgba(0, 0, 0, 0.62);
+}
+.video-title {
+  margin-top: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.video-kind {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.versions-list {
+  margin-top: 12px;
+  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid var(--separator);
+  overflow: hidden;
+  max-width: 760px;
+}
+.version-option {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  text-align: left;
+}
+.version-option + .version-option {
+  border-top: 1px solid var(--separator);
+}
+.version-option:hover {
+  background: var(--surface-hover);
+}
+.version-radio {
+  color: var(--text-tertiary);
+  flex: 0 0 auto;
+}
+.version-option.selected .version-radio {
+  color: var(--accent);
+}
+.version-text {
+  flex: 1;
+  min-width: 0;
+}
+.version-title {
+  font-size: 13.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.version-where {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.version-facts {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+/* MARK: Episodes */
+
+.season-chip .season-done {
+  color: var(--success);
+  margin-right: 5px;
+  vertical-align: -1px;
+}
+.season-chip.selected .season-done {
+  color: rgba(0, 0, 0, 0.6);
+}
+.episode-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 28px 20px;
+  padding: 4px 0 10px;
+}
+.episode-grid .episode-card {
+  width: auto;
+}
+.episodes-problem {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--warning) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--warning) 35%, transparent);
+  max-width: 640px;
+}
+.episodes-problem svg {
+  color: var(--warning);
+  flex: 0 0 auto;
+  margin-top: 1px;
+}
+.episodes-problem h3 {
+  margin: 0 0 4px;
+  font-size: 14px;
+}
+.episodes-problem p {
+  margin: 0 0 10px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+/* MARK: Search */
+
+.search-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+}
+.result-count {
+  color: var(--text-tertiary);
+  font-size: 13px;
+  white-space: nowrap;
+}
+.channel-card .source-tag {
+  margin-top: 4px;
+}
+.program-channel .source-tag {
+  flex: 0 0 auto;
+}
+.program-more {
+  align-self: flex-start;
+  margin: 6px 0 0 4px;
+}
+.section-actions {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.section-actions .link-button {
+  margin-top: 4px;
+  gap: 5px;
+}

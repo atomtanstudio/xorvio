@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.wrangler/
+# Full-resolution app captures (about 60 MB); see README for how to make them.
+shots/
+showcase/.run/
+# Generated artwork lives in the H3LIX library; keep only the manifests that pick it.
+showcase/art/*
+!showcase/art/*.json
+shots-swift/

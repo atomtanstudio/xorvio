@@ -1,0 +1,130 @@
+<!doctype html>
+<!--
+  A title's trailer behind its page in Xorvio: YouTube's player, muted, with
+  no controls, told what to do and listened to through postMessage. It's
+  served from the media gateway (http://127.0.0.1) because YouTube's player
+  refuses to play in pages that aren't served over http, as the app's own
+  aren't. Only the gateway's origin reaches YouTube as the referrer.
+
+  Tells the page around it: {xorvioTrailer, type: "state", value} as YouTube's
+  player state changes, "time" with {t, d} twice a second, and "error" with
+  YouTube's code. Takes {xorvioTrailer, command: "mute" | "unmute" | "stop"}.
+-->
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <!-- Ready for the player's own page and its stills while YouTube's script loads. -->
+    <link rel="preconnect" href="https://www.youtube.com" />
+    <link rel="preconnect" href="https://www.youtube-nocookie.com" />
+    <link rel="preconnect" href="https://i.ytimg.com" />
+    <title>Trailer</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #000;
+      }
+      #player {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        border: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="player"></div>
+    <script>
+      "use strict";
+      const id = new URLSearchParams(location.search).get("v") || "";
+      let player = null;
+      let finished = false;
+
+      function tell(type, value) {
+        window.parent.postMessage({ xorvioTrailer: true, type, value }, "*");
+      }
+
+      if (!/^[\w-]{6,20}$/.test(id)) {
+        tell("error", "id");
+      } else {
+        const api = document.createElement("script");
+        api.src = "https://www.youtube.com/iframe_api";
+        api.onerror = () => tell("error", "unreachable");
+        document.head.appendChild(api);
+      }
+
+      window.onYouTubeIframeAPIReady = () => {
+        player = new YT.Player("player", {
+          host: "https://www.youtube-nocookie.com",
+          videoId: id,
+          playerVars: {
+            autoplay: 1,
+            mute: 1,
+            controls: 0,
+            disablekb: 1,
+            fs: 0,
+            iv_load_policy: 3,
+            rel: 0,
+            playsinline: 1,
+            cc_load_policy: 0,
+            origin: location.origin,
+          },
+          events: {
+            onReady: (event) => {
+              const player = event.target;
+              player.mute();
+              // Autoplay has usually begun by now (buffering): asked for
+              // only when it hasn't.
+              const state = player.getPlayerState();
+              if (state !== 1 && state !== 3) player.playVideo();
+              tell("ready");
+            },
+            onStateChange: (event) => {
+              if (event.data === 0) finished = true;
+              tell("state", event.data);
+            },
+            onError: (event) => tell("error", event.data),
+            // No captions over the picture, whatever YouTube remembers: the
+            // track is switched off once YouTube loads them (unloading them
+            // instead makes YouTube pause a moment later).
+            onApiChange: (event) => {
+              const player = event.target;
+              const track = player.getOption && player.getOption("captions", "track");
+              if (track && track.languageCode) player.setOption("captions", "track", {});
+            },
+          },
+        });
+      };
+
+      setInterval(() => {
+        if (!player || !player.getDuration || finished) return;
+        tell("time", { t: player.getCurrentTime(), d: player.getDuration() });
+      }, 500);
+
+      // Nothing plays while the window is out of sight.
+      document.addEventListener("visibilitychange", () => {
+        if (!player || !player.pauseVideo || finished) return;
+        if (document.hidden) player.pauseVideo();
+        else player.playVideo();
+      });
+
+      window.addEventListener("message", (event) => {
+        const message = event.data;
+        if (event.source !== window.parent || !message || !message.xorvioTrailer || !player || !player.mute) return;
+        if (message.command === "mute") player.mute();
+        else if (message.command === "unmute") {
+          player.unMute();
+          player.setVolume(100);
+        } else if (message.command === "stop") {
+          finished = true;
+          player.stopVideo();
+        }
+      });
+    </script>
+  </body>
+</html>

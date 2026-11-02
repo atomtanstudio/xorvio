@@ -1,0 +1,21 @@
+{"MediaContainer":{"size":1,"allowSync":true,"identifier":"com.plexapp.plugins.library","librarySectionID":1,"librarySectionTitle":"Films","Metadata":[
+{"ratingKey":"101","key":"/library/metadata/101","guid":"plex://movie/5d7768ba96b655001fdc0408","studio":"Northwind Pictures","type":"movie","title":"Canyon Survey","librarySectionTitle":"Films","librarySectionID":1,"originalTitle":"Le Relevé","contentRating":"gb/15","summary":"A surveyor maps a canyon that keeps changing shape.","rating":7.2,"audienceRating":8.1,"year":2018,"tagline":"Every line is a promise.","thumb":"/library/metadata/101/thumb/1790001111","art":"/library/metadata/101/art/1790001111","duration":5520000,"originallyAvailableAt":"2018-04-12","addedAt":1700000000,
+ "Media":[{"id":101,"duration":5520000,"bitrate":18000,"width":3840,"height":2160,"aspectRatio":1.78,"audioChannels":6,"audioCodec":"eac3","videoCodec":"hevc","videoResolution":"4k","container":"mkv","videoProfile":"main 10",
+  "Part":[{"id":101,"key":"/library/parts/101/1790001000/file.mkv","duration":5520000,"container":"mkv",
+   "Stream":[
+    {"id":1,"streamType":1,"codec":"hevc","bitDepth":10,"colorPrimaries":"bt2020","colorSpace":"bt2020nc","colorTrc":"smpte2084","height":2160,"width":3840,"displayTitle":"4K HDR10 (HEVC Main 10)"},
+    {"id":2,"streamType":2,"selected":true,"codec":"eac3","channels":6,"language":"English","displayTitle":"English (EAC3 5.1)"},
+    {"id":3,"streamType":3,"codec":"srt","language":"English","displayTitle":"English (SRT)"}
+   ]}]}],
+ "Image":[{"alt":"Canyon Survey","type":"coverPoster","url":"/library/metadata/101/thumb/1790001111"},{"alt":"Canyon Survey","type":"background","url":"/library/metadata/101/art/1790001111"},{"alt":"Canyon Survey","type":"clearLogo","url":"/library/metadata/101/clearLogo/1790001112"}],
+ "Genre":[{"id":6,"filter":"genre=6","tag":"Drama"},{"id":7,"filter":"genre=7","tag":"Thriller"},{"id":8,"filter":"genre=8","tag":"Mystery"}],
+ "Country":[{"id":12,"filter":"country=12","tag":"Ireland"},{"id":13,"filter":"country=13","tag":"France"}],
+ "Director":[{"id":20,"filter":"director=20","tag":"Joon Park","thumb":"https://metadata-static.plex.tv/people/joon.jpg"}],
+ "Writer":[{"id":21,"filter":"writer=21","tag":"Ada Lune"},{"id":22,"filter":"writer=22","tag":"Bea Script"}],
+ "Role":[
+  {"id":30,"filter":"actor=30","tag":"Mara Ellison","tagKey":"5d776","role":"Ada","thumb":"https://metadata-static.plex.tv/people/mara.jpg"},
+  {"id":31,"filter":"actor=31","tag":"Teo Varga","role":"The Surveyor","thumb":"/library/metadata/101/person/31"},
+  {"id":32,"filter":"actor=32","tag":"Ines Bell"}
+ ],
+ "Guid":[{"id":"imdb://tt0000101"},{"id":"tmdb://5501"}]}
+]}}

@@ -1,0 +1,31 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "website",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "--prefix",
+        "Website",
+        "wrangler",
+        "dev",
+        "--config",
+        "Website/wrangler.jsonc",
+        "--port",
+        "8787",
+        "--ip",
+        "127.0.0.1"
+      ],
+      "port": 8787
+    },
+    {
+      "name": "ui",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev"
+      ],
+      "port": 1420
+    }
+  ]
+}

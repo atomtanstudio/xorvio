@@ -1,0 +1,218 @@
+# Builds a release when a version tag (v0.1.0) is pushed, into a draft
+# GitHub release to look over and publish by hand:
+#
+#   macOS    a disk image each for Apple silicon and Intel (both built on
+#            Apple silicon); signed with the Developer ID and notarized when
+#            the Apple secrets are set, otherwise signed ad hoc
+#   Windows  an NSIS installer and an MSI
+#   Linux    an AppImage and a .deb, built on Ubuntu 22.04
+#
+# Each carries Xorvio's own ffmpeg and ffprobe, built from upstream's sources
+# by Scripts/build-ffmpeg.sh (in MSYS2 on Windows). ffmpeg is GPL, so the
+# release also carries those exact sources and how each copy was configured.
+# The README's "Releases" section lists the secrets.
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  check:
+    name: Version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: The tag matches the version in the app, Cargo and npm
+        run: |
+          app="$(jq -r .version src-tauri/tauri.conf.json)"
+          npm="$(jq -r .version package.json)"
+          cargo="$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -1)"
+          echo "tag $GITHUB_REF_NAME, tauri.conf.json $app, package.json $npm, Cargo.toml $cargo"
+          if [ "$GITHUB_REF_NAME" != "v$app" ] || [ "$npm" != "$app" ] || [ "$cargo" != "$app" ]; then
+            echo "::error::The tag and the three versions have to agree."
+            exit 1
+          fi
+
+  build:
+    name: ${{ matrix.name }}
+    needs: check
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: macOS (Apple silicon)
+            os: macos-latest
+            target: aarch64-apple-darwin
+            bundles: app,dmg
+          # Rust, x264, dav1d and ffmpeg all cross-compile to Intel.
+          - name: macOS (Intel)
+            os: macos-latest
+            target: x86_64-apple-darwin
+            bundles: app,dmg
+          - name: Windows
+            os: windows-latest
+            target: x86_64-pc-windows-msvc
+            bundles: nsis,msi
+          - name: Linux
+            os: ubuntu-22.04
+            target: x86_64-unknown-linux-gnu
+            bundles: appimage,deb
+    runs-on: ${{ matrix.os }}
+    env:
+      # Secrets can't be tested in `if:`, so whether they're set is noted here.
+      HAS_APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE != '' }}
+      HAS_APPLE_API_KEY: ${{ secrets.APPLE_API_PRIVATE_KEY != '' }}
+      HAS_APPLE_ID: ${{ secrets.APPLE_ID != '' }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install Linux packages
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev \
+            libssl-dev libxdo-dev libdbus-1-dev pkg-config patchelf
+
+      - uses: ./.github/actions/xorvio-ffmpeg
+        with:
+          target: ${{ matrix.target }}
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.target }}
+
+      # Tauri signs with APPLE_SIGNING_IDENTITY after importing APPLE_CERTIFICATE,
+      # and notarizes when APPLE_API_* or APPLE_ID, APPLE_PASSWORD and APPLE_TEAM_ID
+      # are set. Set but empty, they'd make it try, so they're only set when the
+      # secrets are.
+      - name: Sign with the Developer ID (macOS)
+        if: runner.os == 'macOS' && env.HAS_APPLE_CERTIFICATE == 'true'
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+        run: |
+          {
+            echo "APPLE_CERTIFICATE<<CERTIFICATE_END"
+            echo "$APPLE_CERTIFICATE"
+            echo "CERTIFICATE_END"
+            echo "APPLE_CERTIFICATE_PASSWORD=$APPLE_CERTIFICATE_PASSWORD"
+            echo "APPLE_SIGNING_IDENTITY=$APPLE_SIGNING_IDENTITY"
+          } >> "$GITHUB_ENV"
+
+      - name: Notarize with an App Store Connect API key (macOS)
+        if: runner.os == 'macOS' && env.HAS_APPLE_CERTIFICATE == 'true' && env.HAS_APPLE_API_KEY == 'true'
+        env:
+          APPLE_API_PRIVATE_KEY: ${{ secrets.APPLE_API_PRIVATE_KEY }}
+          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+        run: |
+          key="$RUNNER_TEMP/AuthKey_$APPLE_API_KEY.p8"
+          printf '%s\n' "$APPLE_API_PRIVATE_KEY" > "$key"
+          {
+            echo "APPLE_API_KEY=$APPLE_API_KEY"
+            echo "APPLE_API_ISSUER=$APPLE_API_ISSUER"
+            echo "APPLE_API_KEY_PATH=$key"
+          } >> "$GITHUB_ENV"
+
+      - name: Notarize with an Apple ID (macOS)
+        if: runner.os == 'macOS' && env.HAS_APPLE_CERTIFICATE == 'true' && env.HAS_APPLE_API_KEY != 'true' && env.HAS_APPLE_ID == 'true'
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          {
+            echo "APPLE_ID=$APPLE_ID"
+            echo "APPLE_PASSWORD=$APPLE_PASSWORD"
+            echo "APPLE_TEAM_ID=$APPLE_TEAM_ID"
+          } >> "$GITHUB_ENV"
+
+      # Without a certificate the app is still sealed, ad hoc: it opens after
+      # System Settings › Privacy & Security › Open Anyway.
+      - name: Sign ad hoc (macOS, no certificate)
+        if: runner.os == 'macOS' && env.HAS_APPLE_CERTIFICATE != 'true'
+        run: echo "APPLE_SIGNING_IDENTITY=-" >> "$GITHUB_ENV"
+
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Built-in Trakt and TMDB credentials, when the repository has them.
+          XORVIO_TRAKT_CLIENT_ID: ${{ secrets.XORVIO_TRAKT_CLIENT_ID }}
+          XORVIO_TMDB_KEY: ${{ secrets.XORVIO_TMDB_KEY }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: Xorvio ${{ github.ref_name }}
+          releaseDraft: true
+          releaseBody: |
+            Xorvio is free software under the GNU GPL, version 3 or later.
+
+            Every download includes Xorvio's own ffmpeg and ffprobe, built with x264 and dav1d (and OpenSSL on Linux) by `Scripts/build-ffmpeg.sh`. They're GPL too: their exact sources and each build's configuration (`ffmpeg-*-BUILDINFO.txt`) are attached to this release, and THIRD-PARTY.md lists their licences.
+          args: --target ${{ matrix.target }} --bundles ${{ matrix.bundles }} --config src-tauri/tauri.ffmpeg.conf.json
+          # Names without the version (Xorvio_aarch64.dmg, Xorvio_x64-setup.exe,
+          # Xorvio_amd64.AppImage), so the website's releases/latest/download
+          # links reach whichever release is newest.
+          assetNamePattern: "[name]_[arch][setup][ext]"
+
+      - name: Keep the ffmpeg build notes
+        shell: bash
+        run: cp "build/ffmpeg/${{ matrix.target }}/BUILDINFO.txt" "ffmpeg-${{ matrix.target }}-BUILDINFO.txt"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ffmpeg-buildinfo-${{ matrix.target }}
+          path: ffmpeg-${{ matrix.target }}-BUILDINFO.txt
+
+  # The GPL asks for the source of what's distributed, so it goes beside it.
+  sources:
+    name: ffmpeg's sources
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/download-artifact@v5
+        with:
+          pattern: ffmpeg-buildinfo-*
+          path: buildinfo
+          merge-multiple: true
+
+      - name: Attach the sources and build notes to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # The pins, read from the script so they can't drift apart.
+          eval "$(grep -E '^(FFMPEG|X264|DAV1D|OPENSSL)_(VERSION|COMMIT|URL|SHA256)=' Scripts/build-ffmpeg.sh)"
+          mkdir sources
+          fetch() {
+            local file="sources/${1##*/}"
+            curl -fsSL --retry 3 -o "$file" "$1"
+            echo "$2  $file" | sha256sum --check -
+          }
+          fetch "$FFMPEG_URL" "$FFMPEG_SHA256"
+          fetch "$X264_URL" "$X264_SHA256"
+          fetch "$DAV1D_URL" "$DAV1D_SHA256"
+          fetch "$OPENSSL_URL" "$OPENSSL_SHA256"
+          gh release upload "$GITHUB_REF_NAME" sources/* buildinfo/* THIRD-PARTY.md --clobber

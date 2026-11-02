@@ -1,0 +1,298 @@
+{
+  "Name": "Test Film One",
+  "OriginalTitle": "Film Un d'Essai",
+  "Id": "10",
+  "DateCreated": "2026-10-30T23:40:49.0000000Z",
+  "DateModified": "2026-10-30T23:40:49.0000000Z",
+  "CanDelete": true,
+  "CanDownload": true,
+  "PresentationUniqueKey": "p-tmdb-Movie-990001-a95bcb57b99345229957dbb098709513",
+  "SupportsSync": true,
+  "Container": "mp4",
+  "SortName": "Test Film One",
+  "ForcedSortName": "Test Film One",
+  "PremiereDate": "2020-04-12T00:00:00.0000000Z",
+  "ExternalUrls": [
+    {
+      "Name": "IMDb",
+      "Url": "https://www.imdb.com/title/tt9900001"
+    },
+    {
+      "Name": "TheMovieDb",
+      "Url": "https://www.themoviedb.org/movie/990001"
+    },
+    {
+      "Name": "Trakt",
+      "Url": "https://trakt.tv/search/tmdb/990001?id_type=movie"
+    }
+  ],
+  "MediaSources": [
+    {
+      "Chapters": [
+        {
+          "StartPositionTicks": 0,
+          "Name": "Chapter 1",
+          "MarkerType": "Chapter",
+          "ChapterIndex": 0
+        },
+        {
+          "StartPositionTicks": 3000000000,
+          "Name": "Chapter 2",
+          "MarkerType": "Chapter",
+          "ChapterIndex": 1
+        }
+      ],
+      "Protocol": "File",
+      "Id": "mediasource_10",
+      "Path": "/media/Movies/Test Film One (2020)/Test Film One (2020).mp4",
+      "Type": "Default",
+      "Container": "mp4",
+      "Size": 8500355,
+      "Name": "Test Film One",
+      "IsRemote": false,
+      "HasMixedProtocols": false,
+      "RunTimeTicks": 3600000000,
+      "SupportsTranscoding": true,
+      "SupportsDirectStream": true,
+      "SupportsDirectPlay": true,
+      "IsInfiniteStream": false,
+      "RequiresOpening": false,
+      "RequiresClosing": false,
+      "RequiresLooping": false,
+      "SupportsProbing": true,
+      "MediaStreams": [
+        {
+          "Codec": "h264",
+          "CodecTag": "avc1",
+          "Language": "und",
+          "TimeBase": "1/10240",
+          "VideoRange": "SDR",
+          "DisplayTitle": "720p H264",
+          "NalLengthSize": "4",
+          "IsInterlaced": false,
+          "BitRate": 89507,
+          "BitDepth": 8,
+          "RefFrames": 1,
+          "IsDefault": true,
+          "IsForced": false,
+          "IsHearingImpaired": false,
+          "Height": 720,
+          "Width": 1280,
+          "AverageFrameRate": 10,
+          "RealFrameRate": 10,
+          "Profile": "Constrained Baseline",
+          "Type": "Video",
+          "AspectRatio": "16:9",
+          "Index": 0,
+          "IsExternal": false,
+          "IsTextSubtitleStream": false,
+          "SupportsExternalStream": false,
+          "Protocol": "File",
+          "PixelFormat": "yuv420p",
+          "Level": 31,
+          "IsAnamorphic": false,
+          "ExtendedVideoType": "None",
+          "ExtendedVideoSubType": "None",
+          "ExtendedVideoSubTypeDescription": "None",
+          "AttachmentSize": 0
+        },
+        {
+          "Codec": "aac",
+          "CodecTag": "mp4a",
+          "Language": "und",
+          "TimeBase": "1/48000",
+          "DisplayTitle": "AAC stereo (Default)",
+          "IsInterlaced": false,
+          "ChannelLayout": "stereo",
+          "BitRate": 96291,
+          "Channels": 2,
+          "SampleRate": 48000,
+          "IsDefault": true,
+          "IsForced": false,
+          "IsHearingImpaired": false,
+          "Profile": "LC",
+          "Type": "Audio",
+          "Index": 1,
+          "IsExternal": false,
+          "IsTextSubtitleStream": false,
+          "SupportsExternalStream": false,
+          "Protocol": "File",
+          "ExtendedVideoType": "None",
+          "ExtendedVideoSubType": "None",
+          "ExtendedVideoSubTypeDescription": "None",
+          "AttachmentSize": 0
+        }
+      ],
+      "Formats": [],
+      "Bitrate": 188896,
+      "RequiredHttpHeaders": {},
+      "AddApiKeyToDirectStreamUrl": false,
+      "ReadAtNativeFramerate": false,
+      "DefaultAudioStreamIndex": 1,
+      "ItemId": "10"
+    }
+  ],
+  "ProductionLocations": [
+    "Ireland"
+  ],
+  "Path": "/media/Movies/Test Film One (2020)/Test Film One (2020).mp4",
+  "OfficialRating": "PG-13",
+  "Overview": "A surveyor maps a canyon that keeps changing shape.",
+  "Taglines": [
+    "Every map is a guess."
+  ],
+  "Genres": [
+    "Science Fiction",
+    "Drama"
+  ],
+  "CommunityRating": 7.4,
+  "RunTimeTicks": 3600000000,
+  "Size": 8500355,
+  "FileName": "Test Film One (2020).mp4",
+  "Bitrate": 188896,
+  "ProductionYear": 2020,
+  "RemoteTrailers": [
+    {
+      "Url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+    }
+  ],
+  "ProviderIds": {
+    "Tmdb": "990001",
+    "Imdb": "tt9900001"
+  },
+  "IsFolder": false,
+  "ParentId": "8",
+  "Type": "Movie",
+  "People": [
+    {
+      "Name": "Joon Park",
+      "Id": "14",
+      "Type": "Director"
+    },
+    {
+      "Name": "Ines Okafor",
+      "Id": "15",
+      "Type": "Writer"
+    },
+    {
+      "Name": "Mara Ellison",
+      "Id": "16",
+      "Role": "Ada Quill",
+      "Type": "Actor"
+    },
+    {
+      "Name": "Tomas Reyes",
+      "Id": "17",
+      "Role": "The Ranger",
+      "Type": "Actor"
+    }
+  ],
+  "Studios": [
+    {
+      "Name": "Lantern Pictures",
+      "Id": 20
+    }
+  ],
+  "TagItems": [],
+  "LocalTrailerCount": 0,
+  "UserData": {
+    "PlayedPercentage": 33.33333333333333,
+    "PlaybackPositionTicks": 1200000000,
+    "PlayCount": 0,
+    "IsFavorite": false,
+    "LastPlayedDate": "2026-10-29T20:00:00.0000000Z",
+    "Played": false
+  },
+  "DisplayPreferencesId": "dbf7709c41faaa746463d67978eb863d",
+  "PrimaryImageAspectRatio": 0.6666666666666666,
+  "MediaStreams": [
+    {
+      "Codec": "h264",
+      "CodecTag": "avc1",
+      "Language": "und",
+      "TimeBase": "1/10240",
+      "VideoRange": "SDR",
+      "DisplayTitle": "720p H264",
+      "NalLengthSize": "4",
+      "IsInterlaced": false,
+      "BitRate": 89507,
+      "BitDepth": 8,
+      "RefFrames": 1,
+      "IsDefault": true,
+      "IsForced": false,
+      "IsHearingImpaired": false,
+      "Height": 720,
+      "Width": 1280,
+      "AverageFrameRate": 10,
+      "RealFrameRate": 10,
+      "Profile": "Constrained Baseline",
+      "Type": "Video",
+      "AspectRatio": "16:9",
+      "Index": 0,
+      "IsExternal": false,
+      "IsTextSubtitleStream": false,
+      "SupportsExternalStream": false,
+      "Protocol": "File",
+      "PixelFormat": "yuv420p",
+      "Level": 31,
+      "IsAnamorphic": false,
+      "ExtendedVideoType": "None",
+      "ExtendedVideoSubType": "None",
+      "ExtendedVideoSubTypeDescription": "None",
+      "AttachmentSize": 0
+    },
+    {
+      "Codec": "aac",
+      "CodecTag": "mp4a",
+      "Language": "und",
+      "TimeBase": "1/48000",
+      "DisplayTitle": "AAC stereo (Default)",
+      "IsInterlaced": false,
+      "ChannelLayout": "stereo",
+      "BitRate": 96291,
+      "Channels": 2,
+      "SampleRate": 48000,
+      "IsDefault": true,
+      "IsForced": false,
+      "IsHearingImpaired": false,
+      "Profile": "LC",
+      "Type": "Audio",
+      "Index": 1,
+      "IsExternal": false,
+      "IsTextSubtitleStream": false,
+      "SupportsExternalStream": false,
+      "Protocol": "File",
+      "ExtendedVideoType": "None",
+      "ExtendedVideoSubType": "None",
+      "ExtendedVideoSubTypeDescription": "None",
+      "AttachmentSize": 0
+    }
+  ],
+  "PartCount": 1,
+  "ImageTags": {
+    "Primary": "586cc6a922702aac045d3c8b3a1952e9",
+    "Logo": "9b195430b0ef3d52cce00f013d34e02f"
+  },
+  "BackdropImageTags": [
+    "2cd41f0384a71209deaea23217a85794"
+  ],
+  "Chapters": [
+    {
+      "StartPositionTicks": 0,
+      "Name": "Chapter 1",
+      "MarkerType": "Chapter",
+      "ChapterIndex": 0
+    },
+    {
+      "StartPositionTicks": 3000000000,
+      "Name": "Chapter 2",
+      "MarkerType": "Chapter",
+      "ChapterIndex": 1
+    }
+  ],
+  "MediaType": "Video",
+  "LockedFields": [],
+  "LockData": false,
+  "Width": 1280,
+  "Height": 720
+}

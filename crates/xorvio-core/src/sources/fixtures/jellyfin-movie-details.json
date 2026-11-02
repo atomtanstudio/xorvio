@@ -1,0 +1,282 @@
+{
+  "Name": "Test Film One",
+  "OriginalTitle": "Film Un d'Essai",
+  "Id": "73b9bbbd0dd0de91c34825af0bde00b9",
+  "DateCreated": "2026-10-30T23:40:49.0807623Z",
+  "CanDelete": true,
+  "CanDownload": true,
+  "Container": "mov,mp4,m4a,3gp,3g2,mj2",
+  "SortName": "test film one",
+  "PremiereDate": "2020-04-12T00:00:00.0000000Z",
+  "ExternalUrls": [
+    {
+      "Name": "IMDb",
+      "Url": "https://www.imdb.com/title/tt9900001"
+    },
+    {
+      "Name": "TMDB",
+      "Url": "https://www.themoviedb.org/movie/990001"
+    }
+  ],
+  "MediaSources": [
+    {
+      "Protocol": "File",
+      "Id": "73b9bbbd0dd0de91c34825af0bde00b9",
+      "Path": "/media/Movies/Test Film One (2020)/Test Film One (2020).mp4",
+      "Type": "Default",
+      "Container": "mp4",
+      "Size": 8500355,
+      "Name": "Test Film One (2020)",
+      "IsRemote": false,
+      "ETag": "7ee4969470f8fdede1de042b7e94ae5e",
+      "RunTimeTicks": 3600000000,
+      "ReadAtNativeFramerate": false,
+      "IgnoreDts": false,
+      "IgnoreIndex": false,
+      "GenPtsInput": false,
+      "SupportsTranscoding": true,
+      "SupportsDirectStream": true,
+      "SupportsDirectPlay": true,
+      "IsInfiniteStream": false,
+      "UseMostCompatibleTranscodingProfile": false,
+      "RequiresOpening": false,
+      "RequiresClosing": false,
+      "RequiresLooping": false,
+      "SupportsProbing": true,
+      "VideoType": "VideoFile",
+      "MediaStreams": [
+        {
+          "Codec": "h264",
+          "CodecTag": "avc1",
+          "Language": "und",
+          "TimeBase": "1/10240",
+          "VideoRange": "SDR",
+          "VideoRangeType": "SDR",
+          "AudioSpatialFormat": "None",
+          "DisplayTitle": "720p H264 SDR",
+          "NalLengthSize": "4",
+          "IsInterlaced": false,
+          "IsAVC": true,
+          "BitRate": 89507,
+          "BitDepth": 8,
+          "RefFrames": 1,
+          "IsDefault": true,
+          "IsForced": false,
+          "IsHearingImpaired": false,
+          "IsOriginal": false,
+          "Height": 720,
+          "Width": 1280,
+          "AverageFrameRate": 10,
+          "RealFrameRate": 10,
+          "ReferenceFrameRate": 10,
+          "Profile": "Constrained Baseline",
+          "Type": "Video",
+          "AspectRatio": "16:9",
+          "Index": 0,
+          "IsExternal": false,
+          "IsTextSubtitleStream": false,
+          "SupportsExternalStream": false,
+          "PixelFormat": "yuv420p",
+          "Level": 31,
+          "IsAnamorphic": false
+        },
+        {
+          "Codec": "aac",
+          "CodecTag": "mp4a",
+          "Language": "und",
+          "TimeBase": "1/48000",
+          "VideoRange": "Unknown",
+          "VideoRangeType": "Unknown",
+          "AudioSpatialFormat": "None",
+          "LocalizedDefault": "Default",
+          "LocalizedExternal": "External",
+          "LocalizedLanguage": "Undetermined",
+          "LocalizedOriginal": "Original",
+          "DisplayTitle": "AAC - Stereo - Default",
+          "IsInterlaced": false,
+          "ChannelLayout": "stereo",
+          "BitRate": 96291,
+          "Channels": 2,
+          "SampleRate": 48000,
+          "IsDefault": true,
+          "IsForced": false,
+          "IsHearingImpaired": false,
+          "IsOriginal": false,
+          "Profile": "LC",
+          "Type": "Audio",
+          "Index": 1,
+          "IsExternal": false,
+          "IsTextSubtitleStream": false,
+          "SupportsExternalStream": false
+        }
+      ],
+      "MediaAttachments": [],
+      "Formats": [],
+      "Bitrate": 188896,
+      "RequiredHttpHeaders": {},
+      "TranscodingSubProtocol": "http",
+      "DefaultAudioStreamIndex": 1,
+      "HasSegments": false
+    }
+  ],
+  "ProductionLocations": [
+    "Ireland"
+  ],
+  "Path": "/media/Movies/Test Film One (2020)/Test Film One (2020).mp4",
+  "EnableMediaSourceDisplay": true,
+  "OfficialRating": "PG-13",
+  "Overview": "A surveyor maps a canyon that keeps changing shape.",
+  "Taglines": [
+    "Every map is a guess."
+  ],
+  "Genres": [
+    "Science Fiction",
+    "Drama"
+  ],
+  "CommunityRating": 7.4,
+  "RunTimeTicks": 3600000000,
+  "PlayAccess": "Full",
+  "ProductionYear": 2020,
+  "RemoteTrailers": [
+    {
+      "Url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+    }
+  ],
+  "ProviderIds": {
+    "Tmdb": "990001",
+    "Imdb": "tt9900001"
+  },
+  "IsHD": true,
+  "IsFolder": false,
+  "ParentId": "e675012a1892a87530d2c0b0d14a9026",
+  "Type": "Movie",
+  "People": [
+    {
+      "Name": "Mara Ellison",
+      "Id": "bd4e48c5b72f8c3acbda52154f4c1787",
+      "Role": "Ada Quill",
+      "Type": "Actor"
+    },
+    {
+      "Name": "Tomas Reyes",
+      "Id": "8a8769fdefd870e6ca17fa8b8a23a1f3",
+      "Role": "The Ranger",
+      "Type": "Actor"
+    },
+    {
+      "Name": "Joon Park",
+      "Id": "a9fc2b04a1b36c0e17a6fb110a374ef5",
+      "Role": "",
+      "Type": "Director"
+    },
+    {
+      "Name": "Ines Okafor",
+      "Id": "0690625f403a72c6435fd09479c77592",
+      "Role": "",
+      "Type": "Writer"
+    }
+  ],
+  "Studios": [
+    {
+      "Name": "Lantern Pictures",
+      "Id": "c2b9c0b9359b4bf637b112004605ee5d"
+    }
+  ],
+  "LocalTrailerCount": 0,
+  "UserData": {
+    "PlayedPercentage": 33.33333333333333,
+    "PlaybackPositionTicks": 1200000000,
+    "PlayCount": 1,
+    "IsFavorite": false,
+    "LastPlayedDate": "2026-10-29T20:00:00.0000000Z",
+    "Played": true,
+    "Key": "990001",
+    "ItemId": "73b9bbbd0dd0de91c34825af0bde00b9"
+  },
+  "SpecialFeatureCount": 0,
+  "DisplayPreferencesId": "dbf7709c41faaa746463d67978eb863d",
+  "Tags": [],
+  "PrimaryImageAspectRatio": 0.6666666666666666,
+  "MediaStreams": [
+    {
+      "Codec": "h264",
+      "CodecTag": "avc1",
+      "Language": "und",
+      "TimeBase": "1/10240",
+      "VideoRange": "SDR",
+      "VideoRangeType": "SDR",
+      "AudioSpatialFormat": "None",
+      "DisplayTitle": "720p H264 SDR",
+      "NalLengthSize": "4",
+      "IsInterlaced": false,
+      "IsAVC": true,
+      "BitRate": 89507,
+      "BitDepth": 8,
+      "RefFrames": 1,
+      "IsDefault": true,
+      "IsForced": false,
+      "IsHearingImpaired": false,
+      "IsOriginal": false,
+      "Height": 720,
+      "Width": 1280,
+      "AverageFrameRate": 10,
+      "RealFrameRate": 10,
+      "ReferenceFrameRate": 10,
+      "Profile": "Constrained Baseline",
+      "Type": "Video",
+      "AspectRatio": "16:9",
+      "Index": 0,
+      "IsExternal": false,
+      "IsTextSubtitleStream": false,
+      "SupportsExternalStream": false,
+      "PixelFormat": "yuv420p",
+      "Level": 31,
+      "IsAnamorphic": false
+    },
+    {
+      "Codec": "aac",
+      "CodecTag": "mp4a",
+      "Language": "und",
+      "TimeBase": "1/48000",
+      "VideoRange": "Unknown",
+      "VideoRangeType": "Unknown",
+      "AudioSpatialFormat": "None",
+      "LocalizedDefault": "Default",
+      "LocalizedExternal": "External",
+      "LocalizedLanguage": "Undetermined",
+      "LocalizedOriginal": "Original",
+      "DisplayTitle": "AAC - Stereo - Default",
+      "IsInterlaced": false,
+      "ChannelLayout": "stereo",
+      "BitRate": 96291,
+      "Channels": 2,
+      "SampleRate": 48000,
+      "IsDefault": true,
+      "IsForced": false,
+      "IsHearingImpaired": false,
+      "IsOriginal": false,
+      "Profile": "LC",
+      "Type": "Audio",
+      "Index": 1,
+      "IsExternal": false,
+      "IsTextSubtitleStream": false,
+      "SupportsExternalStream": false
+    }
+  ],
+  "VideoType": "VideoFile",
+  "ImageTags": {
+    "Primary": "5da423a7f47c6bfd471cab17c2be5b8e",
+    "Logo": "404b097e3593341821a54b8d6e84c446"
+  },
+  "BackdropImageTags": [
+    "71d1a6f43f396e1d18fe7b856dbfd7fc"
+  ],
+  "Chapters": [],
+  "Trickplay": {},
+  "LocationType": "FileSystem",
+  "MediaType": "Video",
+  "LockedFields": [],
+  "LockData": false,
+  "Width": 1280,
+  "Height": 720
+}

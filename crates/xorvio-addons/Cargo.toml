@@ -1,0 +1,25 @@
+[package]
+name = "xorvio-addons"
+description = "Add-ons that speak the Stremio add-on protocol: catalogs, metadata, streams and subtitles."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+xorvio-model.workspace = true
+anyhow.workspace = true
+thiserror.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tokio.workspace = true
+reqwest.workspace = true
+url.workspace = true
+tracing.workspace = true
+futures-util.workspace = true
+regex.workspace = true
+chrono.workspace = true
+percent-encoding = "2.3.2"
+
+[dev-dependencies]
+axum = "0.8.9"
+tempfile = "3.27.0"
