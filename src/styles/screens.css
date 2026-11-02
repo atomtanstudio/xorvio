@@ -2363,6 +2363,13 @@
 .search-page .page-header {
   margin-bottom: 8px;
 }
+.people-track {
+  gap: 28px;
+}
+.shelf-wrap.people .shelf-arrow {
+  top: calc(4px + 47px);
+  transform: translateY(-50%);
+}
 .program-results {
   display: flex;
   flex-direction: column;
@@ -2568,6 +2575,12 @@
   display: flex;
   align-items: center;
   min-width: 0;
+}
+.search-lookups {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
 }
 .settings-note {
   margin: 8px 4px 0;

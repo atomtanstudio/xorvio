@@ -125,6 +125,8 @@ export interface Backend {
   tmdbStatus(): Promise<TmdbStatus>;
   /** Saves the person's own TMDB key (an API key or a read access token) once TMDB takes it; empty removes it. */
   tmdbSetKey(key: string): Promise<TmdbStatus>;
+  /** How many titles are still to be looked up on TMDB for search, or null when they aren't being looked up (switched off, or no key). */
+  searchLookupsLeft(): Promise<number | null>;
   /** Signs a Jellyfin or Emby source in again as the same user. */
   signInToSourceAgain(id: string, password: string): Promise<void>;
   /** Gives a Plex source the token from a new Plex sign-in. */
@@ -533,6 +535,7 @@ async function createTauriBackend(): Promise<Backend> {
     onTraktChanged: subscribe<TraktStatus>("trakt-changed"),
     tmdbStatus: call("tmdbStatus"),
     tmdbSetKey: call("tmdbSetKey", "key"),
+    searchLookupsLeft: call("searchLookupsLeft"),
     signInToSourceAgain: call("signInToSourceAgain", "id", "password"),
     replacePlexSignIn: call("replacePlexSignIn", "id", "pinId"),
     updateSource: call("updateSource", "config", "secrets"),
