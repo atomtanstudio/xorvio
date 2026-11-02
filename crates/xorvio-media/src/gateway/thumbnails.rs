@@ -17,17 +17,18 @@
 //! title comes from. They're made only while nothing else is playing beyond
 //! the title's own stream (no other stream, no other player's, nothing cast)
 //! and the caller's check passes (for a provider: it allows more than one
-//! stream at a time, and no recording from it is running or about to
-//! start), both asked again before every tile, so a recording starting or
-//! another channel playing stops them. Tiles are a second apart and there
-//! are at most 150. ffmpeg reads the title through the gateway (a feed of
-//! its own), which lets one request reach the provider at a time: when
-//! ffmpeg seeks it opens the next request before closing the last, and the
-//! feed ends the last one first. Each request has a connection of its own,
-//! closed with it, so none is ever kept open beside it. Otherwise the title
-//! has none: building them from the stream as it plays would only cover
-//! what has been watched, not where someone scrubs to, and would have the
-//! ffmpeg serving the player decode video it otherwise only copies.
+//! stream at a time, and no recording from it is running or about to start),
+//! both asked again before every tile, so a recording starting or another
+//! channel playing stops them. Another stream starting stops even the tile
+//! under way, so the two never overlap. Tiles are a second apart and there
+//! are at most 150. ffmpeg reads the title through the gateway (a feed of its
+//! own), which lets one request reach the provider at a time: when ffmpeg
+//! seeks it opens the next request before closing the last, and the feed ends
+//! the last one first. Each request has a connection of its own, closed with
+//! it, so none is ever kept open beside it. Otherwise the title has none:
+//! building them from the stream as it plays would only cover what has been
+//! watched, not where someone scrubs to, and would have the ffmpeg serving
+//! the player decode video it otherwise only copies.
 
 mod cache;
 
@@ -419,24 +420,12 @@ impl Shared {
     /// playing, no address handed to another player, nothing on a TV), and
     /// the caller's check passes.
     fn may_connect(&self, target: &StreamTarget, check: &ConnectionCheck) -> Result<(), String> {
-        let (own, others) = {
-            let streams = lock(&self.streams);
-            // Feeds are thumbnails' own, one request at a time.
-            let players = || streams.by_id.iter().filter(|(_, entry)| entry.feed.is_none());
-            let web = |entry: &Entry| Input::of(&entry.target).is_some_and(|input| input.is_web());
-            let own = players()
-                .filter(|(id, entry)| entry.target.url == target.url && !streams.external.contains(id))
-                .count();
-            let others = players()
-                .filter(|(id, entry)| web(entry) && (entry.target.url != target.url || streams.external.contains(id)))
-                .count();
-            (own, others)
-        };
+        let (own, others) = self.streams_of(target);
         if others > 0 || own > 1 {
-            return Err("Something else is playing, and thumbnails would need another connection.".into());
+            return Err(ELSE_PLAYING.into());
         }
         if self.is_casting() {
-            return Err("Something is playing on a TV, and thumbnails would need another connection.".into());
+            return Err(ON_A_TV.into());
         }
         let host = url::Url::parse(&target.url).ok().and_then(|url| {
             let host = url.host_str()?.to_string();
@@ -444,7 +433,37 @@ impl Shared {
         });
         check(host.as_deref().unwrap_or_default())
     }
+
+    /// Something besides the title started (another stream, an address handed
+    /// to another player, a TV) and needs the connection a tile holds. The
+    /// title opened twice doesn't count here: a seek does that for a moment.
+    fn something_else(&self, target: &StreamTarget) -> Option<&'static str> {
+        if self.streams_of(target).1 > 0 {
+            Some(ELSE_PLAYING)
+        } else {
+            self.is_casting().then_some(ON_A_TV)
+        }
+    }
+
+    /// The players with the title, and the streams from anywhere else
+    /// beside it (another title, an address handed to another player).
+    fn streams_of(&self, target: &StreamTarget) -> (usize, usize) {
+        let streams = lock(&self.streams);
+        // Feeds are thumbnails' own, one request at a time.
+        let players = || streams.by_id.iter().filter(|(_, entry)| entry.feed.is_none());
+        let web = |entry: &Entry| Input::of(&entry.target).is_some_and(|input| input.is_web());
+        let own = players()
+            .filter(|(id, entry)| entry.target.url == target.url && !streams.external.contains(id))
+            .count();
+        let others = players()
+            .filter(|(id, entry)| web(entry) && (entry.target.url != target.url || streams.external.contains(id)))
+            .count();
+        (own, others)
+    }
 }
+
+const ELSE_PLAYING: &str = "Something else is playing, and thumbnails would need another connection.";
+const ON_A_TV: &str = "Something is playing on a TV, and thumbnails would need another connection.";
 
 impl Job {
     async fn run(self) {
@@ -548,7 +567,8 @@ impl Job {
     }
 
     /// One tile: the raw frame at `time`, or `None` when there's none to be
-    /// had there. Stops as soon as the title stops playing.
+    /// had there. Stops as soon as the title stops playing, or for a remote
+    /// title, something else starts.
     async fn take(&self, time: f64, keyframes: bool) -> Result<Option<Vec<u8>>, Stop> {
         let Some(input) = Input::of(&self.input) else {
             return Err(Stop::Failed("Xorvio can't open this kind of address.".into()));
@@ -581,14 +601,19 @@ impl Job {
             loop {
                 tokio::time::sleep(GONE_CHECK).await;
                 if !self.shared.still_playing(&self.target) {
-                    break;
+                    break Stop::Gone;
+                }
+                if self.remote.is_some()
+                    && let Some(reason) = self.shared.something_else(&self.target)
+                {
+                    break Stop::Refused(reason.into());
                 }
             }
         };
         // Dropping the child kills ffmpeg, closing any connection it holds.
         let bytes = tokio::select! {
             bytes = tokio::time::timeout(TILE_TIMEOUT, read) => bytes.unwrap_or_default(),
-            _ = gone => return Err(Stop::Gone),
+            stop = gone => return Err(stop),
         };
         let _ = child.start_kill();
         Ok((bytes.len() == want).then_some(bytes))
