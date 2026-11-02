@@ -439,9 +439,15 @@ pub(super) async fn finish(child: &mut Child, stdin: Option<ChildStdin>) {
 pub(super) fn explain(tail: &[String], code: Option<i32>) -> String {
     let text = tail.join("\n").to_lowercase();
     let has = |words: &[&str]| words.iter().any(|w| text.contains(w));
-    if has(&["401", "403", "forbidden", "unauthorized"]) {
+    // HTTP status codes as whole words: ffmpeg starts its lines with a
+    // pointer (`[tcp @ 0x55e5a4013c40]`) that can hold the same digits.
+    let status = |codes: &[&str]| {
+        text.split(|c: char| !c.is_ascii_alphanumeric())
+            .any(|word| codes.contains(&word))
+    };
+    if status(&["401", "403"]) || has(&["forbidden", "unauthorized"]) {
         "The provider refused the stream. The subscription may have expired or reached its connection limit.".into()
-    } else if has(&["404", "not found"]) {
+    } else if status(&["404"]) || has(&["not found"]) {
         "The provider said the channel isn't available right now.".into()
     } else if has(&["server returned 5", "5xx"]) {
         "The provider's server had a problem.".into()
@@ -569,6 +575,12 @@ mod tests {
             say("Connection to tcp://127.0.0.1:1 failed: Error number -10061 occurred")
                 .contains("couldn't be reached")
         );
+        // A pointer with a status code's digits in it isn't a status code.
+        assert!(say(
+            "[tcp @ 0x55e5a4013c40] Connection to tcp://127.0.0.1:1 failed: Connection refused"
+        )
+        .contains("couldn't be reached"));
+        assert!(say("[http @ 0x6000404] HTTP error 401").contains("refused"));
         assert_eq!(explain(&[], Some(0)), "The channel's stream ended.");
     }
 
