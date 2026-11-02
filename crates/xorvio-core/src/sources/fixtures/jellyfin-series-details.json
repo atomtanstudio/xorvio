@@ -1,0 +1,83 @@
+{
+  "Name": "Test Show",
+  "Id": "3964b139df4c37d43b8d949fbbc17af9",
+  "DateCreated": "2026-10-30T23:45:59.3585145Z",
+  "DateLastMediaAdded": "2026-10-30T23:41:16.7982034Z",
+  "CanDelete": true,
+  "CanDownload": false,
+  "SortName": "test show",
+  "PremiereDate": "2019-01-07T00:00:00.0000000Z",
+  "ExternalUrls": [
+    {
+      "Name": "IMDb",
+      "Url": "https://www.imdb.com/title/tt9900010"
+    },
+    {
+      "Name": "TMDB",
+      "Url": "https://www.themoviedb.org/tv/990010"
+    }
+  ],
+  "Path": "/media/Shows/Test Show (2019)",
+  "EnableMediaSourceDisplay": true,
+  "OfficialRating": "TV-14",
+  "Overview": "A small-town radio station stays on the air through one long winter.",
+  "Taglines": [],
+  "Genres": [
+    "Drama",
+    "Comedy"
+  ],
+  "CommunityRating": 8.1,
+  "PlayAccess": "Full",
+  "ProductionYear": 2019,
+  "RemoteTrailers": [],
+  "ProviderIds": {
+    "Tmdb": "990010",
+    "Imdb": "tt9900010"
+  },
+  "IsFolder": true,
+  "ParentId": "74bd751c7ef3115682e1889039d35e20",
+  "Type": "Series",
+  "People": [
+    {
+      "Name": "Nadia Brooks",
+      "Id": "c59fff379248db38ae1b32fa296127ec",
+      "Role": "Host",
+      "Type": "Actor"
+    }
+  ],
+  "Studios": [
+    {
+      "Name": "Northwind Broadcasting",
+      "Id": "2f357d0b1048b58aab9b6314d2af2083"
+    }
+  ],
+  "LocalTrailerCount": 0,
+  "UserData": {
+    "PlayedPercentage": 25,
+    "UnplayedItemCount": 3,
+    "PlaybackPositionTicks": 0,
+    "PlayCount": 0,
+    "IsFavorite": false,
+    "Played": false,
+    "Key": "tt9900010",
+    "ItemId": "3964b139df4c37d43b8d949fbbc17af9"
+  },
+  "RecursiveItemCount": 4,
+  "ChildCount": 2,
+  "SpecialFeatureCount": 0,
+  "DisplayPreferencesId": "f63033ff6886ecc7083a696cbeced1b0",
+  "AirDays": [],
+  "Tags": [],
+  "PrimaryImageAspectRatio": 0.6666666666666666,
+  "ImageTags": {
+    "Primary": "1356910d5c30f60d4c3d3a033e682dde"
+  },
+  "BackdropImageTags": [
+    "d506f460821d9c1ba3f1ed08dbc8d13c"
+  ],
+  "Chapters": [],
+  "LocationType": "FileSystem",
+  "MediaType": "Unknown",
+  "LockedFields": [],
+  "LockData": false
+}

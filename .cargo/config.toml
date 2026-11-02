@@ -1,0 +1,7 @@
+# Sign the app's binary before `cargo run` / `tauri dev` starts it, so the
+# Keychain recognises each build (Scripts/cargo-run-signed.sh).
+[target.aarch64-apple-darwin]
+runner = "Scripts/cargo-run-signed.sh"
+
+[target.x86_64-apple-darwin]
+runner = "Scripts/cargo-run-signed.sh"

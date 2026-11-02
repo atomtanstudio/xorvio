@@ -1,0 +1,22 @@
+.DS_Store
+.build/
+build/
+.wrangler/
+.build-linked/
+
+# Rust + Tauri app
+/target/
+/node_modules/
+/dist/
+src-tauri/gen/
+src-tauri/binaries/
+
+# Signing material and local settings: never commit these.
+*.p12
+*.p8
+*.pem
+*.key
+*.mobileprovision
+.env
+.env.*
+*.tsbuildinfo

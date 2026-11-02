@@ -1,0 +1,71 @@
+{
+  "Items": [
+    {
+      "Name": "Films",
+      "Id": "3",
+      "Guid": "a95bcb57b99345229957dbb098709513",
+      "DateCreated": "2026-10-30T23:46:06.6745004Z",
+      "DateModified": "0001-01-01T00:00:00.0000000Z",
+      "CanDelete": false,
+      "CanDownload": false,
+      "PresentationUniqueKey": "a95bcb57b99345229957dbb098709513",
+      "SortName": "Films",
+      "ForcedSortName": "Films",
+      "ExternalUrls": [],
+      "Taglines": [],
+      "RemoteTrailers": [],
+      "ProviderIds": {},
+      "IsFolder": true,
+      "ParentId": "2",
+      "Type": "CollectionFolder",
+      "UserData": {
+        "PlaybackPositionTicks": 0,
+        "IsFavorite": false,
+        "Played": false
+      },
+      "DisplayPreferencesId": "a95bcb57b99345229957dbb098709513",
+      "PrimaryImageAspectRatio": 1.7777777777777777,
+      "CollectionType": "movies",
+      "ImageTags": {
+        "Primary": "dd9b264ea31eea630103bebefce2d705"
+      },
+      "BackdropImageTags": [],
+      "LockedFields": [],
+      "LockData": false
+    },
+    {
+      "Name": "Shows",
+      "Id": "5",
+      "Guid": "230244a378654abf84f2f8bcdc67a35a",
+      "DateCreated": "2026-10-30T23:46:06.7011424Z",
+      "DateModified": "0001-01-01T00:00:00.0000000Z",
+      "CanDelete": false,
+      "CanDownload": false,
+      "PresentationUniqueKey": "230244a378654abf84f2f8bcdc67a35a",
+      "SortName": "Shows",
+      "ForcedSortName": "Shows",
+      "ExternalUrls": [],
+      "Taglines": [],
+      "RemoteTrailers": [],
+      "ProviderIds": {},
+      "IsFolder": true,
+      "ParentId": "2",
+      "Type": "CollectionFolder",
+      "UserData": {
+        "PlaybackPositionTicks": 0,
+        "IsFavorite": false,
+        "Played": false
+      },
+      "DisplayPreferencesId": "230244a378654abf84f2f8bcdc67a35a",
+      "PrimaryImageAspectRatio": 1.7777777777777777,
+      "CollectionType": "tvshows",
+      "ImageTags": {
+        "Primary": "686ec884f72ce78e657ea94b8697a348"
+      },
+      "BackdropImageTags": [],
+      "LockedFields": [],
+      "LockData": false
+    }
+  ],
+  "TotalRecordCount": 2
+}

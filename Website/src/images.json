@@ -1,0 +1,1454 @@
+{
+ "shots": {
+  "film": {
+   "w": 2880,
+   "h": 1800,
+   "avif": [
+    [
+     "/img/shots/film-960.743fb7d65d.avif",
+     960
+    ],
+    [
+     "/img/shots/film-1440.1f233bdd5b.avif",
+     1440
+    ],
+    [
+     "/img/shots/film-2160.6a92f6c738.avif",
+     2160
+    ],
+    [
+     "/img/shots/film-2880.2c5da00b0c.avif",
+     2880
+    ]
+   ],
+   "webp": [
+    [
+     "/img/shots/film-960.75aca5d127.webp",
+     960
+    ],
+    [
+     "/img/shots/film-1440.416288f0f8.webp",
+     1440
+    ],
+    [
+     "/img/shots/film-2160.ec3a0994fa.webp",
+     2160
+    ],
+    [
+     "/img/shots/film-2880.0a3bc3dbfd.webp",
+     2880
+    ]
+   ]
+  },
+  "home-rows": {
+   "w": 2880,
+   "h": 1800,
+   "avif": [
+    [
+     "/img/shots/home-rows-960.d614c4dbd7.avif",
+     960
+    ],
+    [
+     "/img/shots/home-rows-1440.e354fc837f.avif",
+     1440
+    ],
+    [
+     "/img/shots/home-rows-2160.4393eb1a77.avif",
+     2160
+    ],
+    [
+     "/img/shots/home-rows-2880.497fb1791a.avif",
+     2880
+    ]
+   ],
+   "webp": [
+    [
+     "/img/shots/home-rows-960.bb1b976c80.webp",
+     960
+    ],
+    [
+     "/img/shots/home-rows-1440.c2356d635b.webp",
+     1440
+    ],
+    [
+     "/img/shots/home-rows-2160.fdbbcf3eaa.webp",
+     2160
+    ],
+    [
+     "/img/shots/home-rows-2880.a382d1b576.webp",
+     2880
+    ]
+   ]
+  },
+  "home": {
+   "w": 2880,
+   "h": 1800,
+   "avif": [
+    [
+     "/img/shots/home-960.ca459575f3.avif",
+     960
+    ],
+    [
+     "/img/shots/home-1440.99463a79c9.avif",
+     1440
+    ],
+    [
+     "/img/shots/home-2160.d658891107.avif",
+     2160
+    ],
+    [
+     "/img/shots/home-2880.29db7eb582.avif",
+     2880
+    ]
+   ],
+   "webp": [
+    [
+     "/img/shots/home-960.bcd5e454bc.webp",
+     960
+    ],
+    [
+     "/img/shots/home-1440.d9bed1dcf4.webp",
+     1440
+    ],
+    [
+     "/img/shots/home-2160.ff16996795.webp",
+     2160
+    ],
+    [
+     "/img/shots/home-2880.9c267f0cb6.webp",
+     2880
+    ]
+   ]
+  },
+  "light": {
+   "w": 2880,
+   "h": 1800,
+   "avif": [
+    [
+     "/img/shots/light-960.81681a825c.avif",
+     960
+    ],
+    [
+     "/img/shots/light-1440.4543349b18.avif",
+     1440
+    ],
+    [
+     "/img/shots/light-2160.4a5f3d96a3.avif",
+     2160
+    ],
+    [
+     "/img/shots/light-2880.8f1807ea0b.avif",
+     2880
+    ]
+   ],
+   "webp": [
+    [
+     "/img/shots/light-960.d3f4751097.webp",
+     960
+    ],
+    [
+     "/img/shots/light-1440.0af2e61e37.webp",
+     1440
+    ],
+    [
+     "/img/shots/light-2160.2fff7a9b96.webp",
+     2160
+    ],
+    [
+     "/img/shots/light-2880.78578d843b.webp",
+     2880
+    ]
+   ]
+  },
+  "live": {
+   "w": 2880,
+   "h": 1800,
+   "avif": [
+    [
+     "/img/shots/live-960.dd00c55e41.avif",
+     960
+    ],
+    [
+     "/img/shots/live-1440.0872d42eb7.avif",
+     1440
+    ],
+    [
+     "/img/shots/live-2160.9d0ea7cdcb.avif",
+     2160
+    ],
+    [
+     "/img/shots/live-2880.b3794418ed.avif",
+     2880
+    ]
+   ],
+   "webp": [
+    [
+     "/img/shots/live-960.81568c8a95.webp",
+     960
+    ],
+    [
+     "/img/shots/live-1440.cb0a4e6d62.webp",
+     1440
+    ],
+    [
+     "/img/shots/live-2160.7102ee3560.webp",
+     2160
+    ],
+    [
+     "/img/shots/live-2880.55362f6279.webp",
+     2880
+    ]
+   ]
+  },
+  "mini": {
+   "w": 2880,
+   "h": 1800,
+   "avif": [
+    [
+     "/img/shots/mini-960.398a808e1e.avif",
+     960
+    ],
+    [
+     "/img/shots/mini-1440.3487c1b984.avif",
+     1440
+    ],
+    [
+     "/img/shots/mini-2160.bfe3e5006f.avif",
+     2160
+    ],
+    [
+     "/img/shots/mini-2880.3733494cc1.avif",
+     2880
+    ]
+   ],
+   "webp": [
+    [
+     "/img/shots/mini-960.89a60fb860.webp",
+     960
+    ],
+    [
+     "/img/shots/mini-1440.564512c6cf.webp",
+     1440
+    ],
+    [
+     "/img/shots/mini-2160.5a56b6dde1.webp",
+     2160
+    ],
+    [
+     "/img/shots/mini-2880.175142681c.webp",
+     2880
+    ]
+   ]
+  },
+  "movies": {
+   "w": 2880,
+   "h": 1800,
+   "avif": [
+    [
+     "/img/shots/movies-960.c9d205d218.avif",
+     960
+    ],
+    [
+     "/img/shots/movies-1440.93612881f1.avif",
+     1440
+    ],
+    [
+     "/img/shots/movies-2160.66ebb15c74.avif",
+     2160
+    ],
+    [
+     "/img/shots/movies-2880.23ddb98eaa.avif",
+     2880
+    ]
+   ],
+   "webp": [
+    [
+     "/img/shots/movies-960.4154122a78.webp",
+     960
+    ],
+    [
+     "/img/shots/movies-1440.5b40e3dd38.webp",
+     1440
+    ],
+    [
+     "/img/shots/movies-2160.57fac75aad.webp",
+     2160
+    ],
+    [
+     "/img/shots/movies-2880.c5bc38e7c7.webp",
+     2880
+    ]
+   ]
+  },
+  "multiview": {
+   "w": 2880,
+   "h": 1800,
+   "avif": [
+    [
+     "/img/shots/multiview-960.d5dbe5ae88.avif",
+     960
+    ],
+    [
+     "/img/shots/multiview-1440.5476509a00.avif",
+     1440
+    ],
+    [
+     "/img/shots/multiview-2160.5af3a1d806.avif",
+     2160
+    ],
+    [
+     "/img/shots/multiview-2880.fd0c407917.avif",
+     2880
+    ]
+   ],
+   "webp": [
+    [
+     "/img/shots/multiview-960.ad21a0141c.webp",
+     960
+    ],
+    [
+     "/img/shots/multiview-1440.a0e47c9427.webp",
+     1440
+    ],
+    [
+     "/img/shots/multiview-2160.bcf9a0dd89.webp",
+     2160
+    ],
+    [
+     "/img/shots/multiview-2880.7203228610.webp",
+     2880
+    ]
+   ]
+  },
+  "player": {
+   "w": 2880,
+   "h": 1800,
+   "avif": [
+    [
+     "/img/shots/player-960.dcc1003d39.avif",
+     960
+    ],
+    [
+     "/img/shots/player-1440.63112ecd4f.avif",
+     1440
+    ],
+    [
+     "/img/shots/player-2160.c88cba43df.avif",
+     2160
+    ],
+    [
+     "/img/shots/player-2880.32f3aef383.avif",
+     2880
+    ]
+   ],
+   "webp": [
+    [
+     "/img/shots/player-960.a23d3c971a.webp",
+     960
+    ],
+    [
+     "/img/shots/player-1440.07c5d028cf.webp",
+     1440
+    ],
+    [
+     "/img/shots/player-2160.a31df73d78.webp",
+     2160
+    ],
+    [
+     "/img/shots/player-2880.4c784b5e28.webp",
+     2880
+    ]
+   ]
+  },
+  "recordings": {
+   "w": 2880,
+   "h": 1800,
+   "avif": [
+    [
+     "/img/shots/recordings-960.14812e6eab.avif",
+     960
+    ],
+    [
+     "/img/shots/recordings-1440.9ffe83742f.avif",
+     1440
+    ],
+    [
+     "/img/shots/recordings-2160.6c5b86f5cb.avif",
+     2160
+    ],
+    [
+     "/img/shots/recordings-2880.c5788a47e9.avif",
+     2880
+    ]
+   ],
+   "webp": [
+    [
+     "/img/shots/recordings-960.8647bb1e48.webp",
+     960
+    ],
+    [
+     "/img/shots/recordings-1440.30df3edef7.webp",
+     1440
+    ],
+    [
+     "/img/shots/recordings-2160.84d96da62b.webp",
+     2160
+    ],
+    [
+     "/img/shots/recordings-2880.3243fd90a9.webp",
+     2880
+    ]
+   ]
+  },
+  "search": {
+   "w": 2880,
+   "h": 1800,
+   "avif": [
+    [
+     "/img/shots/search-960.a036b3e600.avif",
+     960
+    ],
+    [
+     "/img/shots/search-1440.6626a31a77.avif",
+     1440
+    ],
+    [
+     "/img/shots/search-2160.9bd329e904.avif",
+     2160
+    ],
+    [
+     "/img/shots/search-2880.bc22a447b8.avif",
+     2880
+    ]
+   ],
+   "webp": [
+    [
+     "/img/shots/search-960.3fdbccb2c2.webp",
+     960
+    ],
+    [
+     "/img/shots/search-1440.c8009fbe6d.webp",
+     1440
+    ],
+    [
+     "/img/shots/search-2160.5366630867.webp",
+     2160
+    ],
+    [
+     "/img/shots/search-2880.f17275ff26.webp",
+     2880
+    ]
+   ]
+  },
+  "series-hero": {
+   "w": 2880,
+   "h": 1800,
+   "avif": [
+    [
+     "/img/shots/series-hero-960.7d0dfa2309.avif",
+     960
+    ],
+    [
+     "/img/shots/series-hero-1440.555ec648b8.avif",
+     1440
+    ],
+    [
+     "/img/shots/series-hero-2160.b45668c068.avif",
+     2160
+    ],
+    [
+     "/img/shots/series-hero-2880.f4d56c3fd4.avif",
+     2880
+    ]
+   ],
+   "webp": [
+    [
+     "/img/shots/series-hero-960.e2df94510c.webp",
+     960
+    ],
+    [
+     "/img/shots/series-hero-1440.b2cf13405b.webp",
+     1440
+    ],
+    [
+     "/img/shots/series-hero-2160.e2376aac65.webp",
+     2160
+    ],
+    [
+     "/img/shots/series-hero-2880.ef53176ea1.webp",
+     2880
+    ]
+   ]
+  },
+  "series": {
+   "w": 2880,
+   "h": 1800,
+   "avif": [
+    [
+     "/img/shots/series-960.4d032c5da5.avif",
+     960
+    ],
+    [
+     "/img/shots/series-1440.33c66269ff.avif",
+     1440
+    ],
+    [
+     "/img/shots/series-2160.bc879763d8.avif",
+     2160
+    ],
+    [
+     "/img/shots/series-2880.67a503d070.avif",
+     2880
+    ]
+   ],
+   "webp": [
+    [
+     "/img/shots/series-960.15ae0a3bfb.webp",
+     960
+    ],
+    [
+     "/img/shots/series-1440.25c7e68f38.webp",
+     1440
+    ],
+    [
+     "/img/shots/series-2160.963e526d1a.webp",
+     2160
+    ],
+    [
+     "/img/shots/series-2880.2e987abfc1.webp",
+     2880
+    ]
+   ]
+  },
+  "sources": {
+   "w": 2880,
+   "h": 1800,
+   "avif": [
+    [
+     "/img/shots/sources-960.dce66b9e2b.avif",
+     960
+    ],
+    [
+     "/img/shots/sources-1440.6681a913c8.avif",
+     1440
+    ],
+    [
+     "/img/shots/sources-2160.82f503da8d.avif",
+     2160
+    ],
+    [
+     "/img/shots/sources-2880.55b0b5b67f.avif",
+     2880
+    ]
+   ],
+   "webp": [
+    [
+     "/img/shots/sources-960.8fbda4c8a8.webp",
+     960
+    ],
+    [
+     "/img/shots/sources-1440.2d53922342.webp",
+     1440
+    ],
+    [
+     "/img/shots/sources-2160.be7e54ed84.webp",
+     2160
+    ],
+    [
+     "/img/shots/sources-2880.7e9992ff76.webp",
+     2880
+    ]
+   ]
+  },
+  "watchlist": {
+   "w": 2880,
+   "h": 1800,
+   "avif": [
+    [
+     "/img/shots/watchlist-960.5095252d23.avif",
+     960
+    ],
+    [
+     "/img/shots/watchlist-1440.89c104d1bd.avif",
+     1440
+    ],
+    [
+     "/img/shots/watchlist-2160.b09bef840a.avif",
+     2160
+    ],
+    [
+     "/img/shots/watchlist-2880.f985b18636.avif",
+     2880
+    ]
+   ],
+   "webp": [
+    [
+     "/img/shots/watchlist-960.9c2800916f.webp",
+     960
+    ],
+    [
+     "/img/shots/watchlist-1440.72ef658dbc.webp",
+     1440
+    ],
+    [
+     "/img/shots/watchlist-2160.2290e0c1c7.webp",
+     2160
+    ],
+    [
+     "/img/shots/watchlist-2880.50adf347c1.webp",
+     2880
+    ]
+   ]
+  }
+ },
+ "posters": {
+  "film-poster-1001": {
+   "w": 1000,
+   "h": 1500,
+   "avif": [
+    [
+     "/img/posters/film-poster-1001-240.e570ec3f7f.avif",
+     240
+    ],
+    [
+     "/img/posters/film-poster-1001-480.0effdb0037.avif",
+     480
+    ]
+   ],
+   "webp": [
+    [
+     "/img/posters/film-poster-1001-240.fce48595b5.webp",
+     240
+    ],
+    [
+     "/img/posters/film-poster-1001-480.c59b759d73.webp",
+     480
+    ]
+   ]
+  },
+  "film-poster-1002": {
+   "w": 1000,
+   "h": 1500,
+   "avif": [
+    [
+     "/img/posters/film-poster-1002-240.79e570b07a.avif",
+     240
+    ],
+    [
+     "/img/posters/film-poster-1002-480.aa470ee2d1.avif",
+     480
+    ]
+   ],
+   "webp": [
+    [
+     "/img/posters/film-poster-1002-240.e2f68ee367.webp",
+     240
+    ],
+    [
+     "/img/posters/film-poster-1002-480.4f0143f556.webp",
+     480
+    ]
+   ]
+  },
+  "film-poster-1003": {
+   "w": 1000,
+   "h": 1500,
+   "avif": [
+    [
+     "/img/posters/film-poster-1003-240.1bb6aa53c5.avif",
+     240
+    ],
+    [
+     "/img/posters/film-poster-1003-480.99d67f9fd3.avif",
+     480
+    ]
+   ],
+   "webp": [
+    [
+     "/img/posters/film-poster-1003-240.fe3465f26b.webp",
+     240
+    ],
+    [
+     "/img/posters/film-poster-1003-480.e3485e46c2.webp",
+     480
+    ]
+   ]
+  },
+  "film-poster-1004": {
+   "w": 1000,
+   "h": 1500,
+   "avif": [
+    [
+     "/img/posters/film-poster-1004-240.9946aa571d.avif",
+     240
+    ],
+    [
+     "/img/posters/film-poster-1004-480.94d22ac8f1.avif",
+     480
+    ]
+   ],
+   "webp": [
+    [
+     "/img/posters/film-poster-1004-240.c503c8fc05.webp",
+     240
+    ],
+    [
+     "/img/posters/film-poster-1004-480.129a49520d.webp",
+     480
+    ]
+   ]
+  },
+  "film-poster-1005": {
+   "w": 1000,
+   "h": 1500,
+   "avif": [
+    [
+     "/img/posters/film-poster-1005-240.118dd733bb.avif",
+     240
+    ],
+    [
+     "/img/posters/film-poster-1005-480.ee21c4e1ae.avif",
+     480
+    ]
+   ],
+   "webp": [
+    [
+     "/img/posters/film-poster-1005-240.6a6b1838a6.webp",
+     240
+    ],
+    [
+     "/img/posters/film-poster-1005-480.4f79addcbf.webp",
+     480
+    ]
+   ]
+  },
+  "film-poster-1006": {
+   "w": 1000,
+   "h": 1500,
+   "avif": [
+    [
+     "/img/posters/film-poster-1006-240.34078e03b0.avif",
+     240
+    ],
+    [
+     "/img/posters/film-poster-1006-480.0b807fe4ce.avif",
+     480
+    ]
+   ],
+   "webp": [
+    [
+     "/img/posters/film-poster-1006-240.9e37a4a14f.webp",
+     240
+    ],
+    [
+     "/img/posters/film-poster-1006-480.428e0d5e07.webp",
+     480
+    ]
+   ]
+  },
+  "film-poster-1007": {
+   "w": 1000,
+   "h": 1500,
+   "avif": [
+    [
+     "/img/posters/film-poster-1007-240.d870e49962.avif",
+     240
+    ],
+    [
+     "/img/posters/film-poster-1007-480.d26e1b8c2d.avif",
+     480
+    ]
+   ],
+   "webp": [
+    [
+     "/img/posters/film-poster-1007-240.bec0f869ea.webp",
+     240
+    ],
+    [
+     "/img/posters/film-poster-1007-480.20332a7340.webp",
+     480
+    ]
+   ]
+  },
+  "film-poster-1008": {
+   "w": 1000,
+   "h": 1500,
+   "avif": [
+    [
+     "/img/posters/film-poster-1008-240.6d9ab12914.avif",
+     240
+    ],
+    [
+     "/img/posters/film-poster-1008-480.16019e5a11.avif",
+     480
+    ]
+   ],
+   "webp": [
+    [
+     "/img/posters/film-poster-1008-240.df06963057.webp",
+     240
+    ],
+    [
+     "/img/posters/film-poster-1008-480.d7f8bae371.webp",
+     480
+    ]
+   ]
+  },
+  "film-poster-1009": {
+   "w": 1000,
+   "h": 1500,
+   "avif": [
+    [
+     "/img/posters/film-poster-1009-240.1615e33005.avif",
+     240
+    ],
+    [
+     "/img/posters/film-poster-1009-480.a35be60f86.avif",
+     480
+    ]
+   ],
+   "webp": [
+    [
+     "/img/posters/film-poster-1009-240.688dcc1c85.webp",
+     240
+    ],
+    [
+     "/img/posters/film-poster-1009-480.cc37b08dc3.webp",
+     480
+    ]
+   ]
+  },
+  "film-poster-1010": {
+   "w": 1000,
+   "h": 1500,
+   "avif": [
+    [
+     "/img/posters/film-poster-1010-240.8037786a16.avif",
+     240
+    ],
+    [
+     "/img/posters/film-poster-1010-480.019344e212.avif",
+     480
+    ]
+   ],
+   "webp": [
+    [
+     "/img/posters/film-poster-1010-240.6fa9d111ea.webp",
+     240
+    ],
+    [
+     "/img/posters/film-poster-1010-480.f15c5af15f.webp",
+     480
+    ]
+   ]
+  },
+  "film-poster-1011": {
+   "w": 1000,
+   "h": 1500,
+   "avif": [
+    [
+     "/img/posters/film-poster-1011-240.2ac6619d4c.avif",
+     240
+    ],
+    [
+     "/img/posters/film-poster-1011-480.2217f8edd3.avif",
+     480
+    ]
+   ],
+   "webp": [
+    [
+     "/img/posters/film-poster-1011-240.365a474534.webp",
+     240
+    ],
+    [
+     "/img/posters/film-poster-1011-480.d58b4b33f5.webp",
+     480
+    ]
+   ]
+  },
+  "film-poster-1012": {
+   "w": 1000,
+   "h": 1500,
+   "avif": [
+    [
+     "/img/posters/film-poster-1012-240.51057eeb04.avif",
+     240
+    ],
+    [
+     "/img/posters/film-poster-1012-480.75a129e68d.avif",
+     480
+    ]
+   ],
+   "webp": [
+    [
+     "/img/posters/film-poster-1012-240.7eaeca30ed.webp",
+     240
+    ],
+    [
+     "/img/posters/film-poster-1012-480.0e6d3ba28f.webp",
+     480
+    ]
+   ]
+  },
+  "film-poster-1013": {
+   "w": 1000,
+   "h": 1500,
+   "avif": [
+    [
+     "/img/posters/film-poster-1013-240.bb6773c886.avif",
+     240
+    ],
+    [
+     "/img/posters/film-poster-1013-480.a9fe5e2b3d.avif",
+     480
+    ]
+   ],
+   "webp": [
+    [
+     "/img/posters/film-poster-1013-240.f2d0f23e34.webp",
+     240
+    ],
+    [
+     "/img/posters/film-poster-1013-480.9ccc29832b.webp",
+     480
+    ]
+   ]
+  },
+  "film-poster-1014": {
+   "w": 1000,
+   "h": 1500,
+   "avif": [
+    [
+     "/img/posters/film-poster-1014-240.7189ee9be9.avif",
+     240
+    ],
+    [
+     "/img/posters/film-poster-1014-480.1257ee9e99.avif",
+     480
+    ]
+   ],
+   "webp": [
+    [
+     "/img/posters/film-poster-1014-240.b4b01ac03a.webp",
+     240
+    ],
+    [
+     "/img/posters/film-poster-1014-480.9523db2890.webp",
+     480
+    ]
+   ]
+  },
+  "film-poster-1015": {
+   "w": 1000,
+   "h": 1500,
+   "avif": [
+    [
+     "/img/posters/film-poster-1015-240.a0db5fac92.avif",
+     240
+    ],
+    [
+     "/img/posters/film-poster-1015-480.068af2c96e.avif",
+     480
+    ]
+   ],
+   "webp": [
+    [
+     "/img/posters/film-poster-1015-240.7f67e71ba2.webp",
+     240
+    ],
+    [
+     "/img/posters/film-poster-1015-480.e40eb40b7a.webp",
+     480
+    ]
+   ]
+  },
+  "film-poster-1016": {
+   "w": 1000,
+   "h": 1500,
+   "avif": [
+    [
+     "/img/posters/film-poster-1016-240.df8c52b5d7.avif",
+     240
+    ],
+    [
+     "/img/posters/film-poster-1016-480.8b262acd0b.avif",
+     480
+    ]
+   ],
+   "webp": [
+    [
+     "/img/posters/film-poster-1016-240.65888b9a9b.webp",
+     240
+    ],
+    [
+     "/img/posters/film-poster-1016-480.15574aab6d.webp",
+     480
+    ]
+   ]
+  },
+  "film-poster-1017": {
+   "w": 1000,
+   "h": 1500,
+   "avif": [
+    [
+     "/img/posters/film-poster-1017-240.ad1b36c2d3.avif",
+     240
+    ],
+    [
+     "/img/posters/film-poster-1017-480.cfd19c7d87.avif",
+     480
+    ]
+   ],
+   "webp": [
+    [
+     "/img/posters/film-poster-1017-240.e065d0a5b9.webp",
+     240
+    ],
+    [
+     "/img/posters/film-poster-1017-480.a318507ab3.webp",
+     480
+    ]
+   ]
+  },
+  "film-poster-1018": {
+   "w": 1000,
+   "h": 1500,
+   "avif": [
+    [
+     "/img/posters/film-poster-1018-240.df24fa61cd.avif",
+     240
+    ],
+    [
+     "/img/posters/film-poster-1018-480.1f5e5a1b47.avif",
+     480
+    ]
+   ],
+   "webp": [
+    [
+     "/img/posters/film-poster-1018-240.d36cc5f6a7.webp",
+     240
+    ],
+    [
+     "/img/posters/film-poster-1018-480.a6f3bbbddc.webp",
+     480
+    ]
+   ]
+  },
+  "film-poster-1019": {
+   "w": 1000,
+   "h": 1500,
+   "avif": [
+    [
+     "/img/posters/film-poster-1019-240.213415c0d4.avif",
+     240
+    ],
+    [
+     "/img/posters/film-poster-1019-480.c4f9a09305.avif",
+     480
+    ]
+   ],
+   "webp": [
+    [
+     "/img/posters/film-poster-1019-240.fc9adcfebc.webp",
+     240
+    ],
+    [
+     "/img/posters/film-poster-1019-480.5036f646e1.webp",
+     480
+    ]
+   ]
+  },
+  "film-poster-1020": {
+   "w": 1000,
+   "h": 1500,
+   "avif": [
+    [
+     "/img/posters/film-poster-1020-240.872e89cee2.avif",
+     240
+    ],
+    [
+     "/img/posters/film-poster-1020-480.e808745c78.avif",
+     480
+    ]
+   ],
+   "webp": [
+    [
+     "/img/posters/film-poster-1020-240.ba35b2ed74.webp",
+     240
+    ],
+    [
+     "/img/posters/film-poster-1020-480.7c49598675.webp",
+     480
+    ]
+   ]
+  },
+  "film-poster-1021": {
+   "w": 1000,
+   "h": 1500,
+   "avif": [
+    [
+     "/img/posters/film-poster-1021-240.ce433d920f.avif",
+     240
+    ],
+    [
+     "/img/posters/film-poster-1021-480.d0ffcb0cc4.avif",
+     480
+    ]
+   ],
+   "webp": [
+    [
+     "/img/posters/film-poster-1021-240.c9f8c11188.webp",
+     240
+    ],
+    [
+     "/img/posters/film-poster-1021-480.f57206f5c7.webp",
+     480
+    ]
+   ]
+  },
+  "film-poster-1022": {
+   "w": 1000,
+   "h": 1500,
+   "avif": [
+    [
+     "/img/posters/film-poster-1022-240.ad960ccc24.avif",
+     240
+    ],
+    [
+     "/img/posters/film-poster-1022-480.0ce500112c.avif",
+     480
+    ]
+   ],
+   "webp": [
+    [
+     "/img/posters/film-poster-1022-240.ebe8d6d961.webp",
+     240
+    ],
+    [
+     "/img/posters/film-poster-1022-480.01a6eca4cf.webp",
+     480
+    ]
+   ]
+  },
+  "film-poster-1023": {
+   "w": 1000,
+   "h": 1500,
+   "avif": [
+    [
+     "/img/posters/film-poster-1023-240.71128c43b1.avif",
+     240
+    ],
+    [
+     "/img/posters/film-poster-1023-480.179db6de04.avif",
+     480
+    ]
+   ],
+   "webp": [
+    [
+     "/img/posters/film-poster-1023-240.5d7d05e106.webp",
+     240
+    ],
+    [
+     "/img/posters/film-poster-1023-480.7f3c7b8f23.webp",
+     480
+    ]
+   ]
+  },
+  "film-poster-1024": {
+   "w": 1000,
+   "h": 1500,
+   "avif": [
+    [
+     "/img/posters/film-poster-1024-240.99ce2b321d.avif",
+     240
+    ],
+    [
+     "/img/posters/film-poster-1024-480.eba9c77972.avif",
+     480
+    ]
+   ],
+   "webp": [
+    [
+     "/img/posters/film-poster-1024-240.05b5af7662.webp",
+     240
+    ],
+    [
+     "/img/posters/film-poster-1024-480.e7f8c892af.webp",
+     480
+    ]
+   ]
+  },
+  "series-poster-2001": {
+   "w": 1000,
+   "h": 1500,
+   "avif": [
+    [
+     "/img/posters/series-poster-2001-240.1f96565ec4.avif",
+     240
+    ],
+    [
+     "/img/posters/series-poster-2001-480.efe1d93da7.avif",
+     480
+    ]
+   ],
+   "webp": [
+    [
+     "/img/posters/series-poster-2001-240.b98f4e24fe.webp",
+     240
+    ],
+    [
+     "/img/posters/series-poster-2001-480.bde4042180.webp",
+     480
+    ]
+   ]
+  },
+  "series-poster-2002": {
+   "w": 1000,
+   "h": 1500,
+   "avif": [
+    [
+     "/img/posters/series-poster-2002-240.05c4d3934d.avif",
+     240
+    ],
+    [
+     "/img/posters/series-poster-2002-480.bab2ec4c55.avif",
+     480
+    ]
+   ],
+   "webp": [
+    [
+     "/img/posters/series-poster-2002-240.a47f44badf.webp",
+     240
+    ],
+    [
+     "/img/posters/series-poster-2002-480.b9aa2e7d53.webp",
+     480
+    ]
+   ]
+  },
+  "series-poster-2003": {
+   "w": 1000,
+   "h": 1500,
+   "avif": [
+    [
+     "/img/posters/series-poster-2003-240.e66a9db249.avif",
+     240
+    ],
+    [
+     "/img/posters/series-poster-2003-480.929ef92150.avif",
+     480
+    ]
+   ],
+   "webp": [
+    [
+     "/img/posters/series-poster-2003-240.de04d99f3c.webp",
+     240
+    ],
+    [
+     "/img/posters/series-poster-2003-480.3f2385d20a.webp",
+     480
+    ]
+   ]
+  },
+  "series-poster-2004": {
+   "w": 1000,
+   "h": 1500,
+   "avif": [
+    [
+     "/img/posters/series-poster-2004-240.19ff018979.avif",
+     240
+    ],
+    [
+     "/img/posters/series-poster-2004-480.f8a245fa07.avif",
+     480
+    ]
+   ],
+   "webp": [
+    [
+     "/img/posters/series-poster-2004-240.8b4e1e13a6.webp",
+     240
+    ],
+    [
+     "/img/posters/series-poster-2004-480.b9383bed79.webp",
+     480
+    ]
+   ]
+  },
+  "series-poster-2005": {
+   "w": 1000,
+   "h": 1500,
+   "avif": [
+    [
+     "/img/posters/series-poster-2005-240.59291863b6.avif",
+     240
+    ],
+    [
+     "/img/posters/series-poster-2005-480.1b8b0076bf.avif",
+     480
+    ]
+   ],
+   "webp": [
+    [
+     "/img/posters/series-poster-2005-240.d6c9d177c2.webp",
+     240
+    ],
+    [
+     "/img/posters/series-poster-2005-480.7387dd2902.webp",
+     480
+    ]
+   ]
+  },
+  "series-poster-2006": {
+   "w": 1000,
+   "h": 1500,
+   "avif": [
+    [
+     "/img/posters/series-poster-2006-240.a3e105c12e.avif",
+     240
+    ],
+    [
+     "/img/posters/series-poster-2006-480.fd4c6eb752.avif",
+     480
+    ]
+   ],
+   "webp": [
+    [
+     "/img/posters/series-poster-2006-240.3099ab032d.webp",
+     240
+    ],
+    [
+     "/img/posters/series-poster-2006-480.39f85408de.webp",
+     480
+    ]
+   ]
+  },
+  "series-poster-2007": {
+   "w": 1000,
+   "h": 1500,
+   "avif": [
+    [
+     "/img/posters/series-poster-2007-240.a09e4a4b97.avif",
+     240
+    ],
+    [
+     "/img/posters/series-poster-2007-480.5f288ce4a3.avif",
+     480
+    ]
+   ],
+   "webp": [
+    [
+     "/img/posters/series-poster-2007-240.447112fde1.webp",
+     240
+    ],
+    [
+     "/img/posters/series-poster-2007-480.792f954829.webp",
+     480
+    ]
+   ]
+  },
+  "series-poster-2008": {
+   "w": 1000,
+   "h": 1500,
+   "avif": [
+    [
+     "/img/posters/series-poster-2008-240.35aea12b97.avif",
+     240
+    ],
+    [
+     "/img/posters/series-poster-2008-480.e3a5a3877c.avif",
+     480
+    ]
+   ],
+   "webp": [
+    [
+     "/img/posters/series-poster-2008-240.36bd1d523c.webp",
+     240
+    ],
+    [
+     "/img/posters/series-poster-2008-480.eb3d71b37f.webp",
+     480
+    ]
+   ]
+  },
+  "series-poster-2009": {
+   "w": 1000,
+   "h": 1500,
+   "avif": [
+    [
+     "/img/posters/series-poster-2009-240.d35559ccb3.avif",
+     240
+    ],
+    [
+     "/img/posters/series-poster-2009-480.cca23f4cef.avif",
+     480
+    ]
+   ],
+   "webp": [
+    [
+     "/img/posters/series-poster-2009-240.c2da9fe662.webp",
+     240
+    ],
+    [
+     "/img/posters/series-poster-2009-480.cd25827d3d.webp",
+     480
+    ]
+   ]
+  },
+  "series-poster-2010": {
+   "w": 1000,
+   "h": 1500,
+   "avif": [
+    [
+     "/img/posters/series-poster-2010-240.520774e93a.avif",
+     240
+    ],
+    [
+     "/img/posters/series-poster-2010-480.1cac8fbc56.avif",
+     480
+    ]
+   ],
+   "webp": [
+    [
+     "/img/posters/series-poster-2010-240.787f90286b.webp",
+     240
+    ],
+    [
+     "/img/posters/series-poster-2010-480.b8351201ea.webp",
+     480
+    ]
+   ]
+  }
+ },
+ "icon": {
+  "w": 1024,
+  "h": 1024,
+  "avif": [
+   [
+    "/img/icon/xorvio-icon-128.eb464da824.avif",
+    128
+   ],
+   [
+    "/img/icon/xorvio-icon-256.f2abdad6e8.avif",
+    256
+   ],
+   [
+    "/img/icon/xorvio-icon-512.e2e32be17f.avif",
+    512
+   ]
+  ],
+  "webp": [
+   [
+    "/img/icon/xorvio-icon-128.5f8465fcab.webp",
+    128
+   ],
+   [
+    "/img/icon/xorvio-icon-256.f8e029dba5.webp",
+    256
+   ],
+   [
+    "/img/icon/xorvio-icon-512.d9e97f32ec.webp",
+    512
+   ]
+  ]
+ }
+}

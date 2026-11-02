@@ -1,0 +1,2434 @@
+{
+ "filmCategories": [
+  [
+   "sci",
+   "Science Fiction"
+  ],
+  [
+   "thr",
+   "Thrillers & Crime"
+  ],
+  [
+   "drama",
+   "Drama"
+  ],
+  [
+   "act",
+   "Action"
+  ],
+  [
+   "adv",
+   "Adventure"
+  ],
+  [
+   "rom",
+   "Romance & Comedy"
+  ],
+  [
+   "fam",
+   "Family"
+  ],
+  [
+   "doc",
+   "Documentaries"
+  ]
+ ],
+ "seriesCategories": [
+  [
+   "crime",
+   "Crime"
+  ],
+  [
+   "scifi",
+   "Science Fiction"
+  ],
+  [
+   "drama",
+   "Drama"
+  ],
+  [
+   "comedy",
+   "Comedy"
+  ],
+  [
+   "thriller",
+   "Thrillers"
+  ],
+  [
+   "doc",
+   "Documentary"
+  ],
+  [
+   "life",
+   "Food & Lifestyle"
+  ]
+ ],
+ "channelCategories": [
+  [
+   "news",
+   "News"
+  ],
+  [
+   "sports",
+   "Sports"
+  ],
+  [
+   "movies",
+   "Movies"
+  ],
+  [
+   "ent",
+   "Entertainment"
+  ],
+  [
+   "kids",
+   "Kids & Family"
+  ],
+  [
+   "doc",
+   "Documentary & Nature"
+  ],
+  [
+   "music",
+   "Music"
+  ],
+  [
+   "life",
+   "Lifestyle & Travel"
+  ]
+ ],
+ "films": [
+  {
+   "id": "1001",
+   "title": "The Long Quiet",
+   "year": 2025,
+   "genre": "Science Fiction, Drama",
+   "runtime": 138,
+   "rating": 8.1,
+   "age": "PG-13",
+   "director": "Mara Ellison",
+   "cast": [
+    "Noor Halvorsen",
+    "Teodor Quill",
+    "Saskia Arden",
+    "Jonah Mireault"
+   ],
+   "tagline": "Somebody is still listening.",
+   "plot": "The last keeper of a deep-space relay hears a voice on a frequency that went dark forty years ago, and has to decide whether to answer it.",
+   "video": "4k-hdr",
+   "category": "sci",
+   "poster": "/Website/showcase/art/out/film-poster-1001.jpg",
+   "backdrop": "/Website/showcase/art/out/film-backdrop-1001.jpg"
+  },
+  {
+   "id": "1002",
+   "title": "Neon Requiem",
+   "year": 2025,
+   "genre": "Thriller, Crime",
+   "runtime": 121,
+   "rating": 7.6,
+   "age": "R",
+   "director": "Dario Venn",
+   "cast": [
+    "Imani Castell",
+    "Hollis Grey",
+    "Lucia Ferrand",
+    "Callum Pryce"
+   ],
+   "tagline": "Every city keeps a ledger.",
+   "plot": "A night-shift detective follows a string of impossible alibis through a rain-soaked city where every witness seems to be reading from the same script.",
+   "video": "4k-hdr",
+   "category": "thr",
+   "poster": "/Website/showcase/art/out/film-poster-1002.jpg",
+   "backdrop": "/Website/showcase/art/out/film-backdrop-1002.jpg"
+  },
+  {
+   "id": "1003",
+   "title": "Saltwater Kings",
+   "year": 2024,
+   "genre": "Adventure, Drama",
+   "runtime": 129,
+   "rating": 7.9,
+   "age": "PG-13",
+   "director": "Elin Strand",
+   "cast": [
+    "Ronan Delacroix",
+    "Greta Vos",
+    "Yusuf Arslan",
+    "Kit Alcott"
+   ],
+   "tagline": "The sea takes what it is owed.",
+   "plot": "Three brothers take their late father's trawler into the worst storm in a generation to settle a debt the family never talked about.",
+   "video": "4k",
+   "category": "adv",
+   "poster": "/Website/showcase/art/out/film-poster-1003.jpg",
+   "backdrop": "/Website/showcase/art/out/film-backdrop-1003.jpg"
+  },
+  {
+   "id": "1004",
+   "title": "Paper Moons",
+   "year": 2023,
+   "genre": "Romance, Comedy",
+   "runtime": 104,
+   "rating": 7.2,
+   "age": "PG-13",
+   "director": "Priya Damaro",
+   "cast": [
+    "August Leclair",
+    "Mina Sato-Reyes",
+    "Oona Fairweather"
+   ],
+   "tagline": "Some nights are worth staying up for.",
+   "plot": "Two strangers locked out on the same rooftop during a summer blackout make a deal to tell each other only true things until the lights come back.",
+   "video": "1080p",
+   "category": "rom",
+   "poster": "/Website/showcase/art/out/film-poster-1004.jpg",
+   "backdrop": "/Website/showcase/art/out/film-backdrop-1004.jpg"
+  },
+  {
+   "id": "1005",
+   "title": "The Glass Orchard",
+   "year": 2024,
+   "genre": "Mystery, Drama",
+   "runtime": 117,
+   "rating": 7.8,
+   "age": "PG-13",
+   "director": "Anselm Krüger",
+   "cast": [
+    "Thea Marchetti",
+    "Bastien Morrow",
+    "Wren Talbot"
+   ],
+   "tagline": "Nothing grows here by accident.",
+   "plot": "When a botanist inherits her estranged aunt's Victorian glasshouse, she finds the plants inside are arranged to tell her how her aunt disappeared.",
+   "video": "4k-hdr",
+   "category": "drama",
+   "poster": "/Website/showcase/art/out/film-poster-1005.jpg",
+   "backdrop": "/Website/showcase/art/out/film-backdrop-1005.jpg"
+  },
+  {
+   "id": "1006",
+   "title": "Ember Road",
+   "year": 2022,
+   "genre": "Western, Action",
+   "runtime": 126,
+   "rating": 7.4,
+   "age": "R",
+   "director": "Sol Abernathy",
+   "cast": [
+    "Callum Pryce",
+    "Lucia Ferrand",
+    "Rafe Okonkwo-Lind"
+   ],
+   "tagline": "Out here, the road decides.",
+   "plot": "A retired courier agrees to carry one last parcel across three hundred miles of desert, and learns on the first night that half the territory wants it more than she does.",
+   "video": "4k",
+   "category": "act",
+   "poster": "/Website/showcase/art/out/film-poster-1006.jpg",
+   "backdrop": "/Website/showcase/art/out/film-backdrop-1006.jpg"
+  },
+  {
+   "id": "1007",
+   "title": "Northbound",
+   "year": 2025,
+   "genre": "Thriller",
+   "runtime": 112,
+   "rating": 7.5,
+   "age": "PG-13",
+   "director": "Hollis Grey",
+   "cast": [
+    "Saskia Arden",
+    "Jonah Mireault",
+    "Priya Damaro"
+   ],
+   "tagline": "Nine passengers. One stop too many.",
+   "plot": "An overnight sleeper train is stranded in a mountain snowstorm, and the passengers slowly realize one of them boarded under somebody else's name.",
+   "video": "4k-hdr",
+   "category": "thr",
+   "poster": "/Website/showcase/art/out/film-poster-1007.jpg",
+   "backdrop": "/Website/showcase/art/out/film-backdrop-1007.jpg"
+  },
+  {
+   "id": "1008",
+   "title": "Kingdom of Moths",
+   "year": 2024,
+   "genre": "Fantasy, Family",
+   "runtime": 109,
+   "rating": 8.0,
+   "age": "PG",
+   "director": "Oona Fairweather",
+   "cast": [
+    "Wren Talbot",
+    "Anselm Krüger",
+    "Mina Sato-Reyes"
+   ],
+   "tagline": "Follow the light.",
+   "plot": "A girl who cannot sleep follows a cloud of glowing moths into the forest behind her grandmother's house, and finds the night has a kingdom of its own.",
+   "video": "4k-hdr",
+   "category": "fam",
+   "poster": "/Website/showcase/art/out/film-poster-1008.jpg",
+   "backdrop": "/Website/showcase/art/out/film-backdrop-1008.jpg"
+  },
+  {
+   "id": "1009",
+   "title": "Halcyon",
+   "year": 2026,
+   "genre": "Science Fiction, Adventure",
+   "runtime": 141,
+   "rating": 8.3,
+   "age": "PG-13",
+   "director": "Mara Ellison",
+   "cast": [
+    "Rafe Okonkwo-Lind",
+    "Noor Halvorsen",
+    "Teodor Quill",
+    "Greta Vos"
+   ],
+   "tagline": "Above the clouds, below the truth.",
+   "plot": "On a city that floats above a drowned world, a maintenance pilot finds the engines that keep everyone aloft are running out of time, and that the council already knows.",
+   "video": "4k-hdr",
+   "category": "sci",
+   "poster": "/Website/showcase/art/out/film-poster-1009.jpg",
+   "backdrop": "/Website/showcase/art/out/film-backdrop-1009.jpg"
+  },
+  {
+   "id": "1010",
+   "title": "The Cartographer's Daughter",
+   "year": 2023,
+   "genre": "Drama, History",
+   "runtime": 133,
+   "rating": 7.7,
+   "age": "PG",
+   "director": "Anselm Krüger",
+   "cast": [
+    "Thea Marchetti",
+    "August Leclair",
+    "Kit Alcott"
+   ],
+   "tagline": "She drew the world as it should be.",
+   "plot": "In 1760s Lisbon, the daughter of a royal mapmaker secretly finishes her father's maps, and redraws a border that a kingdom is ready to go to war over.",
+   "video": "4k",
+   "category": "drama",
+   "poster": "/Website/showcase/art/out/film-poster-1010.jpg",
+   "backdrop": "/Website/showcase/art/out/film-backdrop-1010.jpg"
+  },
+  {
+   "id": "1011",
+   "title": "Velocity Zero",
+   "year": 2025,
+   "genre": "Action",
+   "runtime": 118,
+   "rating": 7.1,
+   "age": "PG-13",
+   "director": "Dario Venn",
+   "cast": [
+    "Imani Castell",
+    "Ronan Delacroix",
+    "Yusuf Arslan"
+   ],
+   "tagline": "Don't brake.",
+   "plot": "A courier who never loses has one night to cross a city in lockdown with a drive that three agencies would kill for.",
+   "video": "4k-hdr",
+   "category": "act",
+   "poster": "/Website/showcase/art/out/film-poster-1011.jpg",
+   "backdrop": "/Website/showcase/art/out/film-backdrop-1011.jpg"
+  },
+  {
+   "id": "1012",
+   "title": "Little Thunder",
+   "year": 2024,
+   "genre": "Family, Adventure",
+   "runtime": 98,
+   "rating": 7.3,
+   "age": "PG",
+   "director": "Priya Damaro",
+   "cast": [
+    "Kit Alcott",
+    "Greta Vos",
+    "Bastien Morrow"
+   ],
+   "tagline": "Big storms start small.",
+   "plot": "A ten-year-old storm chaser and her grandfather build a kite to measure the biggest thunderstorm the prairie has seen in fifty years.",
+   "video": "1080p",
+   "category": "fam",
+   "poster": "/Website/showcase/art/out/film-poster-1012.jpg",
+   "backdrop": "/Website/showcase/art/out/film-backdrop-1012.jpg"
+  },
+  {
+   "id": "1013",
+   "title": "Hollow Tide",
+   "year": 2025,
+   "genre": "Horror, Mystery",
+   "runtime": 101,
+   "rating": 6.9,
+   "age": "R",
+   "director": "Sol Abernathy",
+   "cast": [
+    "Bastien Morrow",
+    "Saskia Arden",
+    "Hollis Grey"
+   ],
+   "tagline": "The light never went out. Someone kept it on.",
+   "plot": "A lighthouse keeper's widow returns to the island after twenty years, and finds the lamp still being lit every night.",
+   "video": "4k-hdr",
+   "category": "thr",
+   "poster": "/Website/showcase/art/out/film-poster-1013.jpg",
+   "backdrop": "/Website/showcase/art/out/film-backdrop-1013.jpg"
+  },
+  {
+   "id": "1014",
+   "title": "The Last Arcade",
+   "year": 2024,
+   "genre": "Comedy, Drama",
+   "runtime": 107,
+   "rating": 7.6,
+   "age": "PG-13",
+   "director": "Callum Pryce",
+   "cast": [
+    "Jonah Mireault",
+    "Mina Sato-Reyes",
+    "Rafe Okonkwo-Lind"
+   ],
+   "tagline": "One more game.",
+   "plot": "Four old friends get one weekend to win back the beach-town arcade where they grew up, against the developer who used to be the fifth of them.",
+   "video": "4k",
+   "category": "rom",
+   "poster": "/Website/showcase/art/out/film-poster-1014.jpg",
+   "backdrop": "/Website/showcase/art/out/film-backdrop-1014.jpg"
+  },
+  {
+   "id": "1015",
+   "title": "Atlas of Silence",
+   "year": 2025,
+   "genre": "Documentary, Nature",
+   "runtime": 94,
+   "rating": 8.4,
+   "age": "G",
+   "director": "Elin Strand",
+   "cast": [
+    "Narrated by Teodor Quill"
+   ],
+   "tagline": "The quietest places on Earth are the most alive.",
+   "plot": "A year among the ice, filmed in the places on Earth where people almost never go, from the hunting grounds of orcas to the slow breathing of glaciers.",
+   "video": "4k-hdr",
+   "category": "doc",
+   "poster": "/Website/showcase/art/out/film-poster-1015.jpg",
+   "backdrop": "/Website/showcase/art/out/film-backdrop-1015.jpg"
+  },
+  {
+   "id": "1016",
+   "title": "The Velvet Ledger",
+   "year": 2025,
+   "genre": "Crime, Thriller",
+   "runtime": 124,
+   "rating": 7.8,
+   "age": "R",
+   "director": "Dario Venn",
+   "cast": [
+    "Lucia Ferrand",
+    "August Leclair",
+    "Imani Castell",
+    "Ronan Delacroix"
+   ],
+   "tagline": "Everyone has a price. She wrote them all down.",
+   "plot": "A bank's quiet auditor plans the heist of the decade using the only thing nobody thought to guard: the bank's own records.",
+   "video": "4k-hdr",
+   "category": "thr",
+   "poster": "/Website/showcase/art/out/film-poster-1016.jpg",
+   "backdrop": "/Website/showcase/art/out/film-backdrop-1016.jpg"
+  },
+  {
+   "id": "1017",
+   "title": "Starling",
+   "year": 2026,
+   "genre": "Science Fiction, Family",
+   "runtime": 116,
+   "rating": 8.2,
+   "age": "PG",
+   "director": "Oona Fairweather",
+   "cast": [
+    "Wren Talbot",
+    "Noor Halvorsen",
+    "Callum Pryce"
+   ],
+   "tagline": "Home is a direction, not a place.",
+   "plot": "The first child born on Mars sets out across the red plains with a broken rover to find the signal her mother left for her.",
+   "video": "4k-hdr",
+   "category": "sci",
+   "poster": "/Website/showcase/art/out/film-poster-1017.jpg",
+   "backdrop": "/Website/showcase/art/out/film-backdrop-1017.jpg"
+  },
+  {
+   "id": "1018",
+   "title": "Deep Field",
+   "year": 2024,
+   "genre": "Science Fiction, Thriller",
+   "runtime": 113,
+   "rating": 7.3,
+   "age": "PG-13",
+   "director": "Hollis Grey",
+   "cast": [
+    "Teodor Quill",
+    "Greta Vos",
+    "Yusuf Arslan"
+   ],
+   "tagline": "Eleven kilometres down, something answered.",
+   "plot": "The crew of a research station on the ocean floor picks up a pattern in the dark that is too regular to be natural.",
+   "video": "4k",
+   "category": "sci",
+   "poster": "/Website/showcase/art/out/film-poster-1018.jpg",
+   "backdrop": "/Website/showcase/art/out/film-backdrop-1018.jpg"
+  },
+  {
+   "id": "1019",
+   "title": "Sunday in Lisbon",
+   "year": 2023,
+   "genre": "Romance",
+   "runtime": 99,
+   "rating": 7.0,
+   "age": "PG",
+   "director": "Priya Damaro",
+   "cast": [
+    "Thea Marchetti",
+    "Bastien Morrow"
+   ],
+   "tagline": "One day. One city. One chance.",
+   "plot": "A translator with a missed flight and a tram driver on his last shift spend one Sunday crossing Lisbon on line 28.",
+   "video": "1080p",
+   "category": "rom",
+   "poster": "/Website/showcase/art/out/film-poster-1019.jpg",
+   "backdrop": "/Website/showcase/art/out/film-backdrop-1019.jpg"
+  },
+  {
+   "id": "1020",
+   "title": "Iron Verdict",
+   "year": 2024,
+   "genre": "Drama, Thriller",
+   "runtime": 127,
+   "rating": 7.5,
+   "age": "PG-13",
+   "director": "Sol Abernathy",
+   "cast": [
+    "Rafe Okonkwo-Lind",
+    "Saskia Arden",
+    "August Leclair"
+   ],
+   "tagline": "The truth has a closing argument.",
+   "plot": "A public defender takes the one case her firm told her to lose, and finds the evidence leads back to the judge.",
+   "video": "4k",
+   "category": "drama",
+   "poster": "/Website/showcase/art/out/film-poster-1020.jpg",
+   "backdrop": "/Website/showcase/art/out/film-backdrop-1020.jpg"
+  },
+  {
+   "id": "1021",
+   "title": "Wild Meridian",
+   "year": 2025,
+   "genre": "Adventure",
+   "runtime": 131,
+   "rating": 7.7,
+   "age": "PG-13",
+   "director": "Elin Strand",
+   "cast": [
+    "Ronan Delacroix",
+    "Imani Castell",
+    "Kit Alcott"
+   ],
+   "tagline": "The map ends. The river doesn't.",
+   "plot": "An expedition sent to measure an unmapped river finds it runs somewhere their instruments refuse to follow.",
+   "video": "4k-hdr",
+   "category": "adv",
+   "poster": "/Website/showcase/art/out/film-poster-1021.jpg",
+   "backdrop": "/Website/showcase/art/out/film-backdrop-1021.jpg"
+  },
+  {
+   "id": "1022",
+   "title": "Aurora Line",
+   "year": 2025,
+   "genre": "Romance, Drama",
+   "runtime": 110,
+   "rating": 7.4,
+   "age": "PG-13",
+   "director": "Mara Ellison",
+   "cast": [
+    "Noor Halvorsen",
+    "Jonah Mireault"
+   ],
+   "tagline": "Meet me where the sky moves.",
+   "plot": "Two strangers meet each winter at the same remote Arctic train halt, for one night, for ten years.",
+   "video": "4k-hdr",
+   "category": "rom",
+   "poster": "/Website/showcase/art/out/film-poster-1022.jpg",
+   "backdrop": "/Website/showcase/art/out/film-backdrop-1022.jpg"
+  },
+  {
+   "id": "1023",
+   "title": "Under a Copper Sky",
+   "year": 2022,
+   "genre": "Drama",
+   "runtime": 122,
+   "rating": 7.6,
+   "age": "PG-13",
+   "director": "Anselm Krüger",
+   "cast": [
+    "Greta Vos",
+    "Yusuf Arslan",
+    "Hollis Grey"
+   ],
+   "tagline": "The town built on the mountain's promise.",
+   "plot": "In the last summer before the mine closes, a foreman's daughter organizes the strike that will decide whether her town survives it.",
+   "video": "4k",
+   "category": "drama",
+   "poster": "/Website/showcase/art/out/film-poster-1023.jpg",
+   "backdrop": "/Website/showcase/art/out/film-backdrop-1023.jpg"
+  },
+  {
+   "id": "1024",
+   "title": "Signal Fire",
+   "year": 2026,
+   "genre": "Action, Thriller",
+   "runtime": 119,
+   "rating": 7.2,
+   "age": "PG-13",
+   "director": "Dario Venn",
+   "cast": [
+    "Callum Pryce",
+    "Lucia Ferrand",
+    "Teodor Quill"
+   ],
+   "tagline": "When the network goes dark, light a fire.",
+   "plot": "When every network on the coast goes down at once, a fire lookout becomes the only person who can see what is coming.",
+   "video": "4k-hdr",
+   "category": "act",
+   "poster": "/Website/showcase/art/out/film-poster-1024.jpg",
+   "backdrop": "/Website/showcase/art/out/film-backdrop-1024.jpg"
+  }
+ ],
+ "series": [
+  {
+   "id": "2001",
+   "title": "Harbor Lights",
+   "year": 2023,
+   "genre": "Crime, Drama",
+   "rating": 8.4,
+   "age": "TV-MA",
+   "network": "Lumen",
+   "creators": [
+    "Elin Strand"
+   ],
+   "cast": [
+    "Saskia Arden",
+    "Ronan Delacroix",
+    "Imani Castell",
+    "Teodor Quill"
+   ],
+   "plot": "In a fishing town where everyone knows everyone, a detective who left twenty years ago comes home to investigate the one death nobody wants solved.",
+   "category": "crime",
+   "poster": "/Website/showcase/art/out/series-poster-2001.jpg",
+   "backdrop": "/Website/showcase/art/out/series-backdrop-2001.jpg",
+   "seasons": [
+    [
+     {
+      "title": "The Tide Line",
+      "plot": "Nell takes the ferry to the mainland to find the man who sold the boat.",
+      "still": "/Website/showcase/art/out/still-2001-1.jpg"
+     },
+     {
+      "title": "Low Water",
+      "plot": "An old case file reopens when the tide uncovers a car on the flats.",
+      "still": "/Website/showcase/art/out/still-2001-2.jpg"
+     },
+     {
+      "title": "What the Nets Bring",
+      "plot": "The harbour board votes on the marina, and someone wants the vote delayed.",
+      "still": "/Website/showcase/art/out/still-2001-3.jpg"
+     },
+     {
+      "title": "Saint Brigid's Light",
+      "plot": "Nell's father asks her for a favour she can't refuse.",
+      "still": "/Website/showcase/art/out/still-2001-4.jpg"
+     },
+     {
+      "title": "Undertow",
+      "plot": "A diver finds something tied to the anchor chain.",
+      "still": "/Website/showcase/art/out/still-2001-5.jpg"
+     },
+     {
+      "title": "The Inquest",
+      "plot": "The pier is closed after dark, and a light is seen at the end of it.",
+      "still": "/Website/showcase/art/out/still-2001-6.jpg"
+     },
+     {
+      "title": "Fog Bell",
+      "plot": "The sea wall gives way, and so does a long-kept alibi.",
+      "still": "/Website/showcase/art/out/still-2001-7.jpg"
+     },
+     {
+      "title": "Harbor Lights",
+      "plot": "Nell has one night to decide what the town is allowed to know.",
+      "still": "/Website/showcase/art/out/still-2001-8.jpg"
+     }
+    ],
+    [
+     {
+      "title": "Home Waters",
+      "plot": "Nell takes the ferry to the mainland to find the man who sold the boat.",
+      "still": null
+     },
+     {
+      "title": "The Ferryman",
+      "plot": "An old case file reopens when the tide uncovers a car on the flats.",
+      "still": null
+     },
+     {
+      "title": "Salt",
+      "plot": "The harbour board votes on the marina, and someone wants the vote delayed.",
+      "still": null
+     },
+     {
+      "title": "A Name in the Register",
+      "plot": "Nell's father asks her for a favour she can't refuse.",
+      "still": null
+     },
+     {
+      "title": "Slack Tide",
+      "plot": "A diver finds something tied to the anchor chain.",
+      "still": null
+     },
+     {
+      "title": "The Long Pier",
+      "plot": "The pier is closed after dark, and a light is seen at the end of it.",
+      "still": null
+     },
+     {
+      "title": "Breakwater",
+      "plot": "The sea wall gives way, and so does a long-kept alibi.",
+      "still": null
+     },
+     {
+      "title": "Night Crossing",
+      "plot": "Nell has one night to decide what the town is allowed to know.",
+      "still": null
+     }
+    ],
+    [
+     {
+      "title": "Return",
+      "plot": "Nell takes the ferry to the mainland to find the man who sold the boat.",
+      "still": null
+     },
+     {
+      "title": "The Quiet House",
+      "plot": "An old case file reopens when the tide uncovers a car on the flats.",
+      "still": null
+     },
+     {
+      "title": "Ballast",
+      "plot": "The harbour board votes on the marina, and someone wants the vote delayed.",
+      "still": null
+     },
+     {
+      "title": "Lantern Season",
+      "plot": "Nell's father asks her for a favour she can't refuse.",
+      "still": null
+     },
+     {
+      "title": "Driftwood",
+      "plot": "A diver finds something tied to the anchor chain.",
+      "still": null
+     },
+     {
+      "title": "Two Keys",
+      "plot": "The pier is closed after dark, and a light is seen at the end of it.",
+      "still": null
+     },
+     {
+      "title": "The Last Boat Out",
+      "plot": "The sea wall gives way, and so does a long-kept alibi.",
+      "still": null
+     },
+     {
+      "title": "Morning Light",
+      "plot": "Nell has one night to decide what the town is allowed to know.",
+      "still": null
+     }
+    ]
+   ]
+  },
+  {
+   "id": "2002",
+   "title": "The Meridian Files",
+   "year": 2024,
+   "genre": "Science Fiction, Mystery",
+   "rating": 8.6,
+   "age": "TV-14",
+   "network": "Orbit Science",
+   "creators": [
+    "Mara Ellison"
+   ],
+   "cast": [
+    "Noor Halvorsen",
+    "Jonah Mireault",
+    "Greta Vos"
+   ],
+   "plot": "A government archivist finds a box of reports describing events that haven't happened yet, all of them signed by her.",
+   "category": "scifi",
+   "poster": "/Website/showcase/art/out/series-poster-2002.jpg",
+   "backdrop": "/Website/showcase/art/out/series-backdrop-2002.jpg",
+   "seasons": [
+    [
+     {
+      "title": "Pre-Filed",
+      "plot": "A box arrives with no number, and the archive's records say it was never sent.",
+      "still": "/Website/showcase/art/out/still-2002-1.jpg"
+     },
+     {
+      "title": "Box 1147",
+      "plot": "June meets the archivist who will replace her, and recognises her coat.",
+      "still": "/Website/showcase/art/out/still-2002-2.jpg"
+     },
+     {
+      "title": "Signature",
+      "plot": "A file goes missing between two signatures.",
+      "still": "/Website/showcase/art/out/still-2002-3.jpg"
+     },
+     {
+      "title": "Cold Storage",
+      "plot": "Two identical reports disagree about a single date.",
+      "still": "/Website/showcase/art/out/still-2002-4.jpg"
+     },
+     {
+      "title": "The Reading Room",
+      "plot": "An overdue request turns out to have been made forty years early.",
+      "still": "/Website/showcase/art/out/still-2002-5.jpg"
+     },
+     {
+      "title": "Redacted",
+      "plot": "The basement stacks are flooded, and only one shelf is dry.",
+      "still": "/Website/showcase/art/out/still-2002-6.jpg"
+     },
+     {
+      "title": "Carbon Copy",
+      "plot": "A reel of microfiche shows the reading room with June still in it.",
+      "still": null
+     },
+     {
+      "title": "Appendix",
+      "plot": "A correction notice is issued for an event that hasn't happened.",
+      "still": null
+     },
+     {
+      "title": "Margin Notes",
+      "plot": "June writes the last report, and has to decide whether to sign it.",
+      "still": null
+     },
+     {
+      "title": "Index",
+      "plot": "The archive receives a box addressed to the day after tomorrow.",
+      "still": null
+     }
+    ],
+    [
+     {
+      "title": "Unfiled",
+      "plot": "A box arrives with no number, and the archive's records say it was never sent.",
+      "still": null
+     },
+     {
+      "title": "The Other Archivist",
+      "plot": "June meets the archivist who will replace her, and recognises her coat.",
+      "still": null
+     },
+     {
+      "title": "Chain of Custody",
+      "plot": "A file goes missing between two signatures.",
+      "still": null
+     },
+     {
+      "title": "Duplicates",
+      "plot": "Two identical reports disagree about a single date.",
+      "still": null
+     },
+     {
+      "title": "Overdue",
+      "plot": "An overdue request turns out to have been made forty years early.",
+      "still": null
+     },
+     {
+      "title": "The Basement",
+      "plot": "The basement stacks are flooded, and only one shelf is dry.",
+      "still": null
+     },
+     {
+      "title": "Microfiche",
+      "plot": "A reel of microfiche shows the reading room with June still in it.",
+      "still": null
+     },
+     {
+      "title": "Erratum",
+      "plot": "A correction notice is issued for an event that hasn't happened.",
+      "still": null
+     },
+     {
+      "title": "Final Draft",
+      "plot": "June writes the last report, and has to decide whether to sign it.",
+      "still": null
+     },
+     {
+      "title": "Received",
+      "plot": "The archive receives a box addressed to the day after tomorrow.",
+      "still": null
+     }
+    ]
+   ]
+  },
+  {
+   "id": "2003",
+   "title": "Fieldwork",
+   "year": 2022,
+   "genre": "Comedy",
+   "rating": 8.0,
+   "age": "TV-PG",
+   "network": "Brightside",
+   "creators": [
+    "Callum Pryce"
+   ],
+   "cast": [
+    "Mina Sato-Reyes",
+    "August Leclair",
+    "Kit Alcott",
+    "Yusuf Arslan"
+   ],
+   "plot": "The overqualified, underfunded staff of a remote botanical research station try to keep it open, one grant application at a time.",
+   "category": "comedy",
+   "poster": "/Website/showcase/art/out/series-poster-2003.jpg",
+   "backdrop": "/Website/showcase/art/out/series-backdrop-2003.jpg",
+   "seasons": [
+    [
+     {
+      "title": "Pilot Study",
+      "plot": "Dr. Ines Marlow promises the board results by Friday, which is a problem.",
+      "still": null
+     },
+     {
+      "title": "Peer Review",
+      "plot": "The station's only intern accidentally creates a plant that hums.",
+      "still": null
+     },
+     {
+      "title": "The Fern Situation",
+      "plot": "A rare fern is discovered in the break room, and everyone wants credit.",
+      "still": null
+     },
+     {
+      "title": "Control Group",
+      "plot": "The control group is thriving and the experiment is not.",
+      "still": null
+     },
+     {
+      "title": "Open Day",
+      "plot": "Visitors arrive for open day, and the cactus collection is not ready.",
+      "still": null
+     },
+     {
+      "title": "Soil Samples",
+      "plot": "Theo labels every soil sample with the wrong year, beautifully.",
+      "still": null
+     },
+     {
+      "title": "The Inspector",
+      "plot": "A ministry inspector loves the station a little too much.",
+      "still": null
+     },
+     {
+      "title": "Funding Round",
+      "plot": "The team writes a grant application overnight, mostly in rhyme.",
+      "still": null
+     },
+     {
+      "title": "Bloom",
+      "plot": "Something in Greenhouse Two is blooming, and nobody planted it.",
+      "still": null
+     },
+     {
+      "title": "Year One",
+      "plot": "The staff celebrate a year that nobody expected them to survive.",
+      "still": null
+     }
+    ],
+    [
+     {
+      "title": "New Growth",
+      "plot": "Dr. Ines Marlow promises the board results by Friday, which is a problem.",
+      "still": null
+     },
+     {
+      "title": "The Intern",
+      "plot": "The station's only intern accidentally creates a plant that hums.",
+      "still": null
+     },
+     {
+      "title": "Hybrid",
+      "plot": "A rare fern is discovered in the break room, and everyone wants credit.",
+      "still": null
+     },
+     {
+      "title": "Frost Warning",
+      "plot": "The control group is thriving and the experiment is not.",
+      "still": null
+     },
+     {
+      "title": "The Rival Lab",
+      "plot": "Visitors arrive for open day, and the cactus collection is not ready.",
+      "still": null
+     },
+     {
+      "title": "Pollination",
+      "plot": "Theo labels every soil sample with the wrong year, beautifully.",
+      "still": null
+     },
+     {
+      "title": "Sabbatical",
+      "plot": "A ministry inspector loves the station a little too much.",
+      "still": null
+     },
+     {
+      "title": "Abstract",
+      "plot": "The team writes a grant application overnight, mostly in rhyme.",
+      "still": null
+     },
+     {
+      "title": "The Gala",
+      "plot": "Something in Greenhouse Two is blooming, and nobody planted it.",
+      "still": null
+     },
+     {
+      "title": "Germination",
+      "plot": "The staff celebrate a year that nobody expected them to survive.",
+      "still": null
+     }
+    ],
+    [
+     {
+      "title": "Off Season",
+      "plot": "Dr. Ines Marlow promises the board results by Friday, which is a problem.",
+      "still": null
+     },
+     {
+      "title": "The Greenhouse Effect",
+      "plot": "The station's only intern accidentally creates a plant that hums.",
+      "still": null
+     },
+     {
+      "title": "Invasive Species",
+      "plot": "A rare fern is discovered in the break room, and everyone wants credit.",
+      "still": null
+     },
+     {
+      "title": "Field Trip",
+      "plot": "The control group is thriving and the experiment is not.",
+      "still": null
+     },
+     {
+      "title": "Seed Bank",
+      "plot": "Visitors arrive for open day, and the cactus collection is not ready.",
+      "still": null
+     },
+     {
+      "title": "The Documentary",
+      "plot": "Theo labels every soil sample with the wrong year, beautifully.",
+      "still": null
+     },
+     {
+      "title": "Cross-Pollination",
+      "plot": "A ministry inspector loves the station a little too much.",
+      "still": null
+     },
+     {
+      "title": "Margin of Error",
+      "plot": "The team writes a grant application overnight, mostly in rhyme.",
+      "still": null
+     },
+     {
+      "title": "Dormancy",
+      "plot": "Something in Greenhouse Two is blooming, and nobody planted it.",
+      "still": null
+     },
+     {
+      "title": "Harvest",
+      "plot": "The staff celebrate a year that nobody expected them to survive.",
+      "still": null
+     }
+    ],
+    [
+     {
+      "title": "Fourth Season",
+      "plot": "Dr. Ines Marlow promises the board results by Friday, which is a problem.",
+      "still": null
+     },
+     {
+      "title": "Repotting",
+      "plot": "The station's only intern accidentally creates a plant that hums.",
+      "still": null
+     },
+     {
+      "title": "The Audit",
+      "plot": "A rare fern is discovered in the break room, and everyone wants credit.",
+      "still": null
+     },
+     {
+      "title": "Root Systems",
+      "plot": "The control group is thriving and the experiment is not.",
+      "still": null
+     },
+     {
+      "title": "Grafting",
+      "plot": "Visitors arrive for open day, and the cactus collection is not ready.",
+      "still": null
+     },
+     {
+      "title": "The Award",
+      "plot": "Theo labels every soil sample with the wrong year, beautifully.",
+      "still": null
+     },
+     {
+      "title": "Wildflowers",
+      "plot": "A ministry inspector loves the station a little too much.",
+      "still": null
+     },
+     {
+      "title": "Late Frost",
+      "plot": "The team writes a grant application overnight, mostly in rhyme.",
+      "still": null
+     },
+     {
+      "title": "Conference",
+      "plot": "Something in Greenhouse Two is blooming, and nobody planted it.",
+      "still": null
+     },
+     {
+      "title": "Perennial",
+      "plot": "The staff celebrate a year that nobody expected them to survive.",
+      "still": null
+     }
+    ]
+   ]
+  },
+  {
+   "id": "2004",
+   "title": "Crown of Ash",
+   "year": 2024,
+   "genre": "Fantasy, Drama",
+   "rating": 8.7,
+   "age": "TV-MA",
+   "network": "Lumen",
+   "creators": [
+    "Anselm Krüger"
+   ],
+   "cast": [
+    "Thea Marchetti",
+    "Rafe Okonkwo-Lind",
+    "Bastien Morrow",
+    "Lucia Ferrand"
+   ],
+   "plot": "When the old king dies without an heir, five houses race to claim a throne that was burned in the war that made it.",
+   "category": "drama",
+   "poster": "/Website/showcase/art/out/series-poster-2004.jpg",
+   "backdrop": "/Website/showcase/art/out/series-backdrop-2004.jpg",
+   "seasons": [
+    [
+     {
+      "title": "The King Is Dead",
+      "plot": "Princess Elayne is named regent for nine days, and nine days is a long time.",
+      "still": null
+     },
+     {
+      "title": "Five Banners",
+      "plot": "The five houses meet under a truce that nobody intends to keep.",
+      "still": null
+     },
+     {
+      "title": "The Ashfield",
+      "plot": "A queen without a crown rides north to the ashfields.",
+      "still": null
+     },
+     {
+      "title": "A Wedding at Thornmere",
+      "plot": "A marriage is arranged to end the war, and a second one to start it again.",
+      "still": null
+     },
+     {
+      "title": "The Vigil",
+      "plot": "The old king's body lies in state, and one of his guards is missing.",
+      "still": null
+     },
+     {
+      "title": "Ironwood",
+      "plot": "Lord Varric offers the exiled prince a sword and a price.",
+      "still": null
+     },
+     {
+      "title": "The Burning Road",
+      "plot": "The road through the burned valley is the only way home.",
+      "still": null
+     },
+     {
+      "title": "Coronation",
+      "plot": "The houses gather for a coronation, and only one of them is invited.",
+      "still": null
+     }
+    ],
+    [
+     {
+      "title": "Embers",
+      "plot": "Princess Elayne is named regent for nine days, and nine days is a long time.",
+      "still": null
+     },
+     {
+      "title": "The Exiled Prince",
+      "plot": "The five houses meet under a truce that nobody intends to keep.",
+      "still": null
+     },
+     {
+      "title": "Winter Court",
+      "plot": "A queen without a crown rides north to the ashfields.",
+      "still": null
+     },
+     {
+      "title": "Salt and Iron",
+      "plot": "A marriage is arranged to end the war, and a second one to start it again.",
+      "still": null
+     },
+     {
+      "title": "The Pale Queen",
+      "plot": "The old king's body lies in state, and one of his guards is missing.",
+      "still": null
+     },
+     {
+      "title": "Siege of Halloway",
+      "plot": "Lord Varric offers the exiled prince a sword and a price.",
+      "still": null
+     },
+     {
+      "title": "What Remains",
+      "plot": "The road through the burned valley is the only way home.",
+      "still": null
+     },
+     {
+      "title": "Crown of Ash",
+      "plot": "The houses gather for a coronation, and only one of them is invited.",
+      "still": null
+     }
+    ]
+   ]
+  },
+  {
+   "id": "2005",
+   "title": "Signal & Noise",
+   "year": 2025,
+   "genre": "Thriller, Drama",
+   "rating": 8.1,
+   "age": "TV-14",
+   "network": "Northwind",
+   "creators": [
+    "Hollis Grey"
+   ],
+   "cast": [
+    "Imani Castell",
+    "Teodor Quill",
+    "Wren Talbot"
+   ],
+   "plot": "A young engineer at a powerful tech company discovers the algorithm she built is quietly deciding elections.",
+   "category": "thriller",
+   "poster": "/Website/showcase/art/out/series-poster-2005.jpg",
+   "backdrop": "/Website/showcase/art/out/series-backdrop-2005.jpg",
+   "seasons": [
+    [
+     {
+      "title": "Launch Day",
+      "plot": "Maya Okafor's model goes live, and the first result surprises her.",
+      "still": null
+     },
+     {
+      "title": "Training Data",
+      "plot": "A colleague asks where the training data came from, and Maya can't say.",
+      "still": null
+     },
+     {
+      "title": "Edge Cases",
+      "plot": "Maya finds a pattern in the results that only appears in swing districts.",
+      "still": null
+     },
+     {
+      "title": "The Whistle",
+      "plot": "A whistle-blower reaches out, and asks Maya to bring a copy.",
+      "still": null
+     },
+     {
+      "title": "Ground Truth",
+      "plot": "The company's lawyers want to talk to Maya about her search history.",
+      "still": null
+     },
+     {
+      "title": "Overfit",
+      "plot": "Maya rebuilds the model at home to prove what it's doing.",
+      "still": null
+     },
+     {
+      "title": "Dark Pattern",
+      "plot": "A redesign of the company's app hides one setting from every user.",
+      "still": null
+     },
+     {
+      "title": "Signal",
+      "plot": "Maya has one chance to make the world hear what she found.",
+      "still": null
+     }
+    ]
+   ]
+  },
+  {
+   "id": "2006",
+   "title": "The Living Coast",
+   "year": 2025,
+   "genre": "Documentary, Nature",
+   "rating": 8.9,
+   "age": "TV-G",
+   "network": "Wild Atlas",
+   "creators": [
+    "Elin Strand"
+   ],
+   "cast": [
+    "Narrated by Greta Vos"
+   ],
+   "plot": "Six coastlines, six years of filming, and the creatures that live where the land gives way to the sea.",
+   "category": "doc",
+   "poster": "/Website/showcase/art/out/series-poster-2006.jpg",
+   "backdrop": "/Website/showcase/art/out/series-backdrop-2006.jpg",
+   "seasons": [
+    [
+     {
+      "title": "Tidepools",
+      "plot": "Life in the rock pools, where every tide is a new world.",
+      "still": null
+     },
+     {
+      "title": "Kelp Forests",
+      "plot": "Beneath the surface, forests of kelp shelter a city of creatures.",
+      "still": null
+     },
+     {
+      "title": "Seabird Cliffs",
+      "plot": "A million seabirds return to the same cliffs every spring.",
+      "still": null
+     },
+     {
+      "title": "Mangroves",
+      "plot": "Where the river meets the sea, the mangroves hold the coast together.",
+      "still": null
+     },
+     {
+      "title": "Ice Shelves",
+      "plot": "At the edge of the ice, seals, bears and whales share a shrinking shore.",
+      "still": null
+     },
+     {
+      "title": "Islands",
+      "plot": "On islands far from anywhere, evolution takes its own path.",
+      "still": null
+     }
+    ]
+   ]
+  },
+  {
+   "id": "2007",
+   "title": "Low Orbit",
+   "year": 2023,
+   "genre": "Science Fiction, Drama",
+   "rating": 8.2,
+   "age": "TV-14",
+   "network": "Orbit Science",
+   "creators": [
+    "Mara Ellison"
+   ],
+   "cast": [
+    "Rafe Okonkwo-Lind",
+    "Saskia Arden",
+    "Jonah Mireault"
+   ],
+   "plot": "The crew of the first commercial space hotel has six months to make it profitable, and four hundred kilometres of nothing to hide their mistakes.",
+   "category": "scifi",
+   "poster": "/Website/showcase/art/out/series-poster-2007.jpg",
+   "backdrop": "/Website/showcase/art/out/series-backdrop-2007.jpg",
+   "seasons": [
+    [
+     {
+      "title": "Grand Opening",
+      "plot": "The Halo Suites open for business, and the first guest is a critic.",
+      "still": null
+     },
+     {
+      "title": "First Guests",
+      "plot": "A celebrity couple wants the honeymoon suite, and the suite isn't finished.",
+      "still": null
+     },
+     {
+      "title": "Dead Weight",
+      "plot": "Manager Ade Mensah has to lose four hundred kilos before the next launch.",
+      "still": null
+     },
+     {
+      "title": "The Review",
+      "plot": "The hotel's first review arrives, and it's from the guest who got stuck in the gym.",
+      "still": null
+     },
+     {
+      "title": "Eclipse Season",
+      "plot": "Ninety minutes of darkness every orbit is hard on the staff, and the plants.",
+      "still": null
+     },
+     {
+      "title": "Docking",
+      "plot": "A supply ship misses its docking window with the wedding cake on board.",
+      "still": null
+     },
+     {
+      "title": "Room Service",
+      "plot": "The chef discovers soup is a gas in microgravity, and so are the complaints.",
+      "still": null
+     },
+     {
+      "title": "Microgravity",
+      "plot": "A guest goes missing in a station with nowhere to hide.",
+      "still": null
+     },
+     {
+      "title": "Burn",
+      "plot": "An engine burn to dodge debris means everybody has to be strapped in for dinner.",
+      "still": null
+     },
+     {
+      "title": "Re-entry",
+      "plot": "The crew comes down for a week and finds Earth very heavy.",
+      "still": null
+     }
+    ],
+    [
+     {
+      "title": "Second Launch",
+      "plot": "The Halo Suites open for business, and the first guest is a critic.",
+      "still": null
+     },
+     {
+      "title": "The Honeymoon Suite",
+      "plot": "A celebrity couple wants the honeymoon suite, and the suite isn't finished.",
+      "still": null
+     },
+     {
+      "title": "Debris Field",
+      "plot": "Manager Ade Mensah has to lose four hundred kilos before the next launch.",
+      "still": null
+     },
+     {
+      "title": "Inspection",
+      "plot": "The hotel's first review arrives, and it's from the guest who got stuck in the gym.",
+      "still": null
+     },
+     {
+      "title": "Solar Storm",
+      "plot": "Ninety minutes of darkness every orbit is hard on the staff, and the plants.",
+      "still": null
+     },
+     {
+      "title": "Zero-G Gala",
+      "plot": "A supply ship misses its docking window with the wedding cake on board.",
+      "still": null
+     },
+     {
+      "title": "Supply Run",
+      "plot": "The chef discovers soup is a gas in microgravity, and so are the complaints.",
+      "still": null
+     },
+     {
+      "title": "The Investor",
+      "plot": "A guest goes missing in a station with nowhere to hide.",
+      "still": null
+     },
+     {
+      "title": "Hull Breach",
+      "plot": "An engine burn to dodge debris means everybody has to be strapped in for dinner.",
+      "still": null
+     },
+     {
+      "title": "Low Orbit",
+      "plot": "The crew comes down for a week and finds Earth very heavy.",
+      "still": null
+     }
+    ]
+   ]
+  },
+  {
+   "id": "2008",
+   "title": "The Bureau of Lost Things",
+   "year": 2024,
+   "genre": "Mystery, Comedy",
+   "rating": 8.3,
+   "age": "TV-PG",
+   "network": "Brightside",
+   "creators": [
+    "Oona Fairweather"
+   ],
+   "cast": [
+    "Wren Talbot",
+    "August Leclair",
+    "Mina Sato-Reyes"
+   ],
+   "plot": "A city's lost property office returns one forgotten object a week, and every object comes with a story nobody expected to finish.",
+   "category": "comedy",
+   "poster": "/Website/showcase/art/out/series-poster-2008.jpg",
+   "backdrop": "/Website/showcase/art/out/series-backdrop-2008.jpg",
+   "seasons": [
+    [
+     {
+      "title": "The Blue Umbrella",
+      "plot": "A blue umbrella left on the night bus leads clerk Ada Penhallow across the city.",
+      "still": null
+     },
+     {
+      "title": "A Glove for the Left Hand",
+      "plot": "A single glove has been handed in every winter for thirty years.",
+      "still": null
+     },
+     {
+      "title": "The Wedding Ring",
+      "plot": "Someone wants a wedding ring back, and someone else wants it lost.",
+      "still": null
+     },
+     {
+      "title": "Forty Keys",
+      "plot": "A ring of forty keys opens forty doors, and one of them is Ada's.",
+      "still": null
+     },
+     {
+      "title": "The Violin Case",
+      "plot": "A violin case comes in with no violin and a train ticket from 1962.",
+      "still": null
+     },
+     {
+      "title": "A Letter Never Sent",
+      "plot": "Ada delivers a letter that was handed in still sealed.",
+      "still": null
+     },
+     {
+      "title": "The Teddy Bear",
+      "plot": "A child's teddy bear has been lost and found in four different countries.",
+      "still": null
+     },
+     {
+      "title": "Unclaimed",
+      "plot": "The bureau's oldest unclaimed object finally has a visitor.",
+      "still": null
+     }
+    ]
+   ]
+  },
+  {
+   "id": "2009",
+   "title": "Open Flame",
+   "year": 2022,
+   "genre": "Reality, Food",
+   "rating": 7.8,
+   "age": "TV-G",
+   "network": "Hearth",
+   "creators": [
+    "Priya Damaro"
+   ],
+   "cast": [
+    "Hosted by Bastien Morrow"
+   ],
+   "plot": "Twelve home cooks, one wood-fired kitchen in the hills, and nothing but fire to cook with.",
+   "category": "life",
+   "poster": "/Website/showcase/art/out/series-poster-2009.jpg",
+   "backdrop": "/Website/showcase/art/out/series-backdrop-2009.jpg",
+   "seasons": [
+    [
+     {
+      "title": "Kindling",
+      "plot": "Twelve cooks arrive in the hills and learn to build their own fires.",
+      "still": null
+     },
+     {
+      "title": "Smoke and Salt",
+      "plot": "Smoking, curing and salting: the cooks have until sundown.",
+      "still": null
+     },
+     {
+      "title": "The Clay Oven",
+      "plot": "The clay oven is lit at dawn, and bread is due by noon.",
+      "still": null
+     },
+     {
+      "title": "Embers Only",
+      "plot": "No flames allowed: everything is cooked in the embers.",
+      "still": null
+     },
+     {
+      "title": "Breakfast at Dawn",
+      "plot": "Breakfast for the whole valley, cooked over a single fire.",
+      "still": null
+     },
+     {
+      "title": "The Long Roast",
+      "plot": "A twelve-hour roast tests the cooks' patience more than their skill.",
+      "still": null
+     },
+     {
+      "title": "Family Recipes",
+      "plot": "The cooks bring the dish their families made over open fires.",
+      "still": null
+     },
+     {
+      "title": "The Final Fire",
+      "plot": "The finalists cook a three-course meal with nothing but fire.",
+      "still": null
+     }
+    ],
+    [
+     {
+      "title": "Back to the Hills",
+      "plot": "Twelve cooks arrive in the hills and learn to build their own fires.",
+      "still": null
+     },
+     {
+      "title": "Coal-Baked",
+      "plot": "Smoking, curing and salting: the cooks have until sundown.",
+      "still": null
+     },
+     {
+      "title": "Fire and Ice",
+      "plot": "The clay oven is lit at dawn, and bread is due by noon.",
+      "still": null
+     },
+     {
+      "title": "The Market Challenge",
+      "plot": "No flames allowed: everything is cooked in the embers.",
+      "still": null
+     },
+     {
+      "title": "One Pot",
+      "plot": "Breakfast for the whole valley, cooked over a single fire.",
+      "still": null
+     },
+     {
+      "title": "The Spit",
+      "plot": "A twelve-hour roast tests the cooks' patience more than their skill.",
+      "still": null
+     },
+     {
+      "title": "Desserts by Firelight",
+      "plot": "The cooks bring the dish their families made over open fires.",
+      "still": null
+     },
+     {
+      "title": "Champion's Table",
+      "plot": "The finalists cook a three-course meal with nothing but fire.",
+      "still": null
+     }
+    ],
+    [
+     {
+      "title": "Season of Smoke",
+      "plot": "Twelve cooks arrive in the hills and learn to build their own fires.",
+      "still": null
+     },
+     {
+      "title": "Wild Herbs",
+      "plot": "Smoking, curing and salting: the cooks have until sundown.",
+      "still": null
+     },
+     {
+      "title": "Flatbreads",
+      "plot": "The clay oven is lit at dawn, and bread is due by noon.",
+      "still": null
+     },
+     {
+      "title": "The Rain Day",
+      "plot": "No flames allowed: everything is cooked in the embers.",
+      "still": null
+     },
+     {
+      "title": "Seafood on the Coals",
+      "plot": "Breakfast for the whole valley, cooked over a single fire.",
+      "still": null
+     },
+     {
+      "title": "Feast for Forty",
+      "plot": "A twelve-hour roast tests the cooks' patience more than their skill.",
+      "still": null
+     },
+     {
+      "title": "Teams",
+      "plot": "The cooks bring the dish their families made over open fires.",
+      "still": null
+     },
+     {
+      "title": "Last Ember",
+      "plot": "The finalists cook a three-course meal with nothing but fire.",
+      "still": null
+     }
+    ]
+   ]
+  },
+  {
+   "id": "2010",
+   "title": "Tidewater",
+   "year": 2023,
+   "genre": "Drama",
+   "rating": 8.0,
+   "age": "TV-14",
+   "network": "Lumen",
+   "creators": [
+    "Sol Abernathy"
+   ],
+   "cast": [
+    "Greta Vos",
+    "Ronan Delacroix",
+    "Kit Alcott",
+    "Hollis Grey"
+   ],
+   "plot": "Three generations of a family share one tidal island house, and one summer that will decide who inherits it.",
+   "category": "drama",
+   "poster": "/Website/showcase/art/out/series-poster-2010.jpg",
+   "backdrop": "/Website/showcase/art/out/series-backdrop-2010.jpg",
+   "seasons": [
+    [
+     {
+      "title": "Low Tide",
+      "plot": "The Calloway family gathers on the island for Grandmother Ruth's eightieth summer.",
+      "still": null
+     },
+     {
+      "title": "The Causeway",
+      "plot": "The causeway floods, and the family is cut off for the night.",
+      "still": null
+     },
+     {
+      "title": "Grandmother's Rules",
+      "plot": "Ruth lays down the rules for the summer, and her grandson breaks the first one.",
+      "still": null
+     },
+     {
+      "title": "The Boathouse",
+      "plot": "The old boathouse holds the family's best memories and a hidden debt.",
+      "still": null
+     },
+     {
+      "title": "Summer Storm",
+      "plot": "A summer storm brings the roof down and the truth out.",
+      "still": null
+     },
+     {
+      "title": "The Will",
+      "plot": "Ruth's will is read early, at her insistence.",
+      "still": null
+     },
+     {
+      "title": "High Water",
+      "plot": "The highest tide in a century reaches the porch steps.",
+      "still": null
+     },
+     {
+      "title": "Ebb",
+      "plot": "The family decides who will keep the house, and who will let it go.",
+      "still": null
+     }
+    ],
+    [
+     {
+      "title": "Flood Tide",
+      "plot": "The Calloway family gathers on the island for Grandmother Ruth's eightieth summer.",
+      "still": null
+     },
+     {
+      "title": "The New Owner",
+      "plot": "The causeway floods, and the family is cut off for the night.",
+      "still": null
+     },
+     {
+      "title": "Moorings",
+      "plot": "Ruth lays down the rules for the summer, and her grandson breaks the first one.",
+      "still": null
+     },
+     {
+      "title": "Old Letters",
+      "plot": "The old boathouse holds the family's best memories and a hidden debt.",
+      "still": null
+     },
+     {
+      "title": "The Regatta",
+      "plot": "A summer storm brings the roof down and the truth out.",
+      "still": null
+     },
+     {
+      "title": "Salt Marsh",
+      "plot": "Ruth's will is read early, at her insistence.",
+      "still": null
+     },
+     {
+      "title": "Spring Tide",
+      "plot": "The highest tide in a century reaches the porch steps.",
+      "still": null
+     },
+     {
+      "title": "Tidewater",
+      "plot": "The family decides who will keep the house, and who will let it go.",
+      "still": null
+     }
+    ]
+   ]
+  }
+ ],
+ "channels": [
+  {
+   "id": "101",
+   "number": 101,
+   "name": "Meridian 24",
+   "category": "news",
+   "logo": "/Website/showcase/art/out/logo-101.png"
+  },
+  {
+   "id": "102",
+   "number": 102,
+   "name": "Northwind World",
+   "category": "news",
+   "logo": "/Website/showcase/art/out/logo-102.png"
+  },
+  {
+   "id": "103",
+   "number": 103,
+   "name": "Civic Desk",
+   "category": "news",
+   "logo": "/Website/showcase/art/out/logo-103.png"
+  },
+  {
+   "id": "201",
+   "number": 201,
+   "name": "Fieldhouse Sports",
+   "category": "sports",
+   "logo": "/Website/showcase/art/out/logo-201.png"
+  },
+  {
+   "id": "202",
+   "number": 202,
+   "name": "Fieldhouse Sports 2",
+   "category": "sports",
+   "logo": "/Website/showcase/art/out/logo-202.png"
+  },
+  {
+   "id": "203",
+   "number": 203,
+   "name": "Pitchside",
+   "category": "sports",
+   "logo": "/Website/showcase/art/out/logo-203.png"
+  },
+  {
+   "id": "204",
+   "number": 204,
+   "name": "Raceline",
+   "category": "sports",
+   "logo": "/Website/showcase/art/out/logo-204.png"
+  },
+  {
+   "id": "205",
+   "number": 205,
+   "name": "Summit Sports",
+   "category": "sports",
+   "logo": "/Website/showcase/art/out/logo-205.png"
+  },
+  {
+   "id": "301",
+   "number": 301,
+   "name": "Reserve Cinema",
+   "category": "movies",
+   "logo": "/Website/showcase/art/out/logo-301.png"
+  },
+  {
+   "id": "302",
+   "number": 302,
+   "name": "Noir Classics",
+   "category": "movies",
+   "logo": "/Website/showcase/art/out/logo-302.png"
+  },
+  {
+   "id": "303",
+   "number": 303,
+   "name": "Premiere",
+   "category": "movies",
+   "logo": "/Website/showcase/art/out/logo-303.png"
+  },
+  {
+   "id": "401",
+   "number": 401,
+   "name": "Lumen",
+   "category": "ent",
+   "logo": "/Website/showcase/art/out/logo-401.png"
+  },
+  {
+   "id": "402",
+   "number": 402,
+   "name": "Brightside",
+   "category": "ent",
+   "logo": "/Website/showcase/art/out/logo-402.png"
+  },
+  {
+   "id": "403",
+   "number": 403,
+   "name": "Halo Comedy",
+   "category": "ent",
+   "logo": "/Website/showcase/art/out/logo-403.png"
+  },
+  {
+   "id": "501",
+   "number": 501,
+   "name": "Kite Kids",
+   "category": "kids",
+   "logo": "/Website/showcase/art/out/logo-501.png"
+  },
+  {
+   "id": "502",
+   "number": 502,
+   "name": "Little Planet",
+   "category": "kids",
+   "logo": "/Website/showcase/art/out/logo-502.png"
+  },
+  {
+   "id": "601",
+   "number": 601,
+   "name": "Wild Atlas",
+   "category": "doc",
+   "logo": "/Website/showcase/art/out/logo-601.png"
+  },
+  {
+   "id": "602",
+   "number": 602,
+   "name": "Orbit Science",
+   "category": "doc",
+   "logo": "/Website/showcase/art/out/logo-602.png"
+  },
+  {
+   "id": "701",
+   "number": 701,
+   "name": "Pulse Music",
+   "category": "music",
+   "logo": "/Website/showcase/art/out/logo-701.png"
+  },
+  {
+   "id": "702",
+   "number": 702,
+   "name": "Low Light Jazz",
+   "category": "music",
+   "logo": "/Website/showcase/art/out/logo-702.png"
+  },
+  {
+   "id": "801",
+   "number": 801,
+   "name": "Hearth",
+   "category": "life",
+   "logo": "/Website/showcase/art/out/logo-801.png"
+  },
+  {
+   "id": "802",
+   "number": 802,
+   "name": "Wanderline",
+   "category": "life",
+   "logo": "/Website/showcase/art/out/logo-802.png"
+  }
+ ],
+ "programmes": {
+  "news": [
+   {
+    "title": "Meridian Morning",
+    "minutes": 120,
+    "summary": "The day's headlines, weather and the stories behind them.",
+    "art": "/Website/showcase/art/out/prog-news.jpg",
+    "live": false
+   },
+   {
+    "title": "World at Noon",
+    "minutes": 60,
+    "summary": "International news with correspondents around the globe.",
+    "art": "/Website/showcase/art/out/prog-news.jpg",
+    "live": false
+   },
+   {
+    "title": "The Briefing",
+    "minutes": 30,
+    "summary": "A fast look at the stories shaping the afternoon.",
+    "art": "/Website/showcase/art/out/prog-news.jpg",
+    "live": false
+   },
+   {
+    "title": "Market Hour",
+    "minutes": 60,
+    "summary": "Business, markets and the economy explained.",
+    "art": "/Website/showcase/art/out/prog-news.jpg",
+    "live": false
+   },
+   {
+    "title": "Evening Edition",
+    "minutes": 60,
+    "summary": "The main evening news, with analysis and interviews.",
+    "art": "/Website/showcase/art/out/prog-news.jpg",
+    "live": false
+   },
+   {
+    "title": "Nightline Report",
+    "minutes": 30,
+    "summary": "Late headlines and tomorrow's front pages.",
+    "art": "/Website/showcase/art/out/prog-news.jpg",
+    "live": false
+   },
+   {
+    "title": "Weekend Review",
+    "minutes": 90,
+    "summary": "The week in review with a panel of commentators.",
+    "art": "/Website/showcase/art/out/prog-news.jpg",
+    "live": false
+   }
+  ],
+  "sports": [
+   {
+    "title": "Harbor City FC v Northgate United",
+    "minutes": 120,
+    "summary": "Live football from Kestrel Park as the league leaders host their closest rivals.",
+    "art": "/Website/showcase/art/out/prog-football.jpg",
+    "live": true
+   },
+   {
+    "title": "Grand Prix of Valtera: Qualifying",
+    "minutes": 90,
+    "summary": "Live from the Valtera street circuit, as the grid is decided under the lights.",
+    "art": "/Website/showcase/art/out/prog-race.jpg",
+    "live": true
+   },
+   {
+    "title": "Matchday Live",
+    "minutes": 60,
+    "summary": "Build-up, team news and analysis ahead of the day's fixtures.",
+    "art": "/Website/showcase/art/out/prog-studio.jpg",
+    "live": false
+   },
+   {
+    "title": "Fieldhouse Tonight",
+    "minutes": 60,
+    "summary": "Highlights, interviews and every goal from today's games.",
+    "art": "/Website/showcase/art/out/prog-studio.jpg",
+    "live": false
+   },
+   {
+    "title": "Ironvale v Crestmoor",
+    "minutes": 150,
+    "summary": "Live basketball as the conference finals reach game seven.",
+    "art": "/Website/showcase/art/out/prog-court.jpg",
+    "live": true
+   },
+   {
+    "title": "Coastline Cup Sailing",
+    "minutes": 90,
+    "summary": "Highlights from the third leg of the offshore racing series.",
+    "art": null,
+    "live": false
+   },
+   {
+    "title": "The Long Run",
+    "minutes": 60,
+    "summary": "A documentary on the runners who chase the hundred-mile mountain race.",
+    "art": null,
+    "live": false
+   },
+   {
+    "title": "Classic Matches",
+    "minutes": 120,
+    "summary": "A full replay of one of the great finals.",
+    "art": "/Website/showcase/art/out/prog-football.jpg",
+    "live": false
+   }
+  ],
+  "movies": [
+   {
+    "title": "The Long Quiet",
+    "minutes": 150,
+    "summary": "The last keeper of a deep-space relay hears a voice on a frequency that went dark forty years ago, and has to decide whether to answer it.",
+    "art": "/Website/showcase/art/out/film-backdrop-1001.jpg",
+    "live": false
+   },
+   {
+    "title": "Neon Requiem",
+    "minutes": 133,
+    "summary": "A night-shift detective follows a string of impossible alibis through a rain-soaked city where every witness seems to be reading from the same script.",
+    "art": "/Website/showcase/art/out/film-backdrop-1002.jpg",
+    "live": false
+   },
+   {
+    "title": "Saltwater Kings",
+    "minutes": 141,
+    "summary": "Three brothers take their late father's trawler into the worst storm in a generation to settle a debt the family never talked about.",
+    "art": "/Website/showcase/art/out/film-backdrop-1003.jpg",
+    "live": false
+   },
+   {
+    "title": "Paper Moons",
+    "minutes": 116,
+    "summary": "Two strangers locked out on the same rooftop during a summer blackout make a deal to tell each other only true things until the lights come back.",
+    "art": "/Website/showcase/art/out/film-backdrop-1004.jpg",
+    "live": false
+   },
+   {
+    "title": "The Glass Orchard",
+    "minutes": 129,
+    "summary": "When a botanist inherits her estranged aunt's Victorian glasshouse, she finds the plants inside are arranged to tell her how her aunt disappeared.",
+    "art": "/Website/showcase/art/out/film-backdrop-1005.jpg",
+    "live": false
+   },
+   {
+    "title": "Ember Road",
+    "minutes": 138,
+    "summary": "A retired courier agrees to carry one last parcel across three hundred miles of desert, and learns on the first night that half the territory wants it more than she does.",
+    "art": "/Website/showcase/art/out/film-backdrop-1006.jpg",
+    "live": false
+   },
+   {
+    "title": "Northbound",
+    "minutes": 124,
+    "summary": "An overnight sleeper train is stranded in a mountain snowstorm, and the passengers slowly realize one of them boarded under somebody else's name.",
+    "art": "/Website/showcase/art/out/film-backdrop-1007.jpg",
+    "live": false
+   },
+   {
+    "title": "Kingdom of Moths",
+    "minutes": 121,
+    "summary": "A girl who cannot sleep follows a cloud of glowing moths into the forest behind her grandmother's house, and finds the night has a kingdom of its own.",
+    "art": "/Website/showcase/art/out/film-backdrop-1008.jpg",
+    "live": false
+   },
+   {
+    "title": "Halcyon",
+    "minutes": 153,
+    "summary": "On a city that floats above a drowned world, a maintenance pilot finds the engines that keep everyone aloft are running out of time, and that the council already knows.",
+    "art": "/Website/showcase/art/out/film-backdrop-1009.jpg",
+    "live": false
+   },
+   {
+    "title": "The Cartographer's Daughter",
+    "minutes": 145,
+    "summary": "In 1760s Lisbon, the daughter of a royal mapmaker secretly finishes her father's maps, and redraws a border that a kingdom is ready to go to war over.",
+    "art": "/Website/showcase/art/out/film-backdrop-1010.jpg",
+    "live": false
+   },
+   {
+    "title": "Velocity Zero",
+    "minutes": 130,
+    "summary": "A courier who never loses has one night to cross a city in lockdown with a drive that three agencies would kill for.",
+    "art": "/Website/showcase/art/out/film-backdrop-1011.jpg",
+    "live": false
+   },
+   {
+    "title": "Little Thunder",
+    "minutes": 110,
+    "summary": "A ten-year-old storm chaser and her grandfather build a kite to measure the biggest thunderstorm the prairie has seen in fifty years.",
+    "art": "/Website/showcase/art/out/film-backdrop-1012.jpg",
+    "live": false
+   },
+   {
+    "title": "Hollow Tide",
+    "minutes": 113,
+    "summary": "A lighthouse keeper's widow returns to the island after twenty years, and finds the lamp still being lit every night.",
+    "art": "/Website/showcase/art/out/film-backdrop-1013.jpg",
+    "live": false
+   },
+   {
+    "title": "The Last Arcade",
+    "minutes": 119,
+    "summary": "Four old friends get one weekend to win back the beach-town arcade where they grew up, against the developer who used to be the fifth of them.",
+    "art": "/Website/showcase/art/out/film-backdrop-1014.jpg",
+    "live": false
+   },
+   {
+    "title": "Atlas of Silence",
+    "minutes": 106,
+    "summary": "A year among the ice, filmed in the places on Earth where people almost never go, from the hunting grounds of orcas to the slow breathing of glaciers.",
+    "art": "/Website/showcase/art/out/film-backdrop-1015.jpg",
+    "live": false
+   },
+   {
+    "title": "The Velvet Ledger",
+    "minutes": 136,
+    "summary": "A bank's quiet auditor plans the heist of the decade using the only thing nobody thought to guard: the bank's own records.",
+    "art": "/Website/showcase/art/out/film-backdrop-1016.jpg",
+    "live": false
+   },
+   {
+    "title": "Starling",
+    "minutes": 128,
+    "summary": "The first child born on Mars sets out across the red plains with a broken rover to find the signal her mother left for her.",
+    "art": "/Website/showcase/art/out/film-backdrop-1017.jpg",
+    "live": false
+   },
+   {
+    "title": "Deep Field",
+    "minutes": 125,
+    "summary": "The crew of a research station on the ocean floor picks up a pattern in the dark that is too regular to be natural.",
+    "art": "/Website/showcase/art/out/film-backdrop-1018.jpg",
+    "live": false
+   },
+   {
+    "title": "Sunday in Lisbon",
+    "minutes": 111,
+    "summary": "A translator with a missed flight and a tram driver on his last shift spend one Sunday crossing Lisbon on line 28.",
+    "art": "/Website/showcase/art/out/film-backdrop-1019.jpg",
+    "live": false
+   },
+   {
+    "title": "Iron Verdict",
+    "minutes": 139,
+    "summary": "A public defender takes the one case her firm told her to lose, and finds the evidence leads back to the judge.",
+    "art": "/Website/showcase/art/out/film-backdrop-1020.jpg",
+    "live": false
+   },
+   {
+    "title": "Wild Meridian",
+    "minutes": 143,
+    "summary": "An expedition sent to measure an unmapped river finds it runs somewhere their instruments refuse to follow.",
+    "art": "/Website/showcase/art/out/film-backdrop-1021.jpg",
+    "live": false
+   },
+   {
+    "title": "Aurora Line",
+    "minutes": 122,
+    "summary": "Two strangers meet each winter at the same remote Arctic train halt, for one night, for ten years.",
+    "art": "/Website/showcase/art/out/film-backdrop-1022.jpg",
+    "live": false
+   },
+   {
+    "title": "Under a Copper Sky",
+    "minutes": 134,
+    "summary": "In the last summer before the mine closes, a foreman's daughter organizes the strike that will decide whether her town survives it.",
+    "art": "/Website/showcase/art/out/film-backdrop-1023.jpg",
+    "live": false
+   },
+   {
+    "title": "Signal Fire",
+    "minutes": 131,
+    "summary": "When every network on the coast goes down at once, a fire lookout becomes the only person who can see what is coming.",
+    "art": "/Website/showcase/art/out/film-backdrop-1024.jpg",
+    "live": false
+   }
+  ],
+  "ent": [
+   {
+    "title": "Tidewater",
+    "minutes": 60,
+    "summary": "Drama. Three generations of a family share one tidal island house.",
+    "art": "/Website/showcase/art/out/series-backdrop-2010.jpg",
+    "live": false
+   },
+   {
+    "title": "Harbor Lights",
+    "minutes": 60,
+    "summary": "Crime drama in a fishing town that keeps its secrets.",
+    "art": "/Website/showcase/art/out/series-backdrop-2001.jpg",
+    "live": false
+   },
+   {
+    "title": "Crown of Ash",
+    "minutes": 60,
+    "summary": "Five houses race to claim a burned throne.",
+    "art": "/Website/showcase/art/out/series-backdrop-2004.jpg",
+    "live": false
+   },
+   {
+    "title": "Late with Lena",
+    "minutes": 60,
+    "summary": "Talk show with guests, music and conversation.",
+    "art": "/Website/showcase/art/out/prog-talk.jpg",
+    "live": false
+   },
+   {
+    "title": "The Bureau of Lost Things",
+    "minutes": 30,
+    "summary": "One forgotten object, one unfinished story.",
+    "art": "/Website/showcase/art/out/series-backdrop-2008.jpg",
+    "live": false
+   },
+   {
+    "title": "Fieldwork",
+    "minutes": 30,
+    "summary": "Comedy at a remote botanical research station.",
+    "art": "/Website/showcase/art/out/series-backdrop-2003.jpg",
+    "live": false
+   }
+  ],
+  "kids": [
+   {
+    "title": "Kite Club",
+    "minutes": 30,
+    "summary": "A gang of friends build something new every week.",
+    "art": null,
+    "live": false
+   },
+   {
+    "title": "Planet Pals",
+    "minutes": 30,
+    "summary": "Animated adventures across the solar system.",
+    "art": null,
+    "live": false
+   },
+   {
+    "title": "Kingdom of Moths",
+    "minutes": 110,
+    "summary": "Family film. A girl follows glowing moths into the forest.",
+    "art": "/Website/showcase/art/out/film-backdrop-1008.jpg",
+    "live": false
+   },
+   {
+    "title": "Story Time",
+    "minutes": 15,
+    "summary": "A gentle bedtime story, read aloud.",
+    "art": null,
+    "live": false
+   },
+   {
+    "title": "Little Thunder",
+    "minutes": 100,
+    "summary": "Family film. A young storm chaser and her grandfather build a kite.",
+    "art": "/Website/showcase/art/out/film-backdrop-1012.jpg",
+    "live": false
+   },
+   {
+    "title": "Make It, Break It",
+    "minutes": 30,
+    "summary": "Engineering challenges for curious kids.",
+    "art": null,
+    "live": false
+   }
+  ],
+  "doc": [
+   {
+    "title": "The Living Coast",
+    "minutes": 60,
+    "summary": "Six coastlines and the creatures that live where land meets sea.",
+    "art": "/Website/showcase/art/out/series-backdrop-2006.jpg",
+    "live": false
+   },
+   {
+    "title": "Atlas of Silence",
+    "minutes": 95,
+    "summary": "A year among the ice in the quietest places on Earth.",
+    "art": "/Website/showcase/art/out/film-backdrop-1015.jpg",
+    "live": false
+   },
+   {
+    "title": "Night Sky Live",
+    "minutes": 60,
+    "summary": "Live from the observatory: this month's planets and meteor showers.",
+    "art": "/Website/showcase/art/out/prog-sky.jpg",
+    "live": true
+   },
+   {
+    "title": "How Bridges Stand",
+    "minutes": 60,
+    "summary": "The engineering behind the world's longest spans.",
+    "art": null,
+    "live": false
+   },
+   {
+    "title": "Deep Time",
+    "minutes": 60,
+    "summary": "A journey through four billion years of the planet's history.",
+    "art": null,
+    "live": false
+   },
+   {
+    "title": "The Meridian Files",
+    "minutes": 60,
+    "summary": "Science fiction mystery. An archivist finds reports of the future.",
+    "art": "/Website/showcase/art/out/series-backdrop-2002.jpg",
+    "live": false
+   }
+  ],
+  "music": [
+   {
+    "title": "Live from the Glasshouse",
+    "minutes": 90,
+    "summary": "A concert recorded in a Victorian greenhouse.",
+    "art": "/Website/showcase/art/out/prog-concert.jpg",
+    "live": true
+   },
+   {
+    "title": "Countdown 40",
+    "minutes": 60,
+    "summary": "The week's most-played songs.",
+    "art": null,
+    "live": false
+   },
+   {
+    "title": "Late Set",
+    "minutes": 120,
+    "summary": "Long-form DJ sets into the small hours.",
+    "art": "/Website/showcase/art/out/prog-concert.jpg",
+    "live": false
+   },
+   {
+    "title": "Studio Sessions",
+    "minutes": 60,
+    "summary": "Artists play their new records live in the studio.",
+    "art": null,
+    "live": false
+   },
+   {
+    "title": "Blue Hour",
+    "minutes": 120,
+    "summary": "Quiet jazz for the end of the day.",
+    "art": null,
+    "live": false
+   }
+  ],
+  "life": [
+   {
+    "title": "Open Flame",
+    "minutes": 60,
+    "summary": "Home cooks and a wood-fired kitchen in the hills.",
+    "art": "/Website/showcase/art/out/series-backdrop-2009.jpg",
+    "live": false
+   },
+   {
+    "title": "Wanderline: Azores",
+    "minutes": 60,
+    "summary": "Volcanic islands in the middle of the Atlantic.",
+    "art": "/Website/showcase/art/out/prog-travel.jpg",
+    "live": false
+   },
+   {
+    "title": "Market to Table",
+    "minutes": 30,
+    "summary": "A chef shops a local market and cooks what she finds.",
+    "art": null,
+    "live": false
+   },
+   {
+    "title": "Small House, Big View",
+    "minutes": 30,
+    "summary": "Tiny homes in extraordinary places.",
+    "art": null,
+    "live": false
+   },
+   {
+    "title": "Wanderline: Kyoto in Winter",
+    "minutes": 60,
+    "summary": "Temples, tea houses and the quiet of a city in snow.",
+    "art": "/Website/showcase/art/out/prog-travel.jpg",
+    "live": false
+   }
+  ]
+ }
+}

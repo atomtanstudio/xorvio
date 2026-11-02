@@ -1,0 +1,8 @@
+{"MediaContainer":{"size":4,"allowSync":true,"art":"/library/metadata/201/art/1790003333","identifier":"com.plexapp.plugins.library","key":"201","parentIndex":1,"parentTitle":"Harbour Lights","viewGroup":"season",
+ "Directory":[{"leafCount":3,"thumb":"/library/metadata/201/thumb/1790003333","viewedLeafCount":1,"key":"/library/metadata/201/allLeaves","title":"All episodes"}],
+ "Metadata":[
+  {"ratingKey":"220","key":"/library/metadata/220/children","parentRatingKey":"201","type":"season","title":"Season 2","summary":"The storm season.","index":2,"thumb":"/library/metadata/220/thumb/1790005555","leafCount":1,"viewedLeafCount":0},
+  {"ratingKey":"210","key":"/library/metadata/210/children","parentRatingKey":"201","type":"season","title":"Season 1","summary":"","index":1,"thumb":"/library/metadata/201/thumb/1790003333","originallyAvailableAt":"2021-09-24","leafCount":2,"viewedLeafCount":1},
+  {"ratingKey":"200","key":"/library/metadata/200/children","parentRatingKey":"201","type":"season","title":"Specials","index":0,"leafCount":0},
+  {"ratingKey":"299","key":"/library/metadata/299/children","parentRatingKey":"201","type":"season","title":"No Number"}
+ ]}}

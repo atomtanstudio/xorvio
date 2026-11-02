@@ -1,0 +1,10 @@
+{"MediaContainer":{"size":4,"totalSize":4,"offset":0,"allowSync":true,"identifier":"com.plexapp.plugins.library","librarySectionID":2,"librarySectionTitle":"Shows","viewGroup":"show","Metadata":[
+{"ratingKey":"212","key":"/library/metadata/212","parentRatingKey":"210","grandparentRatingKey":"201","type":"episode","title":"The Second Lamp","grandparentTitle":"Harbour Lights","parentTitle":"Season 1","contentRating":"TV-14","summary":"The lamp goes dark.","index":2,"parentIndex":1,"viewOffset":600000,"lastViewedAt":1792000000,"thumb":"/library/metadata/212/thumb/1790004444","art":"/library/metadata/201/art/1790003333","duration":2640000,"originallyAvailableAt":"2021-10-01","addedAt":1702000100,
+ "Media":[{"id":212,"duration":2640000,"width":1920,"height":1080,"audioChannels":6,"videoCodec":"h264","container":"mkv","Part":[{"id":212,"key":"/library/parts/212/1702000100/file.mkv","duration":2640000,"container":"mkv"}]}]},
+{"ratingKey":"211","key":"/library/metadata/211","parentRatingKey":"210","grandparentRatingKey":"201","type":"episode","title":"Pilot","grandparentTitle":"Harbour Lights","parentTitle":"Season 1","summary":"","index":1,"parentIndex":1,"viewCount":1,"lastViewedAt":1791500000,"thumb":"/library/metadata/211/thumb/1790004443","duration":2700000,"originallyAvailableAt":"2021-09-24","addedAt":1702000000,
+ "Media":[{"id":211,"duration":2700000,"container":"mkv","Part":[{"id":211,"key":"/library/parts/211/1702000000/file.mkv","duration":2700000}]}]},
+{"ratingKey":"221","key":"/library/metadata/221","parentRatingKey":"220","grandparentRatingKey":"201","type":"episode","title":"","parentIndex":2,"duration":2580000,"addedAt":1702000200,
+ "Media":[{"id":221,"duration":2580000,"container":"avi","Part":[{"id":221,"key":"/library/parts/221/1702000200/file.avi","duration":2580000,"container":"avi"}]}]},
+{"ratingKey":"901","key":"/library/metadata/901","grandparentRatingKey":"999","type":"episode","title":"Elsewhere","index":1,"parentIndex":1,"duration":1000,
+ "Media":[{"id":901,"Part":[{"id":901,"key":"/library/parts/901/1/file.mkv"}]}]}
+]}}

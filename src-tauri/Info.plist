@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Merged into the app's Info.plist by Tauri. -->
+<plist version="1.0">
+<dict>
+	<!-- macOS 15 and later ask before an app reaches devices on the local network, showing this. -->
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Xorvio connects to media servers and playlists you add on your local network, and finds Chromecast and Google TV devices so you can watch on your TV.</string>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_googlecast._tcp</string>
+	</array>
+</dict>
+</plist>

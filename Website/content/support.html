@@ -1,0 +1,247 @@
+<h1>Support</h1>
+<p class="lede">Questions, problems or ideas: we're glad to hear them all.</p>
+
+<h2 id="contact">Get help</h2>
+<p>Email <a href="mailto:support@xorvio.com">support@xorvio.com</a>. A real person reads every message, and we'll reply as soon as we can.</p>
+<p>To report a bug or suggest a feature in the open, <a href="{{github}}/issues">open an issue on GitHub</a>. Issues are public, so leave out logins, playlist links and anything else private. If you'd rather keep it between us, email instead.</p>
+<p>For privacy questions or requests, write to <a href="mailto:privacy@xorvio.com">privacy@xorvio.com</a>.</p>
+<p>We don't run any provider or add-on, so we can't help with provider accounts, subscriptions, billing or missing channels. For those, contact whoever provides them.</p>
+
+<h2 id="report">What to include in a report</h2>
+<p>A few details help us find the problem much faster. Settings is under Xorvio › Settings… (<kbd>⌘</kbd><kbd>,</kbd>) on a Mac, and File › Settings… (<kbd>Ctrl</kbd>+<kbd>,</kbd>) on Windows and Linux.</p>
+<ol>
+  <li><strong>Your system.</strong> Your version of macOS, Windows or Linux, and on Linux, your distribution and desktop.</li>
+  <li><strong>Your Xorvio version.</strong> On a Mac, choose Xorvio › About Xorvio. On Windows and Linux, choose Help › About.</li>
+  <li><strong>What happened.</strong> Tell us what you did, what you expected, and what you saw instead. Mention where it happened, such as Live TV, the guide, Movies, Series, Recordings or the player.</li>
+  <li><strong>The kind of source.</strong> M3U link, M3U file, Xtream Codes, Plex, Jellyfin, Emby, a media folder or an add-on. For live channels, say whether Live streams is set to HLS or MPEG-TS; it's under Advanced when you edit the source. Please don't send your password or the full address of your playlist.</li>
+  <li><strong>A redacted diagnostic log.</strong> Open Settings › Privacy &amp; Diagnostics and switch on Detailed events. Make the problem happen again, then click Export…, save the file and attach it.</li>
+  <li><strong>A screenshot,</strong> if it helps show the problem. Press <kbd>⇧</kbd><kbd>⌘</kbd><kbd>5</kbd> on a Mac, or <kbd>Windows</kbd>+<kbd>Shift</kbd>+<kbd>S</kbd> on Windows.</li>
+</ol>
+<p>Xorvio removes logins, tokens and the values of URL parameters from the log, and removes every source's login again when you export it. The log can still contain server names and the names of channels or titles, so have a quick look before you send it.</p>
+
+<h2 id="faq">Frequently asked questions</h2>
+
+<details>
+  <summary>Where do I get channels?</summary>
+  <p>Xorvio doesn't provide, sell or recommend any channels, providers, playlists or add-ons. It plays sources you already have the right to use: a playlist or login from a service you subscribe to, your own Plex, Jellyfin or Emby server, or folders of your own videos.</p>
+  <p>If you don't have a source yet, you can still try everything in Xorvio with the built-in demo library.</p>
+</details>
+
+<details>
+  <summary>What do I need to run Xorvio?</summary>
+  <ul>
+    <li>A Mac with macOS 12 Monterey or later, with Apple silicon or an Intel processor;</li>
+    <li>or a 64-bit PC with Windows 10 or 11;</li>
+    <li>or a 64-bit Linux desktop as recent as Ubuntu 22.04, with a keyring that offers the Secret Service, such as GNOME Keyring or KWallet. Xorvio keeps your logins there.</li>
+  </ul>
+  <p>You also need an internet connection, or sources on your local network. Everything Xorvio needs for playback and recording comes with it, including its own copy of FFmpeg.</p>
+  <p>Recordings and the live TV buffer need free disk space: about 2 to 4 GB for an hour of HD.</p>
+</details>
+
+<details>
+  <summary>How do I install Xorvio?</summary>
+  <p>Download the latest release from <a href="{{github}}/releases">Xorvio's releases on GitHub</a>.</p>
+  <p><strong>On a Mac,</strong> choose the disk image for Apple silicon or for Intel, open it, and drag Xorvio to Applications. It's signed and notarized by Apple, so it opens like any other app.</p>
+  <p><strong>On Windows,</strong> run the installer: the <code>.exe</code>, or the <code>.msi</code> if you prefer. On Windows 10, the installer also adds Microsoft Edge WebView2 if your PC doesn't have it.</p>
+  <p>The installers aren't signed yet, so Windows checks with you the first time. If your browser holds the download back as uncommon, keep it: in Microsoft Edge, open the download's … menu, choose Keep, then Show more and Keep anyway. When Microsoft Defender SmartScreen says “Windows protected your PC”, click More info, check that the app is the file you downloaded and the publisher reads “Unknown publisher”, then click Run anyway. Each new version may ask again.</p>
+  <p>To be sure the file is the one we released, compare its SHA-256 with the one shown beside it on the releases page. In PowerShell, in the folder it downloaded to, run <code>Get-FileHash</code> followed by its file name.</p>
+  <p>If Smart App Control is on, Windows blocks unsigned apps outright, with no Run anyway. Windows Security › App &amp; browser control › Smart App Control settings shows whether it is. Until Xorvio is signed, it runs only with Smart App Control off, and on older versions of Windows 11, turning it off can't be undone without resetting Windows.</p>
+  <p><strong>On Linux,</strong> use the AppImage or the <code>.deb</code> package. Make the AppImage executable, in its file properties or with <code>chmod +x</code>, then open it. Install the <code>.deb</code> with <code>sudo apt install ./</code> followed by its file name.</p>
+  <p>Xorvio doesn't check for updates or update itself. To update, download the new release and install it the same way. Your library, settings and logins stay as they were. On a Mac, the Keychain may ask once whether the new version can read Xorvio's logins; click Always Allow.</p>
+</details>
+
+<details>
+  <summary>Can I try Xorvio without a source?</summary>
+  <p>Yes. On the welcome screen, click Get Started, then Open Demo under “Just looking?”. If you skipped the welcome, click Try the Demo in Sources while you have no sources.</p>
+  <p>The demo library has made-up channels, films and series, with a working guide, replay and recording. Its videos are public test streams and openly licensed films. Everything in it is marked as demo content. To remove it, click ••• on it in Sources and choose Remove….</p>
+</details>
+
+<details>
+  <summary>How do I add a playlist or an Xtream Codes login?</summary>
+  <p>In Sources, click Add Source, or choose File › Add Source… (<kbd>⌘</kbd><kbd>N</kbd> on a Mac, <kbd>Ctrl</kbd>+<kbd>N</kbd> on Windows and Linux). Under IPTV provider, choose:</p>
+  <ul>
+    <li><strong>Xtream Codes</strong> to enter the server, username and password from your provider. Click Test Connection to check them. If your provider says, Xorvio shows how many connections you're allowed and when the account expires. Xtream adds series details, replay and your account's status.</li>
+    <li><strong>M3U Link</strong> to paste a playlist's address. If the link holds an Xtream login, Xorvio offers to use Xtream instead.</li>
+    <li><strong>M3U File</strong> to click Choose… and pick a playlist file. You can also drop the file onto the sheet.</li>
+  </ul>
+  <p>Give the source a name if you like, choose how often it refreshes (Daily, Every 6 hours or Manually), and click Add Source. Under Advanced, you can choose whether live channels come as HLS (.m3u8), which we recommend, or MPEG-TS (.ts), and set a user agent if your provider asks for one.</p>
+  <p>Logins and playlist links are kept in your system's keychain and sent only to your provider.</p>
+</details>
+
+<details>
+  <summary>How do I add a TV guide (XMLTV)?</summary>
+  <p>Xtream sources bring their provider's guide. For an M3U source, paste the guide's address into Guide (XMLTV) when you add or edit it, or leave it empty to use the guide the playlist points to. Plain and compressed (<code>.xml.gz</code>) guides both work.</p>
+  <p>To fill in channels your sources' guides miss, add another guide under Guides in Sources. Click Add Guide, paste its link and, if it was written for another time zone, choose an offset. Xorvio matches listings to channels by guide id, then by name. To choose a channel's guide yourself, right-click it in Live TV and choose Match Guide….</p>
+</details>
+
+<details>
+  <summary>How do I add my Plex, Jellyfin or Emby server?</summary>
+  <p>In Sources, click Add Source and choose your server under Media server.</p>
+  <ul>
+    <li><strong>Plex:</strong> click Sign In with Plex. Your browser opens plex.tv, where you sign in and allow Xorvio. Back in Xorvio, choose one of your servers, or one shared with you, and click Add Server. To use a server's address instead, click “Connect to a server by its address instead”.</li>
+    <li><strong>Jellyfin and Emby:</strong> enter the server's address, such as <code>http://192.168.1.20:8096</code>, with your username and password, then click Add Source. Leave the password empty if the account has none.</li>
+  </ul>
+  <p>Xorvio keeps a sign-in token, never your password. The server's libraries become categories, and its films and series play straight from its files. What you watch is marked on the server too, and the other way round. Each server also gets a row of its own on Home.</p>
+</details>
+
+<details>
+  <summary>How do I add a folder of my own videos?</summary>
+  <p>In Sources, click Add Source, choose Media Folder, and pick the folder. It can be on your computer, an external drive or a network share. Add as many folders as you like.</p>
+  <p>Xorvio finds films and series from their file and folder names, so names like these work best:</p>
+  <ul>
+    <li><code>Films/The Glass Valley (2021)/The Glass Valley (2021).mkv</code></li>
+    <li><code>Series/Tidewater/Season 1/Tidewater S01E01.mkv</code></li>
+  </ul>
+  <p>Plots, cast and genres come from <code>.nfo</code> files, as Kodi, Jellyfin, Emby and tinyMediaManager save them. Artwork comes from pictures beside your videos: <code>poster.jpg</code>, <code>fanart.jpg</code> and <code>clearlogo.png</code>, <code>season01-poster.jpg</code> for a season, and <code>&lt;file&gt;-thumb.jpg</code> for an episode. A film with no picture of its own gets a frame from its video. Subtitle files named after a video, such as <code>&lt;file&gt;.en.srt</code>, are found when it plays. Samples and extras folders are left out.</p>
+  <p>Folders are read each time Xorvio opens, and on the refresh schedule you choose. To see one as it is on disk, click ••• on it in Sources and choose Open Library. There you can filter and sort its videos, and click Edit to move, rename or delete them. Deleted files go to the folder's Recently Deleted, where you can put them back for 30 days. Otherwise, Xorvio only reads your folders.</p>
+</details>
+
+<details>
+  <summary>How do add-ons work?</summary>
+  <p>Add-ons that speak the Stremio add-on protocol can add catalogs to browse, details, copies to play and subtitles. Xorvio comes with none, and we don't recommend any. You're responsible for having the right to what an add-on offers.</p>
+  <p>To install one, paste its manifest link, which ends in <code>manifest.json</code>, in Settings › Add-ons and click Install. Its titles then appear in Discover, search and Home. Switch an add-on off, or remove it, in the same place. Turn on Lead with add-ons to show add-on titles first in Home, search and copies.</p>
+  <p>Add-on links can hold account keys, so Xorvio keeps them in your system's keychain and shows only the host.</p>
+</details>
+
+<details>
+  <summary>Which formats can Xorvio play?</summary>
+  <p>Almost anything your sources send. Xorvio plays HLS, MPEG-TS and web formats such as MP4 directly. For everything else, its own copy of FFmpeg repackages the video as it plays, converting only what your computer can't play:</p>
+  <ul>
+    <li>MKV, AVI and MPEG-2 files;</li>
+    <li>Dolby Digital, DTS and TrueHD audio;</li>
+    <li>HEVC, played as it is where your computer can decode it, and converted where it can't;</li>
+    <li>VP9 and AV1, played directly from MP4 and WebM files where your computer decodes them, and converted otherwise;</li>
+    <li>picture subtitles from Blu-rays and DVDs (PGS, VobSub and DVB), drawn into the video when you choose them.</li>
+  </ul>
+  <p>Choose audio and subtitle tracks while you watch, and set preferred languages in Settings › Playback. When you change them during a series, Xorvio remembers your choice for its other episodes.</p>
+  <p>On a Mac, you can also open a film, episode or channel in IINA, VLC or Infuse, if you have one installed: choose Open in IINA, or one of the others, from its menu.</p>
+</details>
+
+<details>
+  <summary>How do I record?</summary>
+  <ul>
+    <li><strong>What's on now:</strong> while you watch a live channel, click Record in the player, or choose Record Now on the program in the guide.</li>
+    <li><strong>Something coming up:</strong> choose Record on a program in the guide, in search or on your watchlist.</li>
+    <li><strong>Every episode:</strong> choose Record Series… on a program. Record new episodes only or every airing, on that channel or any, and keep them all or only the latest 3, 5 or 10.</li>
+    <li><strong>Between two times:</strong> in Recordings, click New Recording.</li>
+    <li><strong>Something that already aired:</strong> where your provider offers catch-up, choose Save from Catch-up on the program.</li>
+  </ul>
+  <p>Recordings start a minute early and keep going for 3 minutes after the end. Change that, and where recordings are saved, in Settings › Recording. They're saved as the stream arrives, in the channel's own quality.</p>
+  <p>Xorvio has to be running to record. While recordings are scheduled, closing the window keeps it running in the menu bar or system tray, and it keeps your computer awake while it records. Each recording uses one of your provider's connections, and Xorvio warns you before you'd go past your provider's limit.</p>
+  <p>When a recording finishes, Xorvio looks for its ad breaks and shows a Skip Ad button in each one. To skip them without asking, or to stop looking, change Ad breaks in Settings › Recording. If you've installed comskip, Xorvio uses it to find them. It doesn't come with Xorvio.</p>
+</details>
+
+<details>
+  <summary>Can I pause and rewind live TV?</summary>
+  <p>Yes. In Settings › Pause and Rewind Live TV, set Buffer to From a Pause to start keeping a channel when you pause it, or Always to start when you tune in, so you can rewind straight away. Keep up to sets how much is kept, from 15 minutes to 2 hours.</p>
+  <p>Press <kbd>←</kbd> and <kbd>→</kbd> to skip, and use Go Live (<kbd>⇧</kbd><kbd>⌘</kbd><kbd>L</kbd>, or <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd>) to catch up. The buffer is kept on your computer, about 2 to 4 GB for an hour of HD, and deleted when you change channel.</p>
+  <p>Where your provider offers catch-up, you can also start a program from the beginning with From Start, or watch one that already aired with Play Replay.</p>
+</details>
+
+<details>
+  <summary>Can I watch more than one channel at once?</summary>
+  <p>Yes, with Multiview. Right-click a channel and choose Add to Multiview, click the Multiview button in the player, or choose Playback › Multiview (<kbd>⇧</kbd><kbd>⌘</kbd><kbd>M</kbd>, or <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>M</kbd>). You can watch two to four live channels. Click a tile, or press <kbd>1</kbd> to <kbd>4</kbd>, to hear it.</p>
+  <p>Each tile uses one connection to your provider. If your provider limits how many streams you can watch at once, Xorvio tells you before you go past the limit.</p>
+</details>
+
+<details>
+  <summary>Can I keep watching while I browse?</summary>
+  <p>Yes. Video plays right in the main window, and you can move it out of the way:</p>
+  <ul>
+    <li><strong>Mini player:</strong> go anywhere else in Xorvio and the video shrinks into a corner. Drag it to whichever corner you like.</li>
+    <li><strong>Docked:</strong> in Live TV, the video sits at the top, above the channels and guide.</li>
+    <li><strong>Pop out:</strong> press <kbd>⌥</kbd><kbd>⌘</kbd><kbd>P</kbd> (<kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>P</kbd> on Windows and Linux) to give the video its own window, and again to bring it back. To keep it above other windows, turn on Pop-out player in Settings › Playback.</li>
+    <li><strong>Picture in Picture:</strong> press <kbd>P</kbd>, or click the Picture in Picture button in the player, where your system offers it.</li>
+  </ul>
+  <p>Press <kbd>F</kbd> while the video is in front to fill the screen.</p>
+</details>
+
+<details>
+  <summary>Can I watch on my TV?</summary>
+  <p><strong>Chromecast and Google TV:</strong> click the Cast button in the player and choose your TV. It needs to be on the same network as your computer. Films, episodes and live channels play from where you were, and Xorvio converts what the TV can't play. While you cast, the player shows controls for the TV, and Stop casting brings the video back to your computer.</p>
+  <p>Your system may ask whether Xorvio can find devices on your local network, or accept incoming connections. Allow both, or the TV can't reach the video.</p>
+  <p><strong>AirPlay:</strong> on a Mac, click the AirPlay button in the player and choose an Apple TV or an AirPlay-compatible TV. AirPlay works with HLS streams and common files like MP4, so for an Xtream source, choose HLS for live streams if your provider offers it.</p>
+</details>
+
+<details>
+  <summary>How do I connect Trakt?</summary>
+  <p>Open Settings › Trakt and click Connect Trakt. Your browser opens Trakt, where you enter the code Xorvio shows. From then on, Xorvio tells Trakt what you watch as it plays, and keeps your history, where you left off and your watchlist the same in both places. Choose what's shared with While watching, History and Watchlist, and click Sync Now to sync straight away.</p>
+  <p>If your copy of Xorvio has no Trakt app built in, Settings › Trakt asks for your own. Create an app on trakt.tv with <code>http://localhost</code> as its redirect URI, then enter its Client ID. Xorvio doesn't need the Client Secret.</p>
+  <p>Trakt can also add rows to Home, such as its Top 10s, public lists, your own lists and your recommendations. Add or remove them with Customize Home….</p>
+</details>
+
+<details>
+  <summary>Do I need a TMDB key?</summary>
+  <p>No, but TMDB makes Xorvio look its best. It adds title logos, backdrops, cast photos, trailers, episode stills, people's pages and better suggestions.</p>
+  <p>Look in Settings › Details. If TMDB says “Using the built-in key”, there's nothing to do. If it says “Not set up”, click Get a Key to make a free key on themoviedb.org. The API key and the read access token both work. Paste it in and click Use This Key. To use your own key in place of a built-in one, click Use Your Own.</p>
+  <p>TVmaze fills in series details TMDB can't, with no key needed. You can turn either off in the same place: switched off, it's asked nothing.</p>
+</details>
+
+<details>
+  <summary>How do library profiles and parental controls work?</summary>
+  <p><strong>Library profiles</strong> choose what Xorvio shows: the languages you watch, your favorite genres, live TV, films and series, and whether adult categories are hidden. Switch profiles at the foot of the sidebar, and edit them there or with Edit profiles… in Settings › Profiles and Home. Each profile has its own Home rows, which you choose with Customize Home….</p>
+  <p><strong>Parental controls</strong> lock channels and categories behind a four-digit PIN. Click Set PIN… in Settings › Parental Controls. Categories whose names look adult then lock themselves, and you can lock others by right-clicking them in Live TV and choosing Lock with PIN. Locked channels and categories stay out of Live TV, the guide, Home and search until someone enters the PIN. They lock again after the time you choose under Lock again after, when Xorvio quits, or when you click Lock Now.</p>
+</details>
+
+<details>
+  <summary>Where does Xorvio keep my data?</summary>
+  <p>In its data folder:</p>
+  <ul>
+    <li>macOS: <code>~/Library/Application Support/com.xorvio.desktop</code></li>
+    <li>Windows: <code>%APPDATA%\com.xorvio.desktop</code></li>
+    <li>Linux: <code>~/.local/share/com.xorvio.desktop</code></li>
+  </ul>
+  <p>That's where your catalog, library, settings, recording schedules and automatic backups are kept, with the frames and thumbnails Xorvio makes. Logins, playlist links, tokens and keys are in your system's keychain: the Keychain on a Mac, Windows Credential Manager, or GNOME Keyring or KWallet on Linux.</p>
+  <p>Recordings go to Movies › Xorvio on a Mac and Videos › Xorvio on Windows and Linux, unless you choose another folder in Settings › Recording. Settings › Storage shows how much space each takes. Read the <a href="/privacy">privacy policy</a> for what Xorvio connects to and how to turn things off.</p>
+</details>
+
+<details>
+  <summary>How do I back up Xorvio, or use it on two computers?</summary>
+  <p><strong>Back up:</strong> in Settings › Backup, click Back Up… to save one file you can keep anywhere. It holds your watchlist, progress, history, favorites and groups, changes to channels, recording schedules, settings and sources, but not recordings. To include logins and links, turn on “Include logins and links, sealed with a passphrase”. Without the passphrase, nobody can open them, you included. Set Back up automatically to Daily or Weekly, and Xorvio keeps the latest 7 for you, without logins. To restore, click Restore…; Xorvio restarts to do it.</p>
+  <p><strong>Sync:</strong> Settings › Sync keeps your watchlist, progress, history, favorites and groups, library profiles and changes to channels the same on your computers. It works through a folder they share, such as one in iCloud Drive or Dropbox, a Syncthing folder or a network share. There's no Xorvio server. To set up a second computer, restore a backup from the first, then turn on Sync this computer on both, with the same folder.</p>
+</details>
+
+<details>
+  <summary>What are the keyboard shortcuts?</summary>
+  <p>Everything essential in Xorvio works from the keyboard. These are the most useful shortcuts:</p>
+  <table>
+    <thead>
+      <tr><th scope="col">Action</th><th scope="col">Mac</th><th scope="col">Windows and Linux</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Settings</td><td><kbd>⌘</kbd><kbd>,</kbd></td><td><kbd>Ctrl</kbd>+<kbd>,</kbd></td></tr>
+      <tr><td>Add a source</td><td><kbd>⌘</kbd><kbd>N</kbd></td><td><kbd>Ctrl</kbd>+<kbd>N</kbd></td></tr>
+      <tr><td>Refresh all sources</td><td><kbd>⇧</kbd><kbd>⌘</kbd><kbd>R</kbd></td><td><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>R</kbd></td></tr>
+      <tr><td>Home, Watchlist, Live TV, Movies, Series, Recordings, Sources</td><td><kbd>⌘</kbd><kbd>1</kbd> to <kbd>⌘</kbd><kbd>7</kbd></td><td><kbd>Ctrl</kbd>+<kbd>1</kbd> to <kbd>Ctrl</kbd>+<kbd>7</kbd></td></tr>
+      <tr><td>Search</td><td><kbd>⌘</kbd><kbd>F</kbd></td><td><kbd>Ctrl</kbd>+<kbd>F</kbd></td></tr>
+      <tr><td>Back</td><td><kbd>⌘</kbd><kbd>[</kbd></td><td><kbd>Alt</kbd>+<kbd>←</kbd></td></tr>
+      <tr><td>Hide or show the sidebar</td><td><kbd>⌃</kbd><kbd>⌘</kbd><kbd>S</kbd></td><td><kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>S</kbd></td></tr>
+      <tr><td>Play or pause</td><td><kbd>Space</kbd> or <kbd>⌥</kbd><kbd>Space</kbd></td><td><kbd>Space</kbd></td></tr>
+      <tr><td>Skip back or forward 10 seconds</td><td><kbd>←</kbd> <kbd>→</kbd> or <kbd>⌘</kbd><kbd>←</kbd> <kbd>⌘</kbd><kbd>→</kbd></td><td><kbd>←</kbd> <kbd>→</kbd></td></tr>
+      <tr><td>Skip back or forward a minute</td><td><kbd>⇧</kbd><kbd>←</kbd> <kbd>⇧</kbd><kbd>→</kbd></td><td><kbd>Shift</kbd>+<kbd>←</kbd> <kbd>Shift</kbd>+<kbd>→</kbd></td></tr>
+      <tr><td>Next or previous channel</td><td><kbd>↑</kbd> <kbd>↓</kbd> or <kbd>⌘</kbd><kbd>↑</kbd> <kbd>⌘</kbd><kbd>↓</kbd></td><td><kbd>↑</kbd> <kbd>↓</kbd> or <kbd>Page Up</kbd> <kbd>Page Down</kbd></td></tr>
+      <tr><td>Volume up or down on a live channel</td><td><kbd>⌥</kbd><kbd>↑</kbd> <kbd>⌥</kbd><kbd>↓</kbd></td><td><kbd>Alt</kbd>+<kbd>↑</kbd> <kbd>Alt</kbd>+<kbd>↓</kbd></td></tr>
+      <tr><td>Last channel you watched</td><td><kbd>L</kbd> or <kbd>⌘</kbd><kbd>L</kbd></td><td><kbd>L</kbd> or <kbd>Ctrl</kbd>+<kbd>L</kbd></td></tr>
+      <tr><td>Tune a channel by its number</td><td colspan="2">Type the number</td></tr>
+      <tr><td>Channel list while watching live</td><td><kbd>Return</kbd></td><td><kbd>Enter</kbd></td></tr>
+      <tr><td>Now and Next</td><td colspan="2"><kbd>G</kbd></td></tr>
+      <tr><td>Go live</td><td><kbd>⇧</kbd><kbd>⌘</kbd><kbd>L</kbd></td><td><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd></td></tr>
+      <tr><td>Multiview</td><td><kbd>⇧</kbd><kbd>⌘</kbd><kbd>M</kbd></td><td><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>M</kbd></td></tr>
+      <tr><td>Hear a Multiview tile</td><td colspan="2"><kbd>1</kbd> to <kbd>4</kbd></td></tr>
+      <tr><td>Pop out the video, or bring it back</td><td><kbd>⌥</kbd><kbd>⌘</kbd><kbd>P</kbd></td><td><kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>P</kbd></td></tr>
+      <tr><td>Picture in Picture</td><td colspan="2"><kbd>P</kbd></td></tr>
+      <tr><td>Full screen</td><td><kbd>F</kbd> or <kbd>⌃</kbd><kbd>⌘</kbd><kbd>F</kbd></td><td><kbd>F</kbd> or <kbd>F11</kbd></td></tr>
+      <tr><td>Mute</td><td colspan="2"><kbd>M</kbd></td></tr>
+      <tr><td>Stream information</td><td colspan="2"><kbd>I</kbd></td></tr>
+      <tr><td>Another copy of an add-on title</td><td colspan="2"><kbd>C</kbd></td></tr>
+      <tr><td>Close what's over the video, leave full screen, or go back</td><td colspan="2"><kbd>Esc</kbd></td></tr>
+    </tbody>
+  </table>
+  <p>Keys without <kbd>⌘</kbd> or <kbd>Ctrl</kbd> work while the player is in front. Over a film, <kbd>↑</kbd> and <kbd>↓</kbd> change the volume. The Playback menu lists the rest.</p>
+</details>
+
+<details>
+  <summary>Is Xorvio open source?</summary>
+  <p>Yes. Xorvio is free software under the GNU General Public License, version 3 or later. Its code is <a href="{{github}}">on GitHub</a>, where you can read it, build it yourself, report bugs and suggest features.</p>
+  <p>Contributions are welcome, from small fixes to new features. For anything big, open an issue first so we can talk it over.</p>
+</details>

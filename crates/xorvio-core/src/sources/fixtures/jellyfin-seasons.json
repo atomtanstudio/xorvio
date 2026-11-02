@@ -1,0 +1,70 @@
+{
+  "Items": [
+    {
+      "Name": "Season 1",
+      "Id": "3d3f8b3070148a536d64a81b1bde5f71",
+      "Overview": "The station's season 1.",
+      "IndexNumber": 1,
+      "IsFolder": true,
+      "Type": "Season",
+      "ParentBackdropItemId": "3964b139df4c37d43b8d949fbbc17af9",
+      "ParentBackdropImageTags": [
+        "d506f460821d9c1ba3f1ed08dbc8d13c"
+      ],
+      "UserData": {
+        "PlayedPercentage": 50,
+        "UnplayedItemCount": 1,
+        "PlaybackPositionTicks": 0,
+        "PlayCount": 0,
+        "IsFavorite": false,
+        "Played": false,
+        "Key": "tt9900010001",
+        "ItemId": "3d3f8b3070148a536d64a81b1bde5f71"
+      },
+      "ChildCount": 2,
+      "SeriesName": "Test Show",
+      "SeriesId": "3964b139df4c37d43b8d949fbbc17af9",
+      "SeriesPrimaryImageTag": "1356910d5c30f60d4c3d3a033e682dde",
+      "ImageTags": {
+        "Primary": "4da77125214dc7bcd4f363e90b18ba0f"
+      },
+      "BackdropImageTags": [],
+      "LocationType": "FileSystem",
+      "MediaType": "Unknown"
+    },
+    {
+      "Name": "Season 2",
+      "Id": "fae86c5400255e2460d2d0662f9b645a",
+      "Overview": "The station's season 2.",
+      "IndexNumber": 2,
+      "IsFolder": true,
+      "Type": "Season",
+      "ParentBackdropItemId": "3964b139df4c37d43b8d949fbbc17af9",
+      "ParentBackdropImageTags": [
+        "d506f460821d9c1ba3f1ed08dbc8d13c"
+      ],
+      "UserData": {
+        "PlayedPercentage": 0,
+        "UnplayedItemCount": 2,
+        "PlaybackPositionTicks": 0,
+        "PlayCount": 0,
+        "IsFavorite": false,
+        "Played": false,
+        "Key": "tt9900010002",
+        "ItemId": "fae86c5400255e2460d2d0662f9b645a"
+      },
+      "ChildCount": 2,
+      "SeriesName": "Test Show",
+      "SeriesId": "3964b139df4c37d43b8d949fbbc17af9",
+      "SeriesPrimaryImageTag": "1356910d5c30f60d4c3d3a033e682dde",
+      "ImageTags": {
+        "Primary": "c2671c37e3e036d2ed168cf24ae1dd55"
+      },
+      "BackdropImageTags": [],
+      "LocationType": "FileSystem",
+      "MediaType": "Unknown"
+    }
+  ],
+  "TotalRecordCount": 2,
+  "StartIndex": 0
+}

@@ -1,0 +1,56 @@
+# Xorvio's own ffmpeg and ffprobe for one target, built by
+# Scripts/build-ffmpeg.sh into src-tauri/binaries. The build takes a while,
+# so it's kept in the cache until the script (its pins and configure line)
+# changes.
+name: Xorvio's ffmpeg
+description: Builds ffmpeg and ffprobe with Scripts/build-ffmpeg.sh, or restores them from the cache.
+inputs:
+  target:
+    description: The Rust target triple to build for, such as aarch64-apple-darwin.
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Restore
+      id: cache
+      uses: actions/cache@v4
+      with:
+        key: ffmpeg-${{ inputs.target }}-${{ hashFiles('Scripts/build-ffmpeg.sh') }}
+        path: |
+          src-tauri/binaries
+          build/ffmpeg/${{ inputs.target }}/stamp
+          build/ffmpeg/${{ inputs.target }}/BUILDINFO.txt
+
+    # The script builds Meson, Ninja and NASM itself when they're missing;
+    # Ubuntu's are quicker.
+    - name: Install build tools (Linux)
+      if: steps.cache.outputs.cache-hit != 'true' && runner.os == 'Linux'
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y zsh nasm meson ninja-build pkg-config zlib1g-dev
+
+    - name: Build (macOS, Linux)
+      if: steps.cache.outputs.cache-hit != 'true' && runner.os != 'Windows'
+      shell: bash
+      run: zsh Scripts/build-ffmpeg.sh --target "${{ inputs.target }}"
+
+    - name: Set up MSYS2 (Windows)
+      if: steps.cache.outputs.cache-hit != 'true' && runner.os == 'Windows'
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: UCRT64
+        update: false
+        install: >-
+          zsh make diffutils curl tar xz bzip2
+          mingw-w64-ucrt-x86_64-gcc
+          mingw-w64-ucrt-x86_64-nasm
+          mingw-w64-ucrt-x86_64-pkgconf
+          mingw-w64-ucrt-x86_64-meson
+          mingw-w64-ucrt-x86_64-ninja
+          mingw-w64-ucrt-x86_64-zlib
+
+    - name: Build (Windows)
+      if: steps.cache.outputs.cache-hit != 'true' && runner.os == 'Windows'
+      shell: msys2 {0}
+      run: zsh Scripts/build-ffmpeg.sh --target "${{ inputs.target }}"

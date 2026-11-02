@@ -1,0 +1,54 @@
+[package]
+name = "xorvio"
+description = "Xorvio: live TV, films and series from your own sources."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+default-run = "xorvio"
+
+[lib]
+name = "xorvio_lib"
+crate-type = ["rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+xorvio-model.workspace = true
+xorvio-core.workspace = true
+xorvio-addons.workspace = true
+xorvio-media.workspace = true
+xorvio-cast.workspace = true
+anyhow.workspace = true
+chrono.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+url.workspace = true
+tauri = { version = "2", features = ["macos-private-api", "tray-icon", "image-png"] }
+tauri-plugin-dialog = "2"
+tauri-plugin-notification = "2"
+tauri-plugin-opener = "2"
+tauri-plugin-window-state = "2"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+dirs = "6"
+rusqlite.workspace = true
+futures-util.workspace = true
+keyring = { version = "3.6.2", features = ["apple-native", "windows-native", "sync-secret-service", "crypto-rust"] }
+
+# Finding other players (IINA, VLC, Infuse) through Launch Services; Tauri already brings these crates.
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2-app-kit = { version = "0.3", default-features = false, features = ["std", "NSWorkspace"] }
+objc2-foundation = { version = "0.3", default-features = false, features = ["std", "NSString", "NSURL", "NSBundle"] }
+# Whether macOS lets Xorvio notify (Settings › Reminders); Tauri already brings these crates too.
+objc2-user-notifications = { version = "0.3", default-features = false, features = ["std", "bitflags", "block2", "UNUserNotificationCenter", "UNNotificationSettings"] }
+block2 = "0.6"
+objc2 = "0.6"
+
+# Keeping Windows awake while something records (awake.rs); Tauri already brings this crate.
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.61", features = ["Win32_System_Power"] }
+
+[dev-dependencies]
+reqwest.workspace = true

@@ -1,0 +1,158 @@
+/* Xorvio's "quiet screening room" palette, carried over from Theme.swift.
+   Every colour is semantic with a designed dark and light value; the dark
+   palette is the primary, most carefully tuned one. */
+
+:root,
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --canvas: #111418;
+  --surface: #1b2026;
+  --surface-raised: #242b33;
+  --surface-hover: #2b333d;
+  --separator: #2c333c;
+  --sidebar: #262729;
+  --panel: #181c21;
+
+  --text-primary: #f3f5f7;
+  --text-secondary: #b0bac6;
+  --text-tertiary: #8a95a3;
+
+  --accent: #79aeff;
+  --accent-muted: rgba(121, 174, 255, 0.16);
+  --accent-strong: #4f8ff7;
+
+  --live: #ff5a5f;
+  --recording: #ff453a;
+  --success: #4cd08a;
+  --warning: #f5b84c;
+  --danger: #ff6b6b;
+
+  --guide-past: #171b20;
+  --guide-live: #223047;
+  --guide-future: #1e242b;
+
+  /* Programme kinds in the guide, mixed into a cell's own colour by
+     --guide-tint (less for what has aired), so text keeps its contrast. */
+  --genre-sport: #3fb27f;
+  --genre-news: #5b8def;
+  --genre-film: #a77bf3;
+  --genre-kids: #f2b33d;
+  --genre-factual: #2fb9a8;
+  --genre-entertainment: #e0709f;
+  --genre-music: #ef8a5a;
+  --guide-tint: 14%;
+  --guide-tint-past: 8%;
+
+  --glass: rgba(40, 46, 54, 0.62);
+  --glass-strong: rgba(30, 35, 42, 0.82);
+  --glass-border: rgba(255, 255, 255, 0.09);
+  --glass-highlight: rgba(255, 255, 255, 0.06);
+  --scrim: rgba(0, 0, 0, 0.55);
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  --card-shadow: 0 6px 18px rgba(0, 0, 0, 0.28);
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --canvas: #f4f5f7;
+  --surface: #ffffff;
+  --surface-raised: #eceef2;
+  --surface-hover: #e3e7ed;
+  --separator: #dadfe6;
+  --sidebar: #ececee;
+  --panel: #eef0f3;
+
+  --text-primary: #111418;
+  --text-secondary: #4a5563;
+  --text-tertiary: #66717f;
+
+  --accent: #1f66d1;
+  --accent-muted: rgba(31, 102, 209, 0.14);
+  --accent-strong: #1f66d1;
+
+  --live: #d02a36;
+  --recording: #c81e14;
+  --success: #19804a;
+  --warning: #9a6200;
+  --danger: #c0282d;
+
+  --guide-past: #eef0f3;
+  --guide-live: #dce8fb;
+  --guide-future: #ffffff;
+
+  --genre-sport: #1f9a62;
+  --genre-news: #2f6fe0;
+  --genre-film: #8a55e6;
+  --genre-kids: #d99a12;
+  --genre-factual: #11998a;
+  --genre-entertainment: #d0477f;
+  --genre-music: #e0663a;
+  --guide-tint: 10%;
+  --guide-tint-past: 6%;
+
+  --glass: rgba(255, 255, 255, 0.66);
+  --glass-strong: rgba(250, 251, 252, 0.88);
+  --glass-border: rgba(0, 0, 0, 0.08);
+  --glass-highlight: rgba(255, 255, 255, 0.5);
+  --scrim: rgba(0, 0, 0, 0.35);
+  --shadow: 0 10px 30px rgba(20, 30, 45, 0.16);
+  --card-shadow: 0 6px 18px rgba(20, 30, 45, 0.12);
+}
+
+@media (prefers-contrast: more) {
+  :root {
+    --canvas: #000000;
+    --text-secondary: #d5dce4;
+    --text-tertiary: #b7c1cc;
+    --separator: #5a6573;
+    --accent: #a5c8ff;
+  }
+  :root[data-theme="light"] {
+    --canvas: #ffffff;
+    --text-secondary: #2e3742;
+    --text-tertiary: #46505c;
+    --separator: #8a94a2;
+    --accent: #0a4db0;
+  }
+}
+
+:root {
+  /* 4/8-point spacing scale */
+  --s-xxs: 2px;
+  --s-xs: 4px;
+  --s-s: 8px;
+  --s-m: 12px;
+  --s-l: 16px;
+  --s-xl: 24px;
+  --s-xxl: 32px;
+  --s-section: 40px;
+
+  --r-small: 6px;
+  --r-medium: 10px;
+  --r-large: 14px;
+  --r-card: 12px;
+
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter Variable", "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
+  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter Variable", "Segoe UI Variable", system-ui, sans-serif;
+  --font-condensed: "SF Pro Text", -apple-system, "Inter Variable", system-ui, sans-serif;
+
+  /* Shell geometry */
+  /* Matched to Xorvio for Mac: a 212-point sidebar panel 8 points in, a
+     40-point gutter, Home's 372-point landscape and 200-point poster cards. */
+  --sidebar-width: 212px;
+  --sidebar-inset: 8px;
+  --toolbar-height: 52px;
+  --content-inset: 40px;
+  --poster-width: 168px;
+  --home-poster-width: 200px;
+  --landscape-width: 372px;
+
+  --ease: cubic-bezier(0.25, 0.8, 0.25, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+:root[data-density="compact"] {
+  --poster-width: 128px;
+  --home-poster-width: 150px;
+  --landscape-width: 280px;
+}

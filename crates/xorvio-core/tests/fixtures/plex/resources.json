@@ -1,0 +1,13 @@
+[
+{"name":"Living Room iPad","product":"Plex for iOS","productVersion":"8.40","platform":"iOS","clientIdentifier":"ipad-1","createdAt":"2024-01-01T10:00:00Z","lastSeenAt":"2026-10-30T10:00:00Z","provides":"client,player,pubsub-player","ownerId":null,"sourceTitle":null,"publicAddress":"203.0.113.9","accessToken":"device-token","owned":true,"home":false,"synced":false,"relay":false,"presence":false,"httpsRequired":false,"publicAddressMatches":true,"dnsRebindingProtection":false,"natLoopbackSupported":false,"connections":[]},
+{"name":"Friend's Server","product":"Plex Media Server","productVersion":"1.42.2.10156","platform":"Linux","platformVersion":"6.1","device":"PC","clientIdentifier":"shared-machine","createdAt":"2023-05-05T10:00:00Z","lastSeenAt":"2026-10-30T09:00:00Z","provides":"server","ownerId":12345,"sourceTitle":"friend","publicAddress":"198.51.100.4","accessToken":"shared-server-token","owned":false,"home":false,"synced":false,"relay":true,"presence":true,"httpsRequired":true,"publicAddressMatches":false,"dnsRebindingProtection":false,"natLoopbackSupported":true,
+ "connections":[{"protocol":"https","address":"198.51.100.4","port":32400,"uri":"https://198-51-100-4.abc123.plex.direct:32400","local":false,"relay":false,"IPv6":false}]},
+{"name":"Home Server","product":"Plex Media Server","productVersion":"1.43.5.11079","platform":"Linux","clientIdentifier":"home-machine","createdAt":"2022-02-02T10:00:00Z","lastSeenAt":"2026-10-30T11:00:00Z","provides":"server","ownerId":null,"sourceTitle":null,"publicAddress":"203.0.113.9","accessToken":"home-server-token","owned":true,"home":false,"synced":false,"relay":true,"presence":true,"httpsRequired":false,"publicAddressMatches":true,"dnsRebindingProtection":false,"natLoopbackSupported":false,
+ "connections":[
+  {"protocol":"https","address":"138.68.0.1","port":8443,"uri":"https://138-68-0-1.def456.plex.direct:8443","local":false,"relay":true,"IPv6":false},
+  {"protocol":"https","address":"203.0.113.9","port":32400,"uri":"https://203-0-113-9.def456.plex.direct:32400","local":false,"relay":false,"IPv6":false},
+  {"protocol":"https","address":"192.168.1.5","port":32400,"uri":"https://192-168-1-5.def456.plex.direct:32400","local":true,"relay":false,"IPv6":false}
+ ]},
+{"name":"Old NAS","product":"Plex Media Server","clientIdentifier":"nas-machine","provides":"client,server","owned":"1","connections":[{"uri":"http://10.0.0.2:32400","local":"1","relay":"0"}]},
+{"name":"No Id","product":"Plex Media Server","provides":"server","owned":true,"accessToken":"x","connections":[]}
+]

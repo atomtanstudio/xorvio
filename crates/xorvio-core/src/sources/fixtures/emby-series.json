@@ -1,0 +1,47 @@
+{
+  "Items": [
+    {
+      "Name": "Test Show",
+      "Id": "21",
+      "DateCreated": "2026-10-30T23:41:07.0000000Z",
+      "PremiereDate": "2019-01-07T00:00:00.0000000Z",
+      "OfficialRating": "TV-14",
+      "Overview": "A small-town radio station stays on the air through one long winter.",
+      "Taglines": [],
+      "Genres": [
+        "Drama",
+        "Comedy"
+      ],
+      "CommunityRating": 8.1,
+      "ProductionYear": 2019,
+      "RemoteTrailers": [],
+      "ProviderIds": {
+        "Tmdb": "990010",
+        "Imdb": "tt9900010"
+      },
+      "IsFolder": true,
+      "Type": "Series",
+      "Studios": [
+        {
+          "Name": "Northwind Broadcasting",
+          "Id": 30
+        }
+      ],
+      "UserData": {
+        "UnplayedItemCount": 3,
+        "PlaybackPositionTicks": 0,
+        "PlayCount": 0,
+        "IsFavorite": false,
+        "Played": false
+      },
+      "AirDays": [],
+      "ImageTags": {
+        "Primary": "4961d7070c1bec2fb6dfca54b9d31cf1"
+      },
+      "BackdropImageTags": [
+        "6e584027c047f7321dd345fde2fb7e32"
+      ]
+    }
+  ],
+  "TotalRecordCount": 1
+}

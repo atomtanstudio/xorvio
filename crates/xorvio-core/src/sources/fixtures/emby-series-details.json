@@ -1,0 +1,82 @@
+{
+  "Name": "Test Show",
+  "Id": "21",
+  "DateCreated": "2026-10-30T23:41:07.8201882Z",
+  "DateModified": "2026-10-30T23:41:07.8201882Z",
+  "CanDelete": true,
+  "CanDownload": false,
+  "PresentationUniqueKey": "tt9900010-230244a378654abf84f2f8bcdc67a35a",
+  "SupportsSync": true,
+  "SortName": "Test Show",
+  "ForcedSortName": "Test Show",
+  "PremiereDate": "2019-01-07T00:00:00.0000000Z",
+  "ExternalUrls": [
+    {
+      "Name": "IMDb",
+      "Url": "https://www.imdb.com/title/tt9900010"
+    },
+    {
+      "Name": "TheMovieDb",
+      "Url": "https://www.themoviedb.org/tv/990010"
+    },
+    {
+      "Name": "Trakt",
+      "Url": "https://trakt.tv/search/tmdb/990010?id_type=show"
+    }
+  ],
+  "Path": "/media/Shows/Test Show (2019)",
+  "OfficialRating": "TV-14",
+  "Overview": "A small-town radio station stays on the air through one long winter.",
+  "Taglines": [],
+  "Genres": [
+    "Drama",
+    "Comedy"
+  ],
+  "CommunityRating": 8.1,
+  "FileName": "Test Show (2019)",
+  "ProductionYear": 2019,
+  "RemoteTrailers": [],
+  "ProviderIds": {
+    "Tmdb": "990010",
+    "Imdb": "tt9900010"
+  },
+  "IsFolder": true,
+  "ParentId": "6",
+  "Type": "Series",
+  "People": [
+    {
+      "Name": "Nadia Brooks",
+      "Id": "28",
+      "Role": "Host",
+      "Type": "Actor"
+    }
+  ],
+  "Studios": [
+    {
+      "Name": "Northwind Broadcasting",
+      "Id": 30
+    }
+  ],
+  "TagItems": [],
+  "LocalTrailerCount": 0,
+  "UserData": {
+    "UnplayedItemCount": 3,
+    "PlaybackPositionTicks": 0,
+    "PlayCount": 0,
+    "IsFavorite": false,
+    "Played": false
+  },
+  "ChildCount": 2,
+  "DisplayPreferencesId": "f63033ff6886ecc7083a696cbeced1b0",
+  "AirDays": [],
+  "PrimaryImageAspectRatio": 0.6666666666666666,
+  "DisplayOrder": "Aired",
+  "ImageTags": {
+    "Primary": "4961d7070c1bec2fb6dfca54b9d31cf1"
+  },
+  "BackdropImageTags": [
+    "6e584027c047f7321dd345fde2fb7e32"
+  ],
+  "LockedFields": [],
+  "LockData": false
+}

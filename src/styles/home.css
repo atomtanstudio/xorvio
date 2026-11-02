@@ -1,0 +1,114 @@
+/* Home's banners, the hero's preview clip and channel artwork, "New
+   Episode" chips, and the highlight Home's arrow keys move. */
+
+/* MARK: Banners */
+
+.home-banners {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0 var(--content-inset);
+  margin: 14px 0 6px;
+}
+.home-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  color: var(--text-primary);
+}
+.home-banner.warning {
+  background: color-mix(in srgb, var(--warning) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--warning) 30%, transparent);
+}
+.home-banner.accent {
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+}
+.home-banner-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+.home-banner.warning .home-banner-icon {
+  color: var(--warning);
+}
+.home-banner.accent .home-banner-icon {
+  color: var(--accent);
+}
+.home-banner-text {
+  flex: 1;
+  min-width: 0;
+}
+.home-banner .btn-plain {
+  flex: none;
+}
+
+/* MARK: Hero */
+
+/* A muted clip of the featured film, faded in over its backdrop; it never
+   moves or zooms, and it's off unless chosen in Settings. */
+.hero-preview {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 1.4s ease-in-out;
+  pointer-events: none;
+  background: transparent;
+}
+.hero-preview.visible {
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-preview {
+    display: none;
+  }
+}
+
+/* A live programme without artwork: the channel's colours, its logo large at the right. */
+.hero-ambience {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 12%;
+}
+.hero-ambience .channel-logo {
+  border-radius: 28px;
+  background: rgba(10, 12, 16, 0.35);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.4);
+}
+.hero-ambience .channel-logo .initials {
+  font-size: 44px;
+  color: rgba(255, 255, 255, 0.86);
+}
+
+/* MARK: Chips */
+
+.chip.chip-new {
+  color: #fff;
+  background: color-mix(in srgb, var(--accent) 78%, rgba(10, 12, 16, 0.6));
+}
+
+/* MARK: Keyboard */
+
+/* The highlight Home's arrow keys move: the same ring as keyboard focus
+   anywhere, shown however the browser judges where focus came from. */
+.home .card.key-focus {
+  outline: none;
+}
+.home .card.key-focus .card-art {
+  box-shadow: 0 0 0 3px var(--accent), var(--card-shadow);
+}
+.home .hero .btn.key-focus {
+  outline: none;
+  box-shadow:
+    0 0 0 3px var(--accent),
+    0 0 22px rgba(255, 255, 255, 0.45);
+}

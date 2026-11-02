@@ -1,0 +1,51 @@
+[package]
+name = "xorvio-core"
+description = "Sources (M3U, Xtream Codes, XMLTV), the catalog and library stores, and search."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+xorvio-model.workspace = true
+anyhow.workspace = true
+thiserror.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tokio.workspace = true
+reqwest.workspace = true
+rusqlite.workspace = true
+chrono.workspace = true
+chrono-tz.workspace = true
+url.workspace = true
+percent-encoding.workspace = true
+uuid.workspace = true
+tracing.workspace = true
+futures-util.workspace = true
+regex.workspace = true
+# Streaming XMLTV, with the encodings older guides still declare (ISO-8859-1).
+quick-xml = { version = "0.37.5", features = ["encoding"] }
+# Compressed guides (.xml.gz).
+flate2 = "1.1.1"
+# The operating system's keychain. Without a platform feature keyring falls
+# back to an in-memory mock, so each platform's native store is named here.
+keyring = { version = "3.6.2", features = ["apple-native", "windows-native", "sync-secret-service", "crypto-rust"] }
+# Folding accents and full-width letters for name matching.
+unicode-normalization = "0.1.24"
+# Downloaded guides wait in a temporary file that removes itself.
+tempfile = "3.20.0"
+# The parental PIN is kept as a salted hash.
+sha2 = "0.10.9"
+# Backups (backup/): one zip file, and the logins in it sealed with a key
+# from the person's passphrase (Argon2id, then XChaCha20-Poly1305). The
+# crypto crates are pinned exactly, so they change only when we choose to.
+# All three are MIT or MIT/Apache-2.0, which GPL-3.0 can include.
+zip = { version = "=8.6.0", default-features = false, features = ["deflate-flate2"] }
+argon2 = { version = "=0.6.0", default-features = false, features = ["alloc"] }
+chacha20poly1305 = { version = "=0.11.0", default-features = false, features = ["alloc"] }
+# Random salts, nonces and keys from the operating system (MIT/Apache-2.0).
+getrandom = "0.4.3"
+# The computer's name, for backups and the sync folder (Apache-2.0).
+gethostname = "1.1.0"
+
+[dev-dependencies]
+tokio = { workspace = true }

@@ -1,0 +1,27 @@
+[package]
+name = "xorvio-cast"
+description = "Finding Chromecast and Google TV devices on the network, and playing to them over Cast v2."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+thiserror.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+uuid.workspace = true
+# mDNS browsing for _googlecast._tcp, on a thread of its own (no runtime needed).
+mdns-sd = { version = "0.21.6", default-features = false, features = ["async"] }
+# The receiver speaks TLS on port 8009 with a self-signed certificate. ring is
+# the provider reqwest already brings, so nothing new is compiled for TLS.
+rustls = { version = "0.23.46", default-features = false, features = ["ring", "std", "tls12"] }
+tokio-rustls = { version = "0.26.6", default-features = false, features = ["ring", "tls12"] }
+
+[dev-dependencies]
+# The fake receiver in the tests needs a certificate of its own.
+rcgen = { version = "0.14.10", default-features = false, features = ["ring", "pem", "crypto"] }
+reqwest.workspace = true
+axum = "0.8.9"

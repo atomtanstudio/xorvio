@@ -1,0 +1,301 @@
+{
+  "Items": [
+    {
+      "Name": "Test Film One",
+      "OriginalTitle": "Film Un d'Essai",
+      "Id": "73b9bbbd0dd0de91c34825af0bde00b9",
+      "DateCreated": "2026-10-30T23:40:49.0807623Z",
+      "Container": "mov,mp4,m4a,3gp,3g2,mj2",
+      "PremiereDate": "2020-04-12T00:00:00.0000000Z",
+      "MediaSources": [
+        {
+          "Protocol": "File",
+          "Id": "73b9bbbd0dd0de91c34825af0bde00b9",
+          "Path": "/media/Movies/Test Film One (2020)/Test Film One (2020).mp4",
+          "Type": "Default",
+          "Container": "mp4",
+          "Size": 8500355,
+          "Name": "Test Film One (2020)",
+          "IsRemote": false,
+          "ETag": "7ee4969470f8fdede1de042b7e94ae5e",
+          "RunTimeTicks": 3600000000,
+          "ReadAtNativeFramerate": false,
+          "IgnoreDts": false,
+          "IgnoreIndex": false,
+          "GenPtsInput": false,
+          "SupportsTranscoding": true,
+          "SupportsDirectStream": true,
+          "SupportsDirectPlay": true,
+          "IsInfiniteStream": false,
+          "UseMostCompatibleTranscodingProfile": false,
+          "RequiresOpening": false,
+          "RequiresClosing": false,
+          "RequiresLooping": false,
+          "SupportsProbing": true,
+          "VideoType": "VideoFile",
+          "MediaStreams": [
+            {
+              "Codec": "h264",
+              "CodecTag": "avc1",
+              "Language": "und",
+              "TimeBase": "1/10240",
+              "VideoRange": "SDR",
+              "VideoRangeType": "SDR",
+              "AudioSpatialFormat": "None",
+              "DisplayTitle": "720p H264 SDR",
+              "NalLengthSize": "4",
+              "IsInterlaced": false,
+              "IsAVC": true,
+              "BitRate": 89507,
+              "BitDepth": 8,
+              "RefFrames": 1,
+              "IsDefault": true,
+              "IsForced": false,
+              "IsHearingImpaired": false,
+              "IsOriginal": false,
+              "Height": 720,
+              "Width": 1280,
+              "AverageFrameRate": 10,
+              "RealFrameRate": 10,
+              "ReferenceFrameRate": 10,
+              "Profile": "Constrained Baseline",
+              "Type": "Video",
+              "AspectRatio": "16:9",
+              "Index": 0,
+              "IsExternal": false,
+              "IsTextSubtitleStream": false,
+              "SupportsExternalStream": false,
+              "PixelFormat": "yuv420p",
+              "Level": 31,
+              "IsAnamorphic": false
+            },
+            {
+              "Codec": "aac",
+              "CodecTag": "mp4a",
+              "Language": "und",
+              "TimeBase": "1/48000",
+              "VideoRange": "Unknown",
+              "VideoRangeType": "Unknown",
+              "AudioSpatialFormat": "None",
+              "LocalizedDefault": "Default",
+              "LocalizedExternal": "External",
+              "LocalizedLanguage": "Undetermined",
+              "LocalizedOriginal": "Original",
+              "DisplayTitle": "AAC - Stereo - Default",
+              "IsInterlaced": false,
+              "ChannelLayout": "stereo",
+              "BitRate": 96291,
+              "Channels": 2,
+              "SampleRate": 48000,
+              "IsDefault": true,
+              "IsForced": false,
+              "IsHearingImpaired": false,
+              "IsOriginal": false,
+              "Profile": "LC",
+              "Type": "Audio",
+              "Index": 1,
+              "IsExternal": false,
+              "IsTextSubtitleStream": false,
+              "SupportsExternalStream": false
+            }
+          ],
+          "MediaAttachments": [],
+          "Formats": [],
+          "Bitrate": 188896,
+          "RequiredHttpHeaders": {},
+          "TranscodingSubProtocol": "http",
+          "DefaultAudioStreamIndex": 1,
+          "HasSegments": false
+        }
+      ],
+      "ProductionLocations": [
+        "Ireland"
+      ],
+      "OfficialRating": "PG-13",
+      "Overview": "A surveyor maps a canyon that keeps changing shape.",
+      "Taglines": [
+        "Every map is a guess."
+      ],
+      "Genres": [
+        "Science Fiction",
+        "Drama"
+      ],
+      "CommunityRating": 7.4,
+      "RunTimeTicks": 3600000000,
+      "ProductionYear": 2020,
+      "RemoteTrailers": [
+        {
+          "Url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        }
+      ],
+      "ProviderIds": {
+        "Imdb": "tt9900001",
+        "Tmdb": "990001"
+      },
+      "IsFolder": false,
+      "Type": "Movie",
+      "Studios": [
+        {
+          "Name": "Lantern Pictures",
+          "Id": "c2b9c0b9359b4bf637b112004605ee5d"
+        }
+      ],
+      "UserData": {
+        "PlayedPercentage": 33.33333333333333,
+        "PlaybackPositionTicks": 1200000000,
+        "PlayCount": 1,
+        "IsFavorite": false,
+        "LastPlayedDate": "2026-10-29T20:00:00.0000000Z",
+        "Played": true,
+        "Key": "73b9bbbd-0dd0-de91-c348-25af0bde00b9",
+        "ItemId": "73b9bbbd0dd0de91c34825af0bde00b9"
+      },
+      "VideoType": "VideoFile",
+      "ImageTags": {
+        "Logo": "404b097e3593341821a54b8d6e84c446",
+        "Primary": "5da423a7f47c6bfd471cab17c2be5b8e"
+      },
+      "BackdropImageTags": [
+        "71d1a6f43f396e1d18fe7b856dbfd7fc"
+      ],
+      "LocationType": "FileSystem",
+      "MediaType": "Video"
+    },
+    {
+      "Name": "Test Film Two",
+      "Id": "949ca08e71353033712d102e9d6b6f8e",
+      "DateCreated": "2026-10-30T23:41:07.6502516Z",
+      "Container": "mkv",
+      "PremiereDate": "2021-09-03T00:00:00.0000000Z",
+      "MediaSources": [
+        {
+          "Protocol": "File",
+          "Id": "949ca08e71353033712d102e9d6b6f8e",
+          "Path": "/media/Movies/Test Film Two (2021)/Test Film Two (2021).mkv",
+          "Type": "Default",
+          "Container": "mkv",
+          "Size": 11617316,
+          "Name": "Test Film Two (2021)",
+          "IsRemote": false,
+          "ETag": "ecd824eefcef43c71429d227293b6850",
+          "RunTimeTicks": 3600000000,
+          "ReadAtNativeFramerate": false,
+          "IgnoreDts": false,
+          "IgnoreIndex": false,
+          "GenPtsInput": false,
+          "SupportsTranscoding": true,
+          "SupportsDirectStream": true,
+          "SupportsDirectPlay": true,
+          "IsInfiniteStream": false,
+          "UseMostCompatibleTranscodingProfile": false,
+          "RequiresOpening": false,
+          "RequiresClosing": false,
+          "RequiresLooping": false,
+          "SupportsProbing": true,
+          "VideoType": "VideoFile",
+          "MediaStreams": [
+            {
+              "Codec": "hevc",
+              "ColorSpace": "gbr",
+              "TimeBase": "1/1000",
+              "VideoRange": "SDR",
+              "VideoRangeType": "SDR",
+              "AudioSpatialFormat": "None",
+              "DisplayTitle": "1080p HEVC SDR",
+              "IsInterlaced": false,
+              "BitRate": 66162,
+              "RefFrames": 1,
+              "IsDefault": false,
+              "IsForced": false,
+              "IsHearingImpaired": false,
+              "IsOriginal": false,
+              "Height": 1080,
+              "Width": 1920,
+              "AverageFrameRate": 5,
+              "RealFrameRate": 5,
+              "ReferenceFrameRate": 5,
+              "Profile": "Rext",
+              "Type": "Video",
+              "AspectRatio": "16:9",
+              "Index": 0,
+              "IsExternal": false,
+              "IsTextSubtitleStream": false,
+              "SupportsExternalStream": false,
+              "PixelFormat": "gbrp",
+              "Level": 120,
+              "IsAnamorphic": false
+            },
+            {
+              "Codec": "ac3",
+              "TimeBase": "1/1000",
+              "VideoRange": "Unknown",
+              "VideoRangeType": "Unknown",
+              "AudioSpatialFormat": "None",
+              "LocalizedDefault": "Default",
+              "LocalizedExternal": "External",
+              "LocalizedOriginal": "Original",
+              "DisplayTitle": "Dolby Digital - 5.1",
+              "IsInterlaced": false,
+              "ChannelLayout": "5.1",
+              "BitRate": 192000,
+              "Channels": 6,
+              "SampleRate": 48000,
+              "IsDefault": false,
+              "IsForced": false,
+              "IsHearingImpaired": false,
+              "IsOriginal": false,
+              "Type": "Audio",
+              "Index": 1,
+              "IsExternal": false,
+              "IsTextSubtitleStream": false,
+              "SupportsExternalStream": false
+            }
+          ],
+          "MediaAttachments": [],
+          "Formats": [],
+          "Bitrate": 258162,
+          "RequiredHttpHeaders": {},
+          "TranscodingSubProtocol": "http",
+          "DefaultAudioStreamIndex": 1,
+          "HasSegments": false
+        }
+      ],
+      "ProductionLocations": [],
+      "OfficialRating": "R",
+      "Overview": "Two lighthouse keepers trade letters across a strait.",
+      "Taglines": [],
+      "Genres": [
+        "Romance"
+      ],
+      "CommunityRating": 6.1,
+      "RunTimeTicks": 3600000000,
+      "ProductionYear": 2021,
+      "RemoteTrailers": [],
+      "ProviderIds": {
+        "Tmdb": "990002"
+      },
+      "IsFolder": false,
+      "Type": "Movie",
+      "Studios": [],
+      "UserData": {
+        "PlaybackPositionTicks": 0,
+        "PlayCount": 0,
+        "IsFavorite": false,
+        "Played": false,
+        "Key": "990002",
+        "ItemId": "949ca08e71353033712d102e9d6b6f8e"
+      },
+      "VideoType": "VideoFile",
+      "ImageTags": {
+        "Primary": "fdd088fd7a9f14152bd898dc90494fc3"
+      },
+      "BackdropImageTags": [
+        "0d57ecd3c453365c6def088897f2124c"
+      ],
+      "LocationType": "FileSystem",
+      "MediaType": "Video"
+    }
+  ],
+  "TotalRecordCount": 2,
+  "StartIndex": 0
+}

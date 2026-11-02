@@ -1,0 +1,208 @@
+{
+ "film-backdrop-1001": {
+  "asset": "acd854e36aa17"
+ },
+ "film-backdrop-1002": {
+  "asset": "a56d2e6a6e54a",
+  "upscaled": "a48ff5e4f7b6f"
+ },
+ "film-backdrop-1003": {
+  "asset": "a146ef1ae3e81",
+  "upscale_job": "j2feafd9e7fb2"
+ },
+ "film-backdrop-1004": {
+  "asset": "ae71cc5858ebe",
+  "upscaled": "a7553dd28b078"
+ },
+ "film-backdrop-1005": {
+  "asset": "af3dd3be22938",
+  "upscaled": "a73304d4a3386"
+ },
+ "film-backdrop-1006": {
+  "asset": "a8fd234d8ca5a",
+  "upscaled": "a6cd284384cba"
+ },
+ "film-backdrop-1007": {
+  "asset": "a191e6a95d4a0",
+  "upscale_job": "j06144be18f8b"
+ },
+ "film-backdrop-1008": {
+  "asset": "af609ed83f24d"
+ },
+ "film-backdrop-1009": {
+  "asset": "a7f7d22ec3b52",
+  "upscale_job": "j4e28f55f3a36"
+ },
+ "film-backdrop-1010": {
+  "asset": "afa5428562efd",
+  "upscaled": "af545b5300344"
+ },
+ "film-backdrop-1011": {
+  "asset": "ae272413b081a",
+  "upscaled": "a4f3abe9682c5"
+ },
+ "film-backdrop-1012": {
+  "asset": "ac7936b779361"
+ },
+ "film-backdrop-1013": {
+  "asset": "a6dec607e8f87",
+  "upscale_job": "j55435f6db05e"
+ },
+ "film-backdrop-1014": {
+  "asset": "aa628957aad98"
+ },
+ "film-backdrop-1015": {
+  "asset": "a8120fff21f01"
+ },
+ "film-backdrop-1016": {
+  "asset": "a8c7ea7bf4e01",
+  "upscaled": "a5585a1559d71"
+ },
+ "film-backdrop-1017": {
+  "asset": "aec33146548cc"
+ },
+ "film-backdrop-1018": {
+  "asset": "a5d4a292edfbb"
+ },
+ "film-backdrop-1019": {
+  "asset": "aec5c327e335f"
+ },
+ "film-backdrop-1020": {
+  "asset": "ae47df705152d",
+  "upscale_job": "je3a966232447"
+ },
+ "film-backdrop-1021": {
+  "asset": "a89fb4027e398",
+  "upscale_job": "j544c4709967e"
+ },
+ "film-backdrop-1022": {
+  "asset": "abb19d0ca1edd",
+  "upscale_job": "j610c14255eb1"
+ },
+ "film-backdrop-1023": {
+  "asset": "ae25ec588aa5e",
+  "upscale_job": "j9d1ff5f9c5f7"
+ },
+ "film-backdrop-1024": {
+  "asset": "a2a11e9496e98",
+  "upscale_job": "jcd04cba3060a"
+ },
+ "prog-concert": {
+  "asset": "a87a4a5be0270",
+  "upscale_job": "j434af15c6c0b"
+ },
+ "prog-court": {
+  "asset": "ab4b5cc0dfbf4",
+  "upscale_job": "j63277fdf48cd"
+ },
+ "prog-football": {
+  "asset": "a504226d3dbff",
+  "upscale_job": "j72c4a66bb0ab"
+ },
+ "prog-news": {
+  "asset": "a101176fdf56f",
+  "upscale_job": "jaa51d162963d"
+ },
+ "prog-race": {
+  "asset": "a8253479b39af",
+  "upscale_job": "j6f2548124684"
+ },
+ "prog-sky": {
+  "asset": "a58fac4b925eb",
+  "upscale_job": "j19e80b5c9904"
+ },
+ "prog-studio": {
+  "asset": "abdacc45724e0",
+  "upscale_job": "j1d5c9d7acb03"
+ },
+ "prog-talk": {
+  "asset": "a632fb9742f9b",
+  "upscale_job": "ja34c9bf225f1"
+ },
+ "prog-travel": {
+  "asset": "a7afc5625bbaf",
+  "upscale_job": "jdaf13b0da036"
+ },
+ "series-backdrop-2001": {
+  "asset": "a5f5526287b93",
+  "upscale_job": "j94c633cee554"
+ },
+ "series-backdrop-2002": {
+  "asset": "a47cdb948af7d",
+  "upscale_job": "jb6db6309a55e"
+ },
+ "series-backdrop-2003": {
+  "asset": "ad357df42a996",
+  "upscale_job": "j13030d92ec2b"
+ },
+ "series-backdrop-2004": {
+  "asset": "a7db1e7a80607",
+  "upscale_job": "jfee191694ee5"
+ },
+ "series-backdrop-2005": {
+  "asset": "acae897165e0f",
+  "upscale_job": "j8afd19a91efb"
+ },
+ "series-backdrop-2006": {
+  "asset": "a121b78d680ae",
+  "upscale_job": "jd319c7a5c3c9"
+ },
+ "series-backdrop-2007": {
+  "asset": "a0b2b6e9cd665",
+  "upscale_job": "j90592db4852e"
+ },
+ "series-backdrop-2008": {
+  "asset": "a7f81d112a340",
+  "upscale_job": "j0670fc0aaab6"
+ },
+ "series-backdrop-2009": {
+  "asset": "a6034f8e12e8d",
+  "upscale_job": "j7cd8e492dd73"
+ },
+ "series-backdrop-2010": {
+  "asset": "adaf51dcc9175",
+  "upscale_job": "jeb195f49ecbc"
+ },
+ "still-2001-1": {
+  "asset": "ad0e8b052751c"
+ },
+ "still-2001-2": {
+  "asset": "a3294b2df9ec3"
+ },
+ "still-2001-3": {
+  "asset": "a0c6bcd4865fb"
+ },
+ "still-2001-4": {
+  "asset": "ad28e6f4f8392"
+ },
+ "still-2001-5": {
+  "asset": "afb25b882b73c"
+ },
+ "still-2001-6": {
+  "asset": "a83dd899efe66"
+ },
+ "still-2001-7": {
+  "asset": "ab01052459f24"
+ },
+ "still-2001-8": {
+  "asset": "a4527ea859f6d"
+ },
+ "still-2002-1": {
+  "asset": "a9472d2d618c4"
+ },
+ "still-2002-2": {
+  "asset": "ac5d7e11f8630"
+ },
+ "still-2002-3": {
+  "asset": "aba78e883f2e5"
+ },
+ "still-2002-4": {
+  "asset": "a312460460311"
+ },
+ "still-2002-5": {
+  "asset": "aaea05c67d129"
+ },
+ "still-2002-6": {
+  "asset": "a8eec1434beb5"
+ }
+}
