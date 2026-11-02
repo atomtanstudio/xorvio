@@ -13,7 +13,7 @@ runs:
   steps:
     - name: Restore
       id: cache
-      uses: actions/cache@v4
+      uses: actions/cache@v6
       with:
         key: ffmpeg-${{ inputs.target }}-${{ hashFiles('Scripts/build-ffmpeg.sh') }}
         path: |

@@ -28,7 +28,7 @@ jobs:
     name: Version
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
       - name: The tag matches the version in the app, Cargo and npm
@@ -75,7 +75,7 @@ jobs:
       HAS_APPLE_API_KEY: ${{ secrets.APPLE_API_PRIVATE_KEY != '' }}
       HAS_APPLE_ID: ${{ secrets.APPLE_ID != '' }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
 
@@ -90,7 +90,7 @@ jobs:
         with:
           target: ${{ matrix.target }}
 
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -159,7 +159,7 @@ jobs:
         if: runner.os == 'macOS' && env.HAS_APPLE_CERTIFICATE != 'true'
         run: echo "APPLE_SIGNING_IDENTITY=-" >> "$GITHUB_ENV"
 
-      - uses: tauri-apps/tauri-action@84b9d35b5fc46c1e45415bdb6144030364f7ebc5 # v0.6.2
+      - uses: tauri-apps/tauri-action@1deb371b0cd8bd54025b384f1cd735e725c4060f # v1.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Built-in Trakt and TMDB credentials, when the repository has them.
@@ -183,7 +183,7 @@ jobs:
         shell: bash
         run: cp "build/ffmpeg/${{ matrix.target }}/BUILDINFO.txt" "ffmpeg-${{ matrix.target }}-BUILDINFO.txt"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: ffmpeg-buildinfo-${{ matrix.target }}
           path: ffmpeg-${{ matrix.target }}-BUILDINFO.txt
@@ -196,11 +196,11 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
 
-      - uses: actions/download-artifact@v5
+      - uses: actions/download-artifact@v8
         with:
           pattern: ffmpeg-buildinfo-*
           path: buildinfo
