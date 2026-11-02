@@ -3271,6 +3271,8 @@
 }
 .mv-grid {
   display: grid;
+  /* The inset sits over the big picture, inside it. */
+  position: relative;
 }
 .mv-tile {
   position: relative;
@@ -3432,8 +3434,87 @@
   border-color: rgba(255, 255, 255, 0.45);
   color: #fff;
 }
+/* A film or episode: how far in it is, along the tile's foot. */
+.mv-progress {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 3;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.16);
+  pointer-events: none;
+}
+.mv-progress span {
+  display: block;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.85);
+}
 
-/* The channel picker */
+/* The inset: the second tile small in a corner of the first, dragged to another corner as the mini player is. */
+.mv-tile.inset {
+  position: absolute;
+  z-index: 6;
+  width: 30%;
+  aspect-ratio: 16 / 9;
+  border-radius: 10px;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+.mv-tile.inset.dragging {
+  transition: none;
+}
+.mv-tile.inset.corner-bottomRight,
+.mv-inset-show.corner-bottomRight {
+  right: 14px;
+  bottom: 14px;
+}
+.mv-tile.inset.corner-bottomLeft,
+.mv-inset-show.corner-bottomLeft {
+  left: 14px;
+  bottom: 14px;
+}
+.mv-tile.inset.corner-topRight,
+.mv-inset-show.corner-topRight {
+  right: 14px;
+  top: 14px;
+}
+.mv-tile.inset.corner-topLeft,
+.mv-inset-show.corner-topLeft {
+  left: 14px;
+  top: 14px;
+}
+/* Where a hidden inset was: shows it again. */
+.mv-inset-show {
+  position: absolute;
+  z-index: 6;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  max-width: 40%;
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 15px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+.multiview.active .mv-inset-show {
+  opacity: 1;
+}
+
+/* The picker */
+.mv-picker-tabs {
+  margin-bottom: 10px;
+}
+.mv-picker-back {
+  flex: 0 0 auto;
+  gap: 6px;
+}
 .mv-picker-search {
   position: relative;
   display: flex;

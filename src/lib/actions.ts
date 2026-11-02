@@ -9,15 +9,16 @@ import { sameChannel, versionIds } from "./versions";
 
 const store = () => useApp.getState();
 
-/** `at` plays from that moment instead (another copy switched to while one played). */
-export async function playMovie(movie: Movie, fromStart = false, at?: number) {
-  // Add-on titles have no address of their own: choose one of their copies.
-  if (movie.stream.type === "addon") {
-    store().showCopies({ mediaType: "movie", mediaId: movie.stream.mediaId, itemId: movie.id, title: movie.title, subtitle: movie.year ? String(movie.year) : null, artwork: movie.backdropUrl ?? movie.posterUrl, year: movie.year, fromStart });
-    return;
-  }
-  const saved = fromStart || at !== undefined ? null : await api.progress(movie.id).catch(() => null);
-  store().play({
+/** Where a film or episode carries on from: `at`, the start, or where it was left. */
+async function resumePoint(itemId: string, fromStart: boolean, at?: number) {
+  if (at !== undefined) return at;
+  const saved = fromStart ? null : await api.progress(itemId).catch(() => null);
+  return saved && !saved.finished ? saved.positionSeconds : 0;
+}
+
+/** A film as the player (or a Multiview tile) plays it, from where it was left unless `fromStart`. */
+export async function movieItem(movie: Movie, fromStart = false, at?: number): Promise<NowPlaying> {
+  return {
     request: { kind: "movie", movieId: movie.id },
     kind: "movie",
     itemId: movie.id,
@@ -25,9 +26,35 @@ export async function playMovie(movie: Movie, fromStart = false, at?: number) {
     title: movie.title,
     subtitle: movie.year ? String(movie.year) : null,
     artworkUrl: movie.backdropUrl ?? movie.posterUrl,
-    resumeFrom: at ?? (saved && !saved.finished ? saved.positionSeconds : 0),
+    resumeFrom: await resumePoint(movie.id, fromStart, at),
     durationHint: movie.durationSeconds,
-  });
+  };
+}
+
+/** An episode as the player (or a Multiview tile) plays it, from where it was left unless `fromStart`. */
+export async function episodeItem(episode: Episode, series: Series | null, fromStart = false, at?: number): Promise<NowPlaying> {
+  return {
+    request: { kind: "episode", episodeId: episode.id },
+    kind: "episode",
+    itemId: episode.id,
+    seriesId: episode.seriesId,
+    sourceId: episode.sourceId,
+    title: series?.title ?? episode.title,
+    subtitle: `${episodeCode(episode.season, episode.number)} · ${episode.title}`,
+    artworkUrl: episode.stillUrl ?? series?.backdropUrl,
+    resumeFrom: await resumePoint(episode.id, fromStart, at),
+    durationHint: episode.durationSeconds,
+  };
+}
+
+/** `at` plays from that moment instead (another copy switched to while one played). */
+export async function playMovie(movie: Movie, fromStart = false, at?: number) {
+  // Add-on titles have no address of their own: choose one of their copies.
+  if (movie.stream.type === "addon") {
+    store().showCopies({ mediaType: "movie", mediaId: movie.stream.mediaId, itemId: movie.id, title: movie.title, subtitle: movie.year ? String(movie.year) : null, artwork: movie.backdropUrl ?? movie.posterUrl, year: movie.year, fromStart });
+    return;
+  }
+  store().play(await movieItem(movie, fromStart, at));
 }
 
 export async function playEpisode(episode: Episode, series: Series | null, fromStart = false, at?: number) {
@@ -45,19 +72,7 @@ export async function playEpisode(episode: Episode, series: Series | null, fromS
     });
     return;
   }
-  const saved = fromStart || at !== undefined ? null : await api.progress(episode.id).catch(() => null);
-  store().play({
-    request: { kind: "episode", episodeId: episode.id },
-    kind: "episode",
-    itemId: episode.id,
-    seriesId: episode.seriesId,
-    sourceId: episode.sourceId,
-    title: series?.title ?? episode.title,
-    subtitle: `${episodeCode(episode.season, episode.number)} · ${episode.title}`,
-    artworkUrl: episode.stillUrl ?? series?.backdropUrl,
-    resumeFrom: at ?? (saved && !saved.finished ? saved.positionSeconds : 0),
-    durationHint: episode.durationSeconds,
-  });
+  store().play(await episodeItem(episode, series, fromStart, at));
 }
 
 /** A live channel as the player (or a Multiview tile) plays it. */
@@ -155,11 +170,27 @@ export async function resumeContinue(item: ContinueItem, fromStart = false) {
     const movie = await api.movie(item.itemId);
     if (movie) playMovie(movie, fromStart);
   } else if (item.kind === "episode") {
-    const seriesId = item.itemId.split("|ep|")[0];
-    const [series, episodes] = await Promise.all([api.series(seriesId), api.episodes(seriesId)]);
-    const episode = episodes.find((e) => e.id === item.itemId);
-    if (episode) playEpisode(episode, series, fromStart);
+    const found = await continueEpisode(item);
+    if (found) playEpisode(found.episode, found.series, fromStart);
   }
+}
+
+async function continueEpisode(item: ContinueItem) {
+  const seriesId = item.itemId.split("|ep|")[0];
+  const [series, episodes] = await Promise.all([api.series(seriesId), api.episodes(seriesId)]);
+  const episode = episodes.find((e) => e.id === item.itemId);
+  return episode ? { episode, series } : null;
+}
+
+/** A Continue Watching card's film or episode as a Multiview tile plays it; null for an add-on title, which needs a copy chosen first. */
+export async function continueItem(item: ContinueItem): Promise<NowPlaying | null> {
+  if (item.kind === "movie") {
+    const movie = await api.movie(item.itemId);
+    return movie && movie.stream.type !== "addon" ? movieItem(movie) : null;
+  }
+  if (item.kind !== "episode") return null;
+  const found = await continueEpisode(item);
+  return found && found.episode.stream.type !== "addon" ? episodeItem(found.episode, found.series) : null;
 }
 
 /** Marks a Continue Watching card watched, so its series moves on to the next episode. */

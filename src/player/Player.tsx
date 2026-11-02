@@ -1,4 +1,4 @@
-import { Airplay, ArrowDownLeftFromSquare, ArrowLeft, AudioLines, CalendarClock, Captions, Check, ChevronDown, ChevronUp, CircleDot, CircleStop, ExternalLink, Grid2x2Plus, Layers, ListVideo, Maximize, Minimize, Pause, PictureInPicture2, Play, RotateCcw, RotateCw, Shrink, SlidersHorizontal, SquareArrowOutUpRight, Volume1, Volume2, VolumeX } from "lucide-react";
+import { Airplay, ArrowDownLeftFromSquare, ArrowLeft, AudioLines, CalendarClock, Captions, Check, ChevronDown, ChevronUp, CircleDot, CircleStop, ExternalLink, Grid2x2Plus, Layers, ListVideo, Maximize, Minimize, PanelsRightBottom, Pause, PictureInPicture2, Play, RotateCcw, RotateCw, Shrink, SlidersHorizontal, SquareArrowOutUpRight, Volume1, Volume2, VolumeX } from "lucide-react";
 import { Component, useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { create } from "zustand";
 import { ChannelLogo } from "../components/Artwork";
@@ -13,7 +13,7 @@ import { isPopOutWindow } from "../lib/windows";
 import type { Channel, ExternalPlayer, MediaTrack, Program, ResolvedStream, StreamOptions } from "../lib/types";
 import { switchRequest } from "../screens/Copies";
 import { CastButton, CastPanel, isCasting, useCasting, type Casting } from "./cast";
-import { changeVolume, registerPlayer, toggleMute, togglePictureInPicture } from "./controls";
+import { changeVolume, registerPlayer, SAVE_PROGRESS_EVENT, toggleMute, togglePictureInPicture } from "./controls";
 import { attachStream, type EngineHandle } from "./engine";
 import { externalPlayers, externalTitle, openInPlayer, refreshExternalPlayers } from "./external";
 import { isWindowFullscreen, leavePlayerFullscreen, madeFullscreen, togglePlayerFullscreen } from "./fullscreen";
@@ -33,11 +33,12 @@ import {
   watchHighlighted,
 } from "./LiveOverlays";
 import { useMediaSession } from "./mediaSession";
-import { goLiveTile, heardTile, listenNext, skipTile, toggleAllPaused, toggleHeardPaused, toggleMultiview, useMultiview } from "./multiviewStore";
+import { INSET_KEY } from "./multiviewRules";
+import { goLiveTile, heardTile, insetCommand, listenNext, skipTile, toggleAllPaused, toggleHeardPaused, toggleMultiview, useMultiview } from "./multiviewStore";
 import { playNextEpisode, useEpisodeExtras } from "./nextEpisode";
 import { pauseByPerson, takePausedByPerson } from "./pause";
 import { CornerButton, NextCountdown, StreamInfoPanel, SyncPanel } from "./PlayerPanels";
-import { audioFor, bufferRange, classifyFailure, LIVE_EDGE, withAudio, withSubtitles, type Problem } from "./playerRules";
+import { audioFor, bufferRange, classifyFailure, LIVE_EDGE, watchedEnough, withAudio, withSubtitles, type Problem } from "./playerRules";
 import { FailureCard, ReconnectingCard } from "./PlayerStates";
 import { retry, streamFailed, streamPlaying, takeResumeSeek, titleHasPlayed, useRecovery } from "./recovery";
 import { DockedControls, MiniStrip, useMiniPlayerCorner } from "./SmallPlayers";
@@ -48,8 +49,7 @@ import { useTraktScrobble } from "./trakt";
 import { channelDown, channelUp } from "./zap";
 
 type Zoom = "fit" | "fill" | "stretch";
-/** Asks the player to save where it got to now (the pop-out window is closing). */
-export const SAVE_PROGRESS_EVENT = "xorvio-save-progress";
+export { SAVE_PROGRESS_EVENT } from "./controls";
 
 const zoomFit: Record<Zoom, React.CSSProperties["objectFit"]> = { fit: "contain", fill: "cover", stretch: "fill" };
 
@@ -365,7 +365,7 @@ function Player() {
     (finishedHint = false) => {
       const item = useApp.getState().nowPlaying;
       if (!item || isLive || !duration || isCasting() || (item.kind !== "movie" && item.kind !== "episode" && item.kind !== "recording")) return;
-      const finished = finishedHint || position / duration > 0.93;
+      const finished = finishedHint || watchedEnough(position, duration);
       api
         .saveProgress({ itemId: item.itemId, kind: item.kind, sourceId: item.sourceId, seriesId: item.seriesId ?? null, positionSeconds: position, durationSeconds: duration, finished, updatedAt: nowSeconds() })
         .catch(() => {});
@@ -482,6 +482,7 @@ function Player() {
       toggleFullscreen: () => {
         togglePlayerFullscreen();
       },
+      position: () => handlers.current.position,
     });
     return () => registerPlayer(null, null);
   }, [mounted]);
@@ -955,6 +956,8 @@ function FullControls({ video, isLive, paused, position, duration, onSeek, onBac
       else if (plain && key === "f") toggleFullscreen();
       else if (plain && key === "i") onPanel("info");
       else if (plain && key === "p") togglePictureInPicture();
+      // Something else in a corner of this, in the main window's Multiview.
+      else if (plain && key === INSET_KEY && !isPopOutWindow) insetCommand();
       else if (plain && key === "g" && liveChannel) toggleNowNext();
       else if (plain && key === "c" && onSwitchCopy) onSwitchCopy();
       // In the main window L is the whole window's (App.tsx); the pop-out has only the player.
@@ -1198,8 +1201,13 @@ function FullControls({ video, isLive, paused, position, duration, onSeek, onBac
           <button className="player-icon" aria-label="Picture in Picture" title="Picture in Picture (P)" onClick={togglePictureInPicture}>
             <PictureInPicture2 size={19} />
           </button>
-          {nowPlaying.kind === "channel" && !isPopOutWindow && (
-            <button className="player-icon" aria-label="Multiview" title={`Watch another channel beside this one (${shortcutLabel("playback.multiview")})`} onClick={toggleMultiview}>
+          {!isPopOutWindow && (
+            <button className="player-icon" aria-label="Add an inset" title={`Watch something else in a corner of this (${INSET_KEY.toUpperCase()})`} onClick={insetCommand}>
+              <PanelsRightBottom size={19} />
+            </button>
+          )}
+          {!isPopOutWindow && (
+            <button className="player-icon" aria-label="Multiview" title={`Watch something else beside this (${shortcutLabel("playback.multiview")})`} onClick={toggleMultiview}>
               <Grid2x2Plus size={19} />
             </button>
           )}

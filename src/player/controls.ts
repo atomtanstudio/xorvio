@@ -17,7 +17,12 @@ interface PlayerHandlers {
   /** Another copy of an add-on title, from the same moment. */
   switchCopy(): void;
   toggleFullscreen(): void;
+  /** Seconds into the title, for a film or episode. */
+  position(): number;
 }
+
+/** Asks the player to save where it got to now (the pop-out window is closing, or Multiview is taking the title over). */
+export const SAVE_PROGRESS_EVENT = "xorvio-save-progress";
 
 let video: HTMLVideoElement | null = null;
 let handlers: PlayerHandlers | null = null;
@@ -71,6 +76,11 @@ export function switchCopy() {
 
 export function toggleFullscreen() {
   handlers?.toggleFullscreen();
+}
+
+/** Where the player is in its film or episode (0 for a live channel, or with nothing playing). */
+export function playerPosition() {
+  return playing() ? (handlers?.position() ?? 0) : 0;
 }
 
 type PipVideo = HTMLVideoElement & { webkitSetPresentationMode?: (mode: "inline" | "picture-in-picture") => void; webkitPresentationMode?: string };
