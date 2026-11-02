@@ -43,6 +43,7 @@ pub fn handler() -> impl Fn(tauri::ipc::Invoke) -> bool + Send + Sync + 'static 
         trailer_page,
         tmdb_status,
         tmdb_set_key,
+        search_lookups_left,
         sign_in_to_source_again,
         replace_plex_sign_in,
         update_source,
@@ -363,6 +364,14 @@ pub async fn trakt_lists(state: State<'_, AppState>, query: TraktListQuery) -> C
 #[tauri::command]
 pub async fn tmdb_status(state: State<'_, AppState>) -> CmdResult<TmdbStatus> {
     Ok(state.core.tmdb_status())
+}
+
+/// How many titles are still to be looked up on TMDB for search, or none
+/// when they aren't being looked up.
+#[tauri::command]
+pub async fn search_lookups_left(state: State<'_, AppState>) -> CmdResult<Option<usize>> {
+    let core = state.core.clone();
+    tauri::async_runtime::spawn_blocking(move || core.search_lookups_left()).await.map_err(fail)?.map_err(fail)
 }
 
 /// Saves the person's own TMDB key once TMDB takes it; empty removes it.

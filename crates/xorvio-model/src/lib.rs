@@ -1195,6 +1195,26 @@ pub struct SearchResults {
     pub movies: Vec<Movie>,
     pub series: Vec<Series>,
     pub programs: Vec<ProgramHit>,
+    /// People the search names, with titles of theirs the sources carry.
+    #[serde(default)]
+    pub people: Vec<SearchPerson>,
+    /// Why a film or series was found when its name isn't it ("With Tom
+    /// Hanks", "Comedy", a few words of its story), by id.
+    #[serde(default)]
+    pub reasons: std::collections::BTreeMap<String, String>,
+}
+
+/// Someone a search names: in, or behind, films and series the sources carry.
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SearchPerson {
+    pub name: String,
+    pub photo_url: Option<String>,
+    pub tmdb_id: Option<String>,
+    /// A title of theirs, which tells people of one name apart on their page.
+    pub from_id: String,
+    /// How many of the titles found they're in.
+    pub titles: usize,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

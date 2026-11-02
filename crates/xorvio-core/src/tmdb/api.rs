@@ -253,6 +253,17 @@ impl Client<'_> {
         Ok(parse_movie(&root))
     }
 
+    /// A film's or series' genres, story and credits only, as details: a
+    /// much smaller reply than its page's, for looking a library up for
+    /// search.
+    pub async fn search_details(&self, kind: Kind, id: i64) -> Result<DetailsRecord, SourceError> {
+        let title = match kind {
+            Kind::Movie => parse_movie(&self.get(&format!("movie/{id}"), &[("append_to_response", "credits")]).await?),
+            Kind::Tv => parse_series(&self.get(&format!("tv/{id}"), &[("append_to_response", "aggregate_credits")]).await?),
+        };
+        Ok(title.details)
+    }
+
     /// Only a film's or series' poster, sized for lists: a small reply,
     /// for titles shown in a list whose source has none.
     pub async fn poster(&self, kind: Kind, id: i64) -> Result<Option<String>, SourceError> {

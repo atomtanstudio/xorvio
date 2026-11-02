@@ -247,6 +247,7 @@ pub fn run() {
             build_tray(app.handle())?;
             spawn_background_refresh(app.handle().clone());
             spawn_trakt_schedule(app.handle().clone());
+            spawn_search_lookups(app.handle().clone());
             reminders::handle_clicks(app.handle());
             reminders::spawn(app.handle().clone());
             backup::spawn(app.handle().clone());
@@ -476,6 +477,28 @@ fn spawn_background_refresh(app: AppHandle) {
                 state.recorder.evaluate_rules_soon();
             }
             tokio::time::sleep(Duration::from_secs(15 * 60)).await;
+        }
+    });
+}
+
+/// Looks films and series up on TMDB for search in the background, a batch
+/// at a time, from shortly after launch for as long as Xorvio runs: titles
+/// a refresh brings in are found within minutes. Core says when there's
+/// nothing to do (all looked up, switched off, no key, or TMDB unreachable
+/// just now), and then it waits a while before looking again.
+fn spawn_search_lookups(app: AppHandle) {
+    tauri::async_runtime::spawn(async move {
+        tokio::time::sleep(Duration::from_secs(90)).await;
+        loop {
+            let core = app.state::<AppState>().core.clone();
+            match core.fill_search_terms().await {
+                Ok(0) => tokio::time::sleep(Duration::from_secs(10 * 60)).await,
+                Ok(_) => {}
+                Err(error) => {
+                    tracing::warn!("titles couldn't be looked up for search: {error}");
+                    tokio::time::sleep(Duration::from_secs(10 * 60)).await;
+                }
+            }
         }
     });
 }
