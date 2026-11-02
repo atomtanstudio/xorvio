@@ -206,6 +206,8 @@ impl CatalogStore {
             for id in ids {
                 tx.execute("DELETE FROM movies WHERE id = ?1", [id])?;
                 tx.execute("DELETE FROM search WHERE item_id = ?1", [id])?;
+                tx.execute("DELETE FROM title_terms WHERE item_id = ?1", [id])?;
+                tx.execute("DELETE FROM tmdb_terms WHERE item_id = ?1", [id])?;
             }
             tx.commit()?;
             Ok(())
@@ -222,9 +224,12 @@ impl CatalogStore {
                 let ids = params![video.from, video.to];
                 tx.execute("UPDATE OR REPLACE movies SET id = ?2, stream = json_set(stream, '$.path', ?3) WHERE id = ?1", params![video.from, video.to, video.path])?;
                 tx.execute("UPDATE search SET item_id = ?2 WHERE item_id = ?1", ids)?;
-                for table in ["file_facts", "tmdb_posters", "media_details"] {
+                for table in ["file_facts", "tmdb_posters", "media_details", "tmdb_terms"] {
                     tx.execute(&format!("UPDATE OR REPLACE {table} SET item_id = ?2 WHERE item_id = ?1"), ids)?;
                 }
+                // A row replaced by OR REPLACE skips the triggers that keep the index in step.
+                tx.execute("DELETE FROM title_terms WHERE item_id = ?2", ids)?;
+                tx.execute("UPDATE title_terms SET item_id = ?2 WHERE item_id = ?1", ids)?;
             }
             tx.commit()?;
             Ok(())

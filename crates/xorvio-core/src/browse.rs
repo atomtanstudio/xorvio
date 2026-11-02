@@ -5,7 +5,7 @@
 //! asked for by id (a guide row, a channel to play) are given whatever
 //! their state: the lists that lead to them already left them out.
 
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet};
 
 use chrono::{Datelike, TimeZone};
 use xorvio_model::{
@@ -15,7 +15,11 @@ use xorvio_model::{
 use crate::classify;
 use crate::store::catalog::{Browse, Order, SearchKind};
 use crate::store::library::DEFAULT_LIST;
+use crate::terms::{Person, TermMatches, people_found};
 use crate::{BrowseQuery, BrowseSort, ChannelFilter, Core, Result};
+
+/// The most people a search lists.
+const MOST_PEOPLE_FOUND: usize = 12;
 
 impl BrowseSort {
     fn order(self) -> Order {
@@ -189,7 +193,10 @@ impl Core {
     /// Prefix search over channels, films and series (every word must start a
     /// word of the title), and guide programmes airing now or later whose
     /// title contains the text. Up to `limit` of each. Channels are found by
-    /// the names people gave them too.
+    /// the names people gave them too. Films and series are then found by
+    /// the people in them, their genres and their story (`crate::terms`),
+    /// after those found by name, each saying why, and the people found are
+    /// listed too.
     pub fn search(&self, text: &str, limit: usize) -> Result<SearchResults> {
         self.search_with(text, limit, limit)
     }
@@ -209,8 +216,23 @@ impl Core {
                 }
             }
         }
-        let movie_ids = self.catalog.search(text, SearchKind::Movie, &sources, limit, &ids, tags)?;
-        let series_ids = self.catalog.search(text, SearchKind::Series, &sources, limit, &ids, tags)?;
+        let mut movie_ids = self.catalog.search(text, SearchKind::Movie, &sources, limit, &ids, tags)?;
+        let mut series_ids = self.catalog.search(text, SearchKind::Series, &sources, limit, &ids, tags)?;
+        // Then those found by the people in them, their genres or story.
+        let movie_terms = self.term_matches(text, SearchKind::Movie, &sources, limit, &ids, tags)?;
+        let series_terms = self.term_matches(text, SearchKind::Series, &sources, limit, &ids, tags)?;
+        let mut reasons = BTreeMap::new();
+        for (found, matches) in [(&mut movie_ids, &movie_terms), (&mut series_ids, &series_terms)] {
+            for (id, reason) in &matches.found {
+                if found.len() >= limit {
+                    break;
+                }
+                if !found.contains(id) {
+                    found.push(id.clone());
+                    reasons.insert(id.clone(), reason.clone());
+                }
+            }
+        }
         let now = crate::now();
         let programs = self.catalog.search_programs(text, &sources, now, now, program_limit, &ids)?;
         let channels = self
@@ -220,9 +242,24 @@ impl Core {
             .filter(|channel| sources.contains(&channel.source_id) && !excluded.channel(channel))
             .take(limit)
             .collect();
-        let movies = self.catalog.movies_by_ids(&movie_ids)?.into_iter().filter(|movie| !excluded.movie(movie)).collect();
-        let series = self.catalog.series_by_ids(&series_ids)?.into_iter().filter(|series| !excluded.series(series)).collect();
+        let movies: Vec<Movie> = self.catalog.movies_by_ids(&movie_ids)?.into_iter().filter(|movie| !excluded.movie(movie)).collect();
+        let series: Vec<Series> = self.catalog.series_by_ids(&series_ids)?.into_iter().filter(|series| !excluded.series(series)).collect();
+        // People only from titles that may be shown, found or not.
+        let in_people = |matches: &TermMatches| matches.people.iter().map(|(_, id)| id.clone()).collect::<Vec<_>>();
+        let shown: HashSet<String> = self
+            .catalog
+            .movies_by_ids(&in_people(&movie_terms))?
+            .into_iter()
+            .filter(|movie| !excluded.movie(movie))
+            .map(|movie| movie.id)
+            .chain(self.catalog.series_by_ids(&in_people(&series_terms))?.into_iter().filter(|series| !excluded.series(series)).map(|series| series.id))
+            .collect();
+        let found_people: Vec<(Person, String)> =
+            movie_terms.people.into_iter().chain(series_terms.people).filter(|(_, id)| shown.contains(id)).collect();
+        reasons.retain(|id, _| movies.iter().any(|movie| movie.id == *id) || series.iter().any(|series| series.id == *id));
         Ok(SearchResults {
+            people: people_found(&found_people, MOST_PEOPLE_FOUND),
+            reasons,
             channels: self.present_channels(channels),
             movies: self.present_movies(movies)?,
             series: self.present_series_list(series)?,

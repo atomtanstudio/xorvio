@@ -1,26 +1,32 @@
 import { Bell, CalendarSearch, CircleDot, CircleStop, Play, Search as SearchIcon } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Art, ChannelLogo } from "../components/Artwork";
+import { Art, ChannelLogo, placeholderGradient } from "../components/Artwork";
 import { PosterCard } from "../components/Cards";
 import { openMenu } from "../components/Menu";
 import { channelMenu, movieMenu, programMenu, seriesMenu } from "../components/menus";
+import { ScrollRow } from "../components/ScrollRow";
 import { Shelf } from "../components/Shelf";
 import { cancelOrStopRecording, openMovie, openSeries, playChannel, programEntry, recordProgram, toggleWatchlist } from "../lib/actions";
 import { api } from "../lib/api";
-import { clockTime, dayName, duration, firstGenre, nowSeconds } from "../lib/format";
+import { clockTime, dayName, duration, firstGenre, initials, nowSeconds } from "../lib/format";
 import { showInGuide } from "../lib/guideJump";
 import { imageSrc } from "../lib/images";
 import { useFilledPosters } from "../lib/posterFill";
 import { useSourceName } from "../lib/sourceNames";
 import { recordingFor, useApp } from "../lib/store";
-import type { Movie, ProgramHit, SearchResults, Series } from "../lib/types";
+import type { Movie, ProgramHit, SearchPerson, SearchResults, Series } from "../lib/types";
 import "../styles/browse.css";
 
 /** Listings shown before "Show All". */
 const LISTINGS = 30;
 
-/** Everything that matches, each with its source, and guide programmes ready to watch, record or be reminded of. */
-export function SearchScreen({ query }: { query: string }) {
+/**
+ * Everything that matches, each with its source, and guide programmes ready to watch, record or be reminded of.
+ * Films and series found by who's in them, their genre or their story come after those found by name, each
+ * saying why, and the people named come first. A person's page with nothing to show searches their name
+ * without them (`withPeople`), so choosing them again doesn't lead back here.
+ */
+export function SearchScreen({ query, withPeople = true }: { query: string; withPeople?: boolean }) {
   const [results, setResults] = useState<SearchResults | null>(null);
   const [addonResults, setAddonResults] = useState<{ movies: Movie[]; series: Series[] }>({ movies: [], series: [] });
   const [allListings, setAllListings] = useState(false);
@@ -41,7 +47,8 @@ export function SearchScreen({ query }: { query: string }) {
   }, [query]);
 
   if (!results) return <div className="content" />;
-  const nothing = !results.channels.length && !results.movies.length && !results.series.length && !results.programs.length && !addonResults.movies.length && !addonResults.series.length;
+  const people = withPeople ? results.people : [];
+  const nothing = !results.channels.length && !results.movies.length && !results.series.length && !results.programs.length && !people.length && !addonResults.movies.length && !addonResults.series.length;
   const upcoming = results.programs.filter((p) => p.program.end > nowSeconds()).sort((a, b) => a.program.start - b.program.start);
   const total = results.channels.length + results.movies.length + results.series.length + upcoming.length + addonResults.movies.length + addonResults.series.length;
 
@@ -72,6 +79,7 @@ export function SearchScreen({ query }: { query: string }) {
         </div>
       ) : (
         <>
+          {people.length > 0 && <PeopleShelf people={people} />}
           {upcoming.length > 0 && (
             <section className="shelf">
               <div className="shelf-header">
@@ -90,8 +98,8 @@ export function SearchScreen({ query }: { query: string }) {
             </section>
           )}
           {addonsLead && addonShelves}
-          {results.movies.length > 0 && <TitleShelf title="Films" items={results.movies} kind="movie" withSource />}
-          {results.series.length > 0 && <TitleShelf title="Series" items={results.series} kind="series" withSource />}
+          {results.movies.length > 0 && <TitleShelf title="Films" items={results.movies} kind="movie" withSource reasons={results.reasons} />}
+          {results.series.length > 0 && <TitleShelf title="Series" items={results.series} kind="series" withSource reasons={results.reasons} />}
           {!addonsLead && addonShelves}
           {results.channels.length > 0 && (
             <Shelf title="Channels">
@@ -115,8 +123,33 @@ export function SearchScreen({ query }: { query: string }) {
   );
 }
 
-/** A row of films or series; with `withSource`, each says which source it's from, as copies of one film each show. */
-export function TitleShelf({ title, items, kind, withSource }: { title: string; items: (Movie | Series)[]; kind: "movie" | "series"; withSource?: boolean }) {
+/** People a search names, as a title page's cast: each opens their page, from a title of theirs. */
+function PeopleShelf({ people }: { people: SearchPerson[] }) {
+  const push = useApp((s) => s.push);
+  return (
+    <section className="shelf">
+      <div className="shelf-header">
+        <h2 className="shelf-title">People</h2>
+      </div>
+      <ScrollRow className="shelf-track people-track" wrapClassName="people">
+        {people.map((p) => (
+          <button key={p.name} className="cast-member" onClick={() => push({ type: "person", name: p.name, tmdbId: p.tmdbId, fromId: p.fromId })}>
+            <div className="cast-photo" style={{ background: placeholderGradient(p.name) }}>
+              {p.photoUrl ? <img src={imageSrc(p.photoUrl)} alt="" loading="lazy" /> : <span>{initials(p.name)}</span>}
+            </div>
+            <div className="cast-name">{p.name}</div>
+            <div className="cast-role">
+              {p.titles} title{p.titles === 1 ? "" : "s"}
+            </div>
+          </button>
+        ))}
+      </ScrollRow>
+    </section>
+  );
+}
+
+/** A row of films or series; with `withSource`, each says which source it's from, as copies of one film each show; with `reasons`, why search found those it didn't find by name. */
+export function TitleShelf({ title, items, kind, withSource, reasons }: { title: string; items: (Movie | Series)[]; kind: "movie" | "series"; withSource?: boolean; reasons?: Record<string, string> }) {
   const watchlistIds = useApp((s) => s.watchlistIds);
   const sourceName = useSourceName();
   const posters = useFilledPosters(items);
@@ -128,6 +161,7 @@ export function TitleShelf({ title, items, kind, withSource }: { title: string; 
           title={item.title}
           meta={[item.year, withSource ? sourceName(item.sourceId) || firstGenre(item.genre) : firstGenre(item.genre)].filter(Boolean).join(" · ")}
           posterUrl={item.posterUrl ?? posters.get(item.id)}
+          note={reasons?.[item.id]}
           saved={watchlistIds.has(item.id)}
           onClick={() => (kind === "movie" ? openMovie(item as Movie) : openSeries(item as Series))}
           onContextMenu={(e) => openMenu(e, kind === "movie" ? movieMenu(item as Movie) : seriesMenu(item as Series))}
