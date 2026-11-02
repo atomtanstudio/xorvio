@@ -1229,7 +1229,8 @@ async fn the_parental_pin_locks_adult_categories() {
     core.set_pin(Some("1234"), Some("4321")).unwrap();
     assert!(!core.unlock("1234").unwrap());
     let stored = core.library.preference(crate::parental::PIN_KEY).unwrap().unwrap();
-    assert!(!stored.contains("4321"));
+    // Hashed with a random salt; the hex can hold "4321" by chance, so look at whole parts.
+    assert!(stored.starts_with("v1:") && !stored.split(':').any(|part| part == "4321"), "{stored}");
 
     // Survives a restart, and turns tries away after five wrong ones.
     drop(core);
