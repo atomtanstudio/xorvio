@@ -10,7 +10,7 @@ use serde_json::Value;
 use xorvio_model::{StreamInfo, StreamTarget, language_code};
 
 use crate::gateway::PlaybackSupport;
-use crate::process::{Input, header_args, tool_command};
+use crate::process::{Input, web_input_args, tool_command};
 
 /// How long ffprobe gets before the stream is treated as unknown. Large
 /// files from a debrid service can take ten seconds or more to start.
@@ -311,7 +311,7 @@ pub(crate) async fn probe(ffprobe: &Path, target: &StreamTarget) -> anyhow::Resu
         "-show_streams",
     ]);
     if input.is_web() {
-        command.args(header_args(target));
+        command.args(web_input_args(target));
         command.args(["-rw_timeout", "8000000"]);
     }
     command

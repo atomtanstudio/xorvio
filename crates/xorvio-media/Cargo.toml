@@ -29,5 +29,9 @@ trash = "5.2.9"
 # Naming the frames taken for videos' cards (stills.rs).
 sha2 = "0.10.9"
 
+[target.'cfg(unix)'.dependencies]
+# The user's id, to check the folder for temporary files is theirs (scratch.rs).
+libc = "0.2"
+
 [dev-dependencies]
 tempfile = "3.27.0"

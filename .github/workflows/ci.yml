@@ -38,6 +38,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
 
       # WebKitGTK and the rest Tauri 2 builds against, D-Bus for the
       # keyring's Secret Service, and ffmpeg for making test media.
@@ -76,11 +78,12 @@ jobs:
           npm ci
           npm run typecheck
 
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
         with:
+          toolchain: stable
           components: clippy
 
-      - uses: Swatinem/rust-cache@v2
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
 
       # Any warning fails the build: the code is clean, and stays so.
       - name: Clippy

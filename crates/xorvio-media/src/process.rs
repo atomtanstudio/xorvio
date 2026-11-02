@@ -83,10 +83,16 @@ impl Input {
     }
 }
 
-/// The input options carrying the target's user agent and headers.
-pub(crate) fn header_args(target: &StreamTarget) -> Vec<String> {
-    let mut args = Vec::new();
-    if let Some(agent) = target.user_agent.as_deref().filter(|a| !a.is_empty()) {
+/// What ffmpeg may use to read a web input: the web, and what HLS needs
+/// (encrypted segments, `data:` keys). Never files, so a playlist from a
+/// provider or an add-on can't make it read one from this computer.
+const WEB_PROTOCOLS: &str = "http,https,tls,tcp,crypto,data,httpproxy";
+
+/// The options for a web input: the protocols ffmpeg may use for it, and the
+/// target's user agent and headers.
+pub(crate) fn web_input_args(target: &StreamTarget) -> Vec<String> {
+    let mut args = vec!["-protocol_whitelist".to_string(), WEB_PROTOCOLS.to_string()];
+    if let Some(agent) = target.user_agent.as_deref().filter(|a| !a.is_empty() && !a.contains(['\r', '\n'])) {
         args.extend(["-user_agent".to_string(), agent.to_string()]);
     }
     let headers: String = target
@@ -206,7 +212,7 @@ mod tests {
     }
 
     #[test]
-    fn header_args_skip_unsafe_headers() {
+    fn web_input_args_skip_unsafe_headers() {
         let target = StreamTarget {
             url: "http://a".into(),
             user_agent: Some("Player/1".into()),
@@ -218,13 +224,18 @@ mod tests {
             is_live: true,
         };
         assert_eq!(
-            header_args(&target),
+            web_input_args(&target),
             [
+                "-protocol_whitelist",
+                WEB_PROTOCOLS,
                 "-user_agent",
                 "Player/1",
                 "-headers",
                 "Referer: http://r\r\n"
             ]
         );
+        // A user agent that would add a header of its own is left out.
+        let sneaky = StreamTarget { user_agent: Some("Player/1\r\nX-Evil: 1".into()), headers: vec![], ..target };
+        assert_eq!(web_input_args(&sneaky), ["-protocol_whitelist", WEB_PROTOCOLS]);
     }
 }

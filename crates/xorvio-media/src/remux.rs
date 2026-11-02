@@ -18,7 +18,7 @@ use xorvio_model::StreamTarget;
 
 use crate::gateway::PlaybackSupport;
 use crate::probe::{Probe, VideoStream};
-use crate::process::{Input, drain_stderr, header_args, tool_command};
+use crate::process::{Input, drain_stderr, web_input_args, tool_command};
 
 /// How ffmpeg treats each kind of stream, decided once from ffprobe.
 #[derive(Debug, Clone, PartialEq)]
@@ -211,7 +211,7 @@ impl RemuxPlan {
             .map(String::from)
             .to_vec();
         if input.is_web() {
-            args.extend(header_args(target));
+            args.extend(web_input_args(target));
             args.extend(
                 [
                     "-reconnect",
