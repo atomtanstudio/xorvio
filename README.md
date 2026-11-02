@@ -9,7 +9,7 @@ Xorvio brings M3U playlists, Xtream Codes accounts, XMLTV guides, Plex, Jellyfin
 - **Live TV with a full guide**: a preview that keeps playing while you browse, catch-up wherever your provider keeps an archive, and up to two hours of live TV to pause and rewind.
 - **A built-in DVR**: record what's on now or schedule it from the guide, record a series' new episodes, and skip the ad breaks.
 - **Film and series pages** with full-window artwork, cast and ratings, Up Next, and one watchlist for films, series and upcoming programmes (synced with Trakt if you like).
-- **Multiview** with four channels side by side, a mini player, a pop-out window, Picture in Picture, AirPlay and Chromecast.
+- **Multiview** with four channels side by side, each one to pause, rewind and catch up on, plus a mini player, a pop-out window, Picture in Picture, AirPlay and Chromecast.
 - **Plays the hard ones**: MKV, HEVC, AV1, DTS and Dolby audio, through its own bundled FFmpeg.
 - **No account, ads or tracking.** Your library stays on your computer, and logins stay in your system's keychain.
 
