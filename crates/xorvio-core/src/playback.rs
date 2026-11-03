@@ -51,6 +51,12 @@ impl Core {
                 let session = self.server_session(source_id)?;
                 Ok(crate::sources::server::stream_target(&session, key, part.as_deref())?)
             }
+            // Tuned on the server only while it's read, through the relay (tuners.rs).
+            StreamLocator::ServerChannel { key, dvr } => {
+                let session = self.server_session(source_id)?;
+                let url = self.tuner_relay()?.address(source_id, session, key, dvr.as_deref());
+                Ok(StreamTarget { url, user_agent: None, headers: Vec::new(), is_live: true })
+            }
         }
     }
 

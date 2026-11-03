@@ -1,0 +1,35 @@
+{
+  "MediaContainer": {
+    "size": 2,
+    "allowTuners": true,
+    "livetv": 7,
+    "myPlexSubscription": false,
+    "MediaProvider": [
+      {
+        "identifier": "com.plexapp.plugins.library",
+        "title": "Library",
+        "types": "video,audio,photo",
+        "protocols": "stream,download",
+        "Feature": [{ "key": "/library/sections", "type": "content" }]
+      },
+      {
+        "id": 3,
+        "parentID": 2,
+        "identifier": "tv.plex.providers.epg.xmltv:2",
+        "providerIdentifier": "tv.plex.providers.epg.xmltv",
+        "title": "Live TV & DVR",
+        "types": "video",
+        "protocols": "livetv",
+        "epgSource": "XMLTV",
+        "friendlyName": "Home Server",
+        "Feature": [
+          { "key": "/tv.plex.providers.epg.xmltv:2/sections", "type": "content" },
+          { "key": "/tv.plex.providers.epg.xmltv:2/metadata", "type": "metadata" },
+          { "key": "/photo/:/transcode", "type": "imagetranscoder" },
+          { "key": "/tv.plex.providers.epg.xmltv:2/grid", "type": "grid" },
+          { "scrobbleKey": "/:/scrobble", "unscrobbleKey": "/:/unscrobble", "key": "/:/timeline", "type": "timeline" }
+        ]
+      }
+    ]
+  }
+}

@@ -244,6 +244,9 @@ pub fn run() {
             });
             app.manage(backup::BackupService::new(data_dir.clone(), secrets.clone(), restored));
 
+            // Media servers' tuners still held from a run that ended abruptly.
+            let core = app.state::<AppState>().core.clone();
+            tauri::async_runtime::spawn(async move { core.let_go_of_abandoned_tuners().await });
             build_tray(app.handle())?;
             spawn_background_refresh(app.handle().clone());
             spawn_trakt_schedule(app.handle().clone());
@@ -281,6 +284,8 @@ pub fn run() {
             cast::stop_on_quit(handle);
             if let Some(state) = handle.try_state::<AppState>() {
                 state.gateway.release_all();
+                // Media servers hold a tuner until they're told to let it go.
+                tauri::async_runtime::block_on(state.core.let_go_of_tuners());
             }
         }
         #[cfg(target_os = "macos")]

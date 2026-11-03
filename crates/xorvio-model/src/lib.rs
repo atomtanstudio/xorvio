@@ -115,6 +115,14 @@ pub struct SourceConfig {
     /// guides written for the wrong time zone. Applied when the guide loads.
     #[serde(default)]
     pub guide_offset_minutes: i64,
+    /// Media servers: their live channels and guide are read along with
+    /// their films and series. On unless turned off.
+    #[serde(default = "included")]
+    pub include_live_tv: bool,
+}
+
+fn included() -> bool {
+    true
 }
 
 /// Everything credential-bearing about a source. Stored only in the keychain.
@@ -161,7 +169,8 @@ pub struct SourceStatus {
     pub series_count: i64,
     pub program_count: i64,
     pub capabilities: SourceCapabilities,
-    /// The provider's simultaneous-connection allowance, when it reports one.
+    /// The provider's simultaneous-connection allowance, when it reports
+    /// one; for a media server, how many tuners its live TV has.
     pub max_connections: Option<i64>,
     pub account_expires: Option<Timestamp>,
     pub authentication_expired: bool,
@@ -259,6 +268,16 @@ pub enum StreamLocator {
         /// The file's container ("mkv", "mp4"), when the server says.
         extension: Option<String>,
     },
+    /// A live channel from a media server's tuners, by the server's own
+    /// keys. It's tuned on the server only while it's being read.
+    #[serde(rename_all = "camelCase")]
+    ServerChannel {
+        /// Jellyfin and Emby: the channel's item id. Plex: the channel's
+        /// identifier in its DVR's lineup.
+        key: String,
+        /// Plex: the key of the DVR that tunes it.
+        dvr: Option<String>,
+    },
 }
 
 impl StreamLocator {
@@ -269,6 +288,8 @@ impl StreamLocator {
             Self::Xtream { extension, .. } => return Some(extension.to_lowercase()),
             Self::Addon { .. } => return None,
             Self::Server { extension, .. } => return extension.as_deref().map(str::to_lowercase),
+            // Always MPEG-TS, however the server sends it (see xorvio-core's tuner relay).
+            Self::ServerChannel { .. } => return Some("ts".into()),
         };
         let last = path.rsplit('/').next().unwrap_or(path);
         last.rsplit_once('.').map(|(_, ext)| ext.to_lowercase())
