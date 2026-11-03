@@ -52,6 +52,9 @@ pub struct Settings {
     /// TMDB is asked for details at all (with the person's key or the
     /// built-in one).
     pub tmdb: bool,
+    /// Every film and series whose source names no one in it is looked up
+    /// on TMDB in the background, so search finds it by its cast too.
+    pub tmdb_search: bool,
     /// Episodes' intros, recaps and credits are looked up on IntroDB.
     pub intro_db: bool,
     /// Home's Trakt charts and lists load before an account is connected.
@@ -172,6 +175,7 @@ impl Default for Settings {
             onboarding_done: false,
             tvmaze: true,
             tmdb: true,
+            tmdb_search: true,
             intro_db: true,
             trakt_rows_without_account: false,
             preferred_live_format: LiveStreamFormat::Hls,
@@ -221,6 +225,7 @@ impl Settings {
         core.set_tidy_names(self.tidy_names);
         core.set_tvmaze_enabled(self.tvmaze);
         core.set_tmdb_enabled(self.tmdb);
+        core.set_search_lookups(self.tmdb_search);
         core.set_intro_db_enabled(self.intro_db);
         core.set_trakt_rows_without_account(self.trakt_rows_without_account);
         core.set_relock_after(self.relock_after());
