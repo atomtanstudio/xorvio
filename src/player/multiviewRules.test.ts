@@ -10,8 +10,7 @@ import {
   fitGrid,
   focusAfterAdd,
   focusAfterRemove,
-  hideChanges,
-  insetChanges,
+  heardInInset,
   layoutFor,
   limitTitle,
   listenTo,
@@ -154,19 +153,8 @@ check("three tiles make the grid, inset or not", layoutFor(["a", "b", "c"], null
 check("the inset wins over an expanded tile", layoutFor(["a", "b"], "b", true).places.map((p) => p.id), ["a"]);
 check("without it, no inset", layoutFor(["a", "b"], null).inset, null);
 
-const tile = (id: string, live: boolean, paused = false, insetPaused = false) => ({ id, live, paused, insetPaused });
-check("the film going small pauses", insetChanges(tile("game", true), tile("film", false)), [{ id: "film", paused: true, insetPaused: true }]);
-check("the game going small plays on", insetChanges(tile("film", false), tile("game", true)), []);
-check("the film the inset paused plays when it's big", insetChanges(tile("film", false, true, true), tile("game", true)), [{ id: "film", paused: false, insetPaused: false }]);
-check("one someone paused stays paused when it's big", insetChanges(tile("film", false, true), tile("game", true)), []);
-check("a film already paused going small isn't the inset's to play later", insetChanges(tile("game", true), tile("film", false, true)), []);
-check("two films: the big one plays, the small one waits", insetChanges(tile("a", false, true, true), tile("b", false)), [
-  { id: "a", paused: false, insetPaused: false },
-  { id: "b", paused: true, insetPaused: true },
-]);
-check("a channel paused into its buffer stays so when it's big", insetChanges(tile("game", true, true), tile("film", false, true, true)), []);
-check("hiding a film playing small pauses it", hideChanges(tile("film", false)), [{ id: "film", paused: true, insetPaused: true }]);
-check("hiding a channel lets it play on", hideChanges(tile("game", true)), []);
-check("hiding a paused film changes nothing", hideChanges(tile("film", false, true)), []);
+check("the big one is heard, the small one plays on silently", heardInInset(["game", "film"]), "game");
+check("swapped, the film is heard", heardInInset(["film", "game"]), "film");
+check("nothing to hear without tiles", heardInInset([]), null);
 
 console.log(`Multiview rules: ${checks} checks passed`);

@@ -201,32 +201,12 @@ export function canInset(count: number): boolean {
   return count === 2;
 }
 
-/** What the inset needs to know of a tile: a channel plays on, a film or episode can wait. */
-export interface InsetTile {
-  id: string;
-  live: boolean;
-  paused: boolean;
-  /** Paused by going small, rather than by someone. */
-  insetPaused: boolean;
-}
-
-export type PauseChange = { id: string; paused: boolean; insetPaused: boolean };
-
 /**
- * What the two do once one is big and the other small (after a swap, or as
- * the inset starts): a film or episode going small pauses, so nothing is
- * missed while it's out of the way, and one the inset paused plays again
- * when it's big. A channel plays on either way, silently when it's small,
- * so you see when the game's back on. A tile someone paused stays paused.
+ * Who's heard while one is small in a corner of the other: the big one.
+ * The small one plays on silently, a channel or a film alike, so you see
+ * when the game's back on; neither is paused or played by the inset, which
+ * is the person's to do.
  */
-export function insetChanges(big: InsetTile, small: InsetTile): PauseChange[] {
-  const changes: PauseChange[] = [];
-  if (big.insetPaused) changes.push({ id: big.id, paused: false, insetPaused: false });
-  if (!small.live && !small.paused) changes.push({ id: small.id, paused: true, insetPaused: true });
-  return changes;
-}
-
-/** Hiding the inset: a film or episode playing in it waits until it's shown again, and a channel plays on out of sight. */
-export function hideChanges(small: InsetTile): PauseChange[] {
-  return !small.live && !small.paused ? [{ id: small.id, paused: true, insetPaused: true }] : [];
+export function heardInInset(ids: string[]): string | null {
+  return ids[0] ?? null;
 }
