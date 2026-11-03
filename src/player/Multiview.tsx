@@ -4,7 +4,7 @@
 // streams are multiviewStore. With the inset on, the second tile sits small
 // in a corner over the first, and can be dragged to another corner.
 
-import { ArrowLeft, ArrowLeftRight, ChevronLeft, ChevronRight, CircleDot, CircleStop, Columns2, Ellipsis, Eye, EyeOff, Grid2x2Plus, Maximize, Maximize2, Minimize, Minimize2, PanelsRightBottom, Pause, Play, Plus, Replace, RotateCcw, RotateCw, Search, Star, Tv, Volume2, VolumeX, X } from "lucide-react";
+import { ArrowLeft, ArrowLeftRight, ChevronLeft, ChevronRight, CircleDot, CircleStop, Columns2, Ellipsis, Eye, EyeOff, Folder, Grid2x2Plus, Maximize, Maximize2, Minimize, Minimize2, PanelsRightBottom, Pause, Play, Plus, Replace, RotateCcw, RotateCw, Search, Star, Tv, Volume2, VolumeX, X } from "lucide-react";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { ChannelLogo } from "../components/Artwork";
 import { openMenu, type MenuEntry } from "../components/Menu";
@@ -15,7 +15,8 @@ import { api } from "../lib/api";
 import { episodeCode, nowSeconds, playerClock, remaining } from "../lib/format";
 import { isMac } from "../lib/platform";
 import { useApp, type NowPlaying } from "../lib/store";
-import type { Channel, ContinueItem, Episode, Movie, Program, Recording, Series } from "../lib/types";
+import { useSources } from "../lib/sources";
+import type { Channel, ContinueItem, Episode, FolderListing, Movie, Program, Recording, Series } from "../lib/types";
 import { versionIds } from "../lib/versions";
 import { attachStream, describeMediaError, type EngineHandle } from "./engine";
 import { isWindowFullscreen, togglePlayerFullscreen } from "./fullscreen";
@@ -761,21 +762,42 @@ interface TitleRow {
   name: string;
   meta: string | null;
   artwork: string | null;
+  /** A folder's, in place of artwork. */
+  folder?: boolean;
   heading: string;
-  /** What choosing it does: the item to play, or (for a series) its episodes. */
+  /** What choosing it does: the item to play, or (for a series or a folder) what's in it. */
   choose: () => Promise<NowPlaying | null> | void;
+  /** It opens to more rows. */
+  opens?: boolean;
 }
 
+/** A media folder being looked through: the source, and the folder in it (null for the source's own). */
+interface Browsing {
+  sourceId: string;
+  name: string;
+  folder: string | null;
+  listing: FolderListing | null;
+  /** The source's series, at its own folder: their episodes aren't among a folder's videos. */
+  series: Series[];
+}
+
+/** Videos listed from a folder at once; the library page has the rest. */
+const FOLDER_ROWS = 200;
+
 /**
- * Films and episodes: what's in Continue Watching (and up next), or the
- * films and series found for what's typed; a series opens to its episodes.
- * Add-on titles aren't here, since one needs a copy chosen first.
+ * Films and episodes: what's in Continue Watching (and up next) and the
+ * media folders to look through, or the films and series found for what's
+ * typed; a series opens to its episodes and a folder to its folders and
+ * videos. Add-on titles aren't here, since one needs a copy chosen first.
  */
 function TitleRows({ text, note, enter }: { text: string; note: Note; enter: Enter }) {
   const [continuing, setContinuing] = useState<ContinueItem[] | null>(null);
   const [found, setFound] = useState<{ text: string; movies: Movie[]; series: Series[] } | null>(null);
   const [opened, setOpened] = useState<{ series: Series; episodes: Episode[] | null } | null>(null);
+  const [browsing, setBrowsing] = useState<Browsing | null>(null);
   const [busy, setBusy] = useState(false);
+  const sources = useSources((s) => s.sources);
+  const folders = useMemo(() => (sources ?? []).filter((s) => s.config.kind === "folder" && !s.config.isPaused).map((s) => s.config), [sources]);
   const query = text.trim();
 
   useEffect(() => {
@@ -788,6 +810,7 @@ function TitleRows({ text, note, enter }: { text: string; note: Note; enter: Ent
   // What's typed, looked up once typing pauses.
   useEffect(() => {
     setOpened(null);
+    if (query) setBrowsing(null);
     if (!query) return setFound(null);
     const timer = setTimeout(() => {
       api
@@ -806,50 +829,131 @@ function TitleRows({ text, note, enter }: { text: string; note: Note; enter: Ent
       .catch(() => setOpened((o) => (o?.series.id === series.id ? { series, episodes: [] } : o)));
   };
 
-  const rows: TitleRow[] | null = opened
-    ? (opened.episodes?.map((episode) => ({
-        key: episode.id,
-        itemId: episode.id,
-        name: `${episodeCode(episode.season, episode.number)} · ${episode.title}`,
-        meta: null,
-        artwork: episode.stillUrl ?? opened.series.posterUrl,
-        heading: opened.series.title,
-        choose: () => episodeItem(episode, opened.series),
-      })) ?? null)
-    : query
-      ? found && found.text === query
-        ? [
-            ...found.movies.map((movie) => ({
-              key: movie.id,
-              itemId: movie.id,
-              name: movie.title,
-              meta: movie.year ? String(movie.year) : null,
-              artwork: movie.posterUrl ?? movie.backdropUrl,
-              heading: "Films",
-              choose: () => movieItem(movie),
-            })),
-            ...found.series.map((series) => ({
-              key: series.id,
-              itemId: series.id,
-              name: series.title,
-              meta: series.year ? `${series.year} · Series` : "Series",
-              artwork: series.posterUrl ?? series.backdropUrl,
-              heading: "Series",
-              choose: () => openSeries(series),
-            })),
-          ]
-        : null
-      : (continuing?.map((item) => ({
-          key: item.itemId,
-          itemId: item.itemId,
-          name: item.title,
-          meta: [item.subtitle, item.upNext ? "Up next" : item.remainingSeconds ? remaining(item.remainingSeconds) : null].filter(Boolean).join(" · ") || null,
-          artwork: item.artworkUrl,
-          heading: "Continue Watching",
-          choose: () => continueItem(item),
-        })) ?? null);
+  const openFolder = (sourceId: string, name: string, folder: string | null) => {
+    setBrowsing({ sourceId, name, folder, listing: null, series: [] });
+    const here = (b: Browsing | null): b is Browsing => b?.sourceId === sourceId && b.folder === folder;
+    const empty: FolderListing = { folder, trail: [], folders: [], videos: [], total: 0, unread: 0 };
+    Promise.all([
+      api.folderListing({ sourceId, folder, below: false, kind: null, length: null, sort: "name", limit: FOLDER_ROWS, offset: 0 }).catch(() => empty),
+      folder === null ? api.seriesList({ sourceId, sort: "title", limit: FOLDER_ROWS, offset: 0 }).catch((): Series[] => []) : Promise.resolve([] as Series[]),
+    ]).then(([listing, series]) => setBrowsing((b) => (here(b) ? { ...b, listing, series } : b)));
+  };
 
-  const why = (row: TitleRow) => note((item) => !isLiveItem(item) && item.itemId === row.itemId);
+  /** Up a folder, or out of the media folder. */
+  const back = () => {
+    if (opened) return setOpened(null);
+    // The trail runs from the source's own folder to the one shown, as the library page's does.
+    const trail = browsing?.listing?.trail ?? [];
+    if (!browsing || browsing.folder === null || trail.length < 2) return setBrowsing(null);
+    const parent = trail[trail.length - 2];
+    openFolder(browsing.sourceId, browsing.name, parent.path === trail[0].path ? null : parent.path);
+  };
+
+  // A series' episodes, a media folder, what was found, or what's in Continue Watching and the media folders.
+  const rows = ((): TitleRow[] | null => {
+    if (opened)
+      return (
+        opened.episodes?.map((episode) => ({
+          key: episode.id,
+          itemId: episode.id,
+          name: `${episodeCode(episode.season, episode.number)} · ${episode.title}`,
+          meta: null,
+          artwork: episode.stillUrl ?? opened.series.posterUrl,
+          heading: opened.series.title,
+          choose: () => episodeItem(episode, opened.series),
+        })) ?? null
+      );
+    if (browsing) {
+      const { listing, series } = browsing;
+      if (!listing) return null;
+      const heading = listing.trail.at(-1)?.name ?? browsing.name;
+      return [
+        // A folder of a series' episodes alone counts no videos: the series is listed instead.
+        ...listing.folders
+          .filter((entry) => entry.videos > 0)
+          .map((entry) => ({
+            key: `folder:${entry.path}`,
+            itemId: "",
+            name: entry.name,
+            meta: `${entry.videos.toLocaleString()} ${entry.videos === 1 ? "video" : "videos"}`,
+            artwork: null,
+            folder: true,
+            opens: true,
+            heading,
+            choose: () => openFolder(browsing.sourceId, browsing.name, entry.path),
+          })),
+        ...series.map((one) => ({
+          key: one.id,
+          itemId: one.id,
+          name: one.title,
+          meta: one.year ? `${one.year} · Series` : "Series",
+          artwork: one.posterUrl ?? one.backdropUrl,
+          opens: true,
+          heading: "Series",
+          // Its episodes, with Back to the folder.
+          choose: () => openSeries(one),
+        })),
+        ...listing.videos.map(({ movie, facts }) => ({
+          key: movie.id,
+          itemId: movie.id,
+          name: movie.title,
+          meta: facts?.durationSeconds ? playerClock(facts.durationSeconds) : movie.year ? String(movie.year) : null,
+          artwork: movie.posterUrl ?? movie.backdropUrl,
+          heading: series.length ? "Films" : heading,
+          choose: () => movieItem(movie),
+        })),
+      ];
+    }
+    if (query) {
+      if (!found || found.text !== query) return null;
+      return [
+        ...found.movies.map((movie) => ({
+          key: movie.id,
+          itemId: movie.id,
+          name: movie.title,
+          meta: movie.year ? String(movie.year) : null,
+          artwork: movie.posterUrl ?? movie.backdropUrl,
+          heading: "Films",
+          choose: () => movieItem(movie),
+        })),
+        ...found.series.map((series) => ({
+          key: series.id,
+          itemId: series.id,
+          name: series.title,
+          meta: series.year ? `${series.year} · Series` : "Series",
+          artwork: series.posterUrl ?? series.backdropUrl,
+          heading: "Series",
+          opens: true,
+          choose: () => openSeries(series),
+        })),
+      ];
+    }
+    if (!continuing) return null;
+    return [
+      ...continuing.map((item) => ({
+        key: item.itemId,
+        itemId: item.itemId,
+        name: item.title,
+        meta: [item.subtitle, item.upNext ? "Up next" : item.remainingSeconds ? remaining(item.remainingSeconds) : null].filter(Boolean).join(" · ") || null,
+        artwork: item.artworkUrl,
+        heading: "Continue Watching",
+        choose: () => continueItem(item),
+      })),
+      ...folders.map((config) => ({
+        key: `source:${config.id}`,
+        itemId: "",
+        name: config.name,
+        meta: "Media folder",
+        artwork: null,
+        folder: true,
+        opens: true,
+        heading: "Media Folders",
+        choose: () => openFolder(config.id, config.name, null),
+      })),
+    ];
+  })();
+
+  const why = (row: TitleRow) => (row.itemId ? note((item) => !isLiveItem(item) && item.itemId === row.itemId) : null);
   const pick = async (row: TitleRow) => {
     if (busy) return;
     const made = row.choose();
@@ -866,18 +970,20 @@ function TitleRows({ text, note, enter }: { text: string; note: Note; enter: Ent
 
   return (
     <div className="mv-picker-list" role="listbox" aria-label="Films and series">
-      {opened && (
-        <button className="copy-row mv-picker-row mv-picker-back" onClick={() => setOpened(null)}>
+      {(opened || browsing) && (
+        <button className="copy-row mv-picker-row mv-picker-back" onClick={back}>
           <ChevronLeft size={15} />
           <span className="copy-text">
-            <span className="copy-name">{query ? "Back to what was found" : "Back"}</span>
+            <span className="copy-name">{opened && query ? "Back to what was found" : "Back"}</span>
           </span>
         </button>
       )}
       {rows == null ? (
         <div className="spinner" style={{ margin: "14px auto" }} />
       ) : rows.length === 0 ? (
-        <p className="muted mv-picker-empty">{opened ? "This series has no episodes to play here." : query ? "No film or series has that name." : "Search for a film or series in your sources."}</p>
+        <p className="muted mv-picker-empty">
+          {browsing ? "There are no videos in this folder." : opened ? "This series has no episodes to play here." : query ? "No film or series has that name." : "Search for a film or series in your sources."}
+        </p>
       ) : (
         shown.map((row, i) => {
           const taken = why(row);
@@ -886,18 +992,29 @@ function TitleRows({ text, note, enter }: { text: string; note: Note; enter: Ent
             <div key={row.key} className="mv-picker-item">
               {heading && <div className="mv-picker-heading">{heading}</div>}
               <button className="copy-row mv-picker-row" disabled={!!taken || busy} onClick={() => pick(row)} role="option" aria-selected={false}>
-                <ChannelLogo src={row.artwork} name={row.name} size={30} />
+                {row.folder ? (
+                  <span className="channel-logo mv-picker-folder" style={{ width: 30, height: 30 }}>
+                    <Folder size={15} />
+                  </span>
+                ) : (
+                  <ChannelLogo src={row.artwork} name={row.name} size={30} />
+                )}
                 <span className="copy-text">
                   <span className="copy-name">{row.name}</span>
                   {(taken ?? row.meta) && <span className="copy-meta">{taken ?? row.meta}</span>}
                 </span>
-                {row.heading === "Series" && !opened && <ChevronRight size={14} className="mv-picker-star" />}
+                {row.opens && <ChevronRight size={14} className="mv-picker-star" />}
               </button>
             </div>
           );
         })
       )}
       {rows && rows.length > PICKER_ROWS && <p className="muted mv-picker-more">Showing {PICKER_ROWS} of {rows.length}. Type to find the rest.</p>}
+      {browsing?.listing && browsing.listing.total > browsing.listing.videos.length && (
+        <p className="muted mv-picker-more">
+          Showing {browsing.listing.videos.length} of {browsing.listing.total.toLocaleString()} videos. Search finds the rest.
+        </p>
+      )}
     </div>
   );
 }

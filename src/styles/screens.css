@@ -3473,15 +3473,16 @@
   left: 14px;
   bottom: 14px;
 }
+/* In a top corner, below the big picture's name and buttons. */
 .mv-tile.inset.corner-topRight,
 .mv-inset-show.corner-topRight {
   right: 14px;
-  top: 14px;
+  top: 56px;
 }
 .mv-tile.inset.corner-topLeft,
 .mv-inset-show.corner-topLeft {
   left: 14px;
-  top: 14px;
+  top: 56px;
 }
 /* Where a hidden inset was: shows it again. */
 .mv-inset-show {
@@ -3514,6 +3515,11 @@
 .mv-picker-back {
   flex: 0 0 auto;
   gap: 6px;
+}
+.mv-picker-folder {
+  display: grid;
+  place-items: center;
+  color: var(--text-secondary);
 }
 .mv-picker-search {
   position: relative;
