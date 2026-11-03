@@ -2,7 +2,26 @@
 // 23.6 or later runs TypeScript as it is, so nothing needs installing). It
 // stops at the first rule broken, with what was expected.
 
-import { afterRemove, fitGrid, focusAfterAdd, focusAfterRemove, layoutFor, listenTo, moveTile, stepAudio, tileForKey, tileToKeep, toggleExpanded, watchingFrom } from "./multiviewRules.ts";
+import {
+  afterRemove,
+  allPaused,
+  buffersOnPause,
+  fitGrid,
+  focusAfterAdd,
+  focusAfterRemove,
+  layoutFor,
+  listenTo,
+  moveTile,
+  resumeAt,
+  secondsBehind,
+  skipInBuffer,
+  stepAudio,
+  tileForKey,
+  tileToKeep,
+  toggleExpanded,
+  watchingFrom,
+} from "./multiviewRules.ts";
+import { bufferRange } from "./playerRules.ts";
 
 let checks = 0;
 function check(name: string, actual: unknown, expected: unknown) {
@@ -76,5 +95,36 @@ const sources = [
 check("counts the source's other tiles", watchingFrom(sources, "x"), 2);
 check("a tile being swapped doesn't count", watchingFrom(sources, "x", "a"), 1);
 check("other sources don't count", watchingFrom(sources, "z"), 0);
+
+// Pausing and rewinding
+const direct = { isLive: true, timeshift: null };
+const buffered = { isLive: true, timeshift: { windowSeconds: 1800 } };
+check("a paused tile moves onto a buffer", buffersOnPause("paused", direct), true);
+check("whatever the player's setting", buffersOnPause("always", direct), true);
+check("unless the live buffer is off", buffersOnPause("off", direct), false);
+check("a tile on a buffer stays on it", buffersOnPause("paused", buffered), false);
+check("nothing to buffer before the stream arrives", buffersOnPause("paused", null), false);
+check("a recording or replay isn't live", buffersOnPause("paused", { isLive: false, timeshift: null }), false);
+
+const range = { start: 100, end: 400 };
+check("behind live, to the second", secondsBehind(range, 309.6), 90);
+check("at the edge", secondsBehind(range, 400.4), 0);
+check("no buffer, not behind", secondsBehind(null, 50), 0);
+check("back ten seconds", skipInBuffer(range, 300, -10), 290);
+check("back a minute, no further than the buffer keeps", skipInBuffer(range, 130, -60), 100);
+check("forward, short of the very end", skipInBuffer(range, 395, 10), 399);
+check("carries on where it was", resumeAt(range, 250), 250);
+check("paused longer than the buffer keeps: its oldest part", resumeAt(range, 40), 101);
+check("no range yet", resumeAt(null, 40), 40);
+
+const fakeVideo = (ranges: [number, number][]) => ({ seekable: { length: ranges.length, start: (i: number) => ranges[i][0], end: (i: number) => ranges[i][1] } });
+check("a buffer's range", bufferRange(fakeVideo([[3, 60]])), { start: 3, end: 60 });
+check("no range until the playlist loads", bufferRange(fakeVideo([])), null);
+check("an endless one isn't a range", bufferRange(fakeVideo([[0, Infinity]])), null);
+
+check("all paused", allPaused([{ paused: true, error: null }, { paused: true, error: null }]), true);
+check("one playing", allPaused([{ paused: true, error: null }, { paused: false, error: null }]), false);
+check("a failed tile doesn't count", allPaused([{ paused: true, error: null }, { paused: false, error: "offline" }]), true);
+check("none to pause", allPaused([]), false);
 
 console.log(`Multiview rules: ${checks} checks passed`);

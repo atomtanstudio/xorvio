@@ -35,7 +35,7 @@ export function PopOutApp() {
     // While it's open, the menu bar's Playback items act here, where the video is.
     const offMenu = followMenu();
     const offMenuState = followMenuState(
-      () => ({ playback: { ...usePlaybackReport.getState(), lastChannel: !!lastChannel(), multiview: false, poppedOut: true } }),
+      () => ({ playback: { ...usePlaybackReport.getState(), lastChannel: !!lastChannel(), multiview: false, allPaused: false, poppedOut: true } }),
       (changed) => {
         const offs = [usePlaybackReport.subscribe(changed), useApp.subscribe(changed)];
         return () => offs.forEach((off) => off());
