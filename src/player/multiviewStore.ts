@@ -1,8 +1,12 @@
 // Multiview: two to four live channels at once, in the main window where the
 // player shows (never a window of its own). Each tile plays its own stream,
 // a provider connection of its own, and fails on its own; one tile is heard.
-// Tiles always play directly, never from the live buffer, which would be
-// another ffmpeg and gigabytes on disk for each of them.
+// Tiles play directly until they're paused: pausing one moves it onto a live
+// buffer of its own from then (unless the live buffer is off), so it can be
+// rewound and caught up on, and the buffer's ffmpeg and disk are spent only
+// on paused tiles. The buffer takes over the tile's connection rather than
+// adding one (the gateway closes the direct stream before the buffer opens),
+// and Go Live lets the buffer go and plays the channel directly again.
 //
 // Opening Multiview takes over the live channel playing: its stream carries
 // on in the first tile. Closing it carries on with the tile being heard in
@@ -17,7 +21,22 @@ import { useApp } from "../lib/store";
 import type { Channel, ResolvedStream } from "../lib/types";
 import { sameChannel } from "../lib/versions";
 import { leavePlayerFullscreen } from "./fullscreen";
-import { afterRemove, focusAfterAdd, focusAfterRemove, listenTo, MAX_TILES, moveTile as moved, stepAudio, tileToKeep, toggleExpanded, watchingFrom } from "./multiviewRules";
+import {
+  afterRemove,
+  allPaused,
+  buffersOnPause,
+  focusAfterAdd,
+  focusAfterRemove,
+  listenTo,
+  MAX_TILES,
+  moveTile as moved,
+  skipInBuffer,
+  stepAudio,
+  tileToKeep,
+  toggleExpanded,
+  watchingFrom,
+} from "./multiviewRules";
+import { bufferRange } from "./playerRules";
 
 export interface Tile {
   id: string;
@@ -29,6 +48,16 @@ export interface Tile {
   error: string | null;
   /** Each try at a stream. One that arrives after a swap, a retry or removal is let go. */
   attempt: number;
+  /** Paused by someone: the tile's own button or keys, or Pause All. */
+  paused: boolean;
+  /** Moving onto its buffer after a pause; the direct stream ends meanwhile. */
+  startingBuffer: boolean;
+  /** Its buffer opens where the pause was, at the buffer's start. */
+  holdAtStart: boolean;
+  /** The buffer couldn't start, and the direct stream went with the try: playing tunes in again. */
+  retune: boolean;
+  /** Seconds behind live, while it plays from its buffer. */
+  behind: number;
 }
 
 /** The channel picker: for another tile, or to change one tile's channel. */
@@ -42,23 +71,34 @@ interface MultiviewState {
   audio: string | null;
   /** The tile filling the view. */
   expanded: string | null;
-  /** Pausing pauses every tile. */
-  paused: boolean;
   picker: Picker | null;
 }
 
-const closed = { open: false, tiles: [] as Tile[], audio: null, expanded: null, paused: false };
+const closed = { open: false, tiles: [] as Tile[], audio: null, expanded: null };
 
 export const useMultiview = create<MultiviewState>(() => ({ ...closed, picker: null }));
 
 const state = () => useMultiview.getState();
 const app = () => useApp.getState();
 
+/** A tile playing live, as it starts and after a swap, retry or Go Live. */
+const live = { error: null, paused: false, startingBuffer: false, holdAtStart: false, retune: false, behind: 0 };
+
 let seq = 0;
 function newTile(channel: Channel, stream: ResolvedStream | null = null): Tile {
   seq += 1;
-  return { id: `tile-${seq}`, seq, channel, stream, error: null, attempt: 0 };
+  return { id: `tile-${seq}`, seq, channel, stream, attempt: 0, ...live };
 }
+
+/** The tiles' video elements, for skipping within their buffers. */
+const videos = new Map<string, HTMLVideoElement>();
+
+export function registerTileVideo(id: string, video: HTMLVideoElement | null) {
+  if (video) videos.set(id, video);
+  else videos.delete(id);
+}
+
+export const tileVideo = (id: string | null) => (id ? (videos.get(id) ?? null) : null);
 
 const tileById = (id: string) => state().tiles.find((t) => t.id === id);
 
@@ -86,12 +126,12 @@ async function load(id: string) {
   }
 }
 
-/** The tile again from a fresh stream, on another channel or the same one (Retry). */
+/** The tile again from a fresh stream, live, on another channel or the same one (Retry). */
 function restart(id: string, channel?: Channel) {
   const tile = tileById(id);
   if (!tile) return;
   release(tile);
-  update(id, { channel: channel ?? tile.channel, stream: null, error: null, attempt: tile.attempt + 1 });
+  update(id, { channel: channel ?? tile.channel, stream: null, attempt: tile.attempt + 1, ...live });
   load(id);
 }
 
@@ -125,7 +165,7 @@ function start(channel: Channel | null) {
   const playing = playingChannel();
   const tiles: Tile[] = [];
   if (playing) {
-    // Its stream carries on in the first tile, unless it's the live buffer, which tiles never play.
+    // Its stream carries on in the first tile, unless it's the live buffer: tiles play directly until paused.
     const direct = stream && !stream.timeshift ? stream : null;
     if (stream && !direct) api.releaseStream(stream.url).catch(() => {});
     tiles.push(newTile(playing, direct));
@@ -138,8 +178,9 @@ function start(channel: Channel | null) {
 
 /**
  * Closes Multiview. The tile kept carries on in the player, full size, with
- * its stream as it is; with the live buffer always on, the player starts it
- * again from a buffer, which tiles don't have. The others are let go.
+ * its stream as it is (a buffer it was paused into included); with the live
+ * buffer always on, the player starts it again from a buffer of its own. The
+ * others are let go, and their buffers with them.
  */
 function leave(keepId: string | null) {
   const { tiles } = state();
@@ -149,7 +190,8 @@ function leave(keepId: string | null) {
   if (!keep) return;
   const item = channelItem(keep.channel);
   const { stream } = keep;
-  if (stream && !keep.error && app().settings.liveBuffer !== "always") {
+  const usable = !keep.error && !keep.retune && !keep.startingBuffer;
+  if (stream && usable && (stream.timeshift || app().settings.liveBuffer !== "always")) {
     useApp.setState((s) => ({
       nowPlaying: item,
       stream,
@@ -217,9 +259,13 @@ export function retryTile(id: string) {
   restart(id);
 }
 
-/** The player's error for a tile's stream, unless it's been restarted since. */
+/**
+ * The player's error for a tile's stream, unless it's been restarted since,
+ * or the stream ended because the tile is moving onto its buffer.
+ */
 export function failTile(id: string, attempt: number, message: string) {
-  if (tileById(id)?.attempt === attempt) update(id, { error: message });
+  const tile = tileById(id);
+  if (tile?.attempt === attempt && !tile.startingBuffer && !tile.retune) update(id, { error: message });
 }
 
 export function removeTile(id: string) {
@@ -271,8 +317,87 @@ export function moveTile(id: string, by: 1 | -1) {
   useMultiview.setState((s) => ({ tiles: moved(s.tiles, id, by) }));
 }
 
-export function setPaused(paused: boolean) {
-  useMultiview.setState({ paused });
+// MARK: Pausing and rewinding
+
+/**
+ * Pauses or plays one tile. Pausing a live channel playing directly moves
+ * it onto a buffer of its own from now, so it carries on from the pause,
+ * behind live; one that couldn't be buffered tunes in again when played.
+ */
+export function setTilePaused(id: string, paused: boolean) {
+  const tile = tileById(id);
+  if (!tile || tile.error || tile.paused === paused) return;
+  if (!paused && tile.retune) return restart(id);
+  update(id, { paused });
+  if (paused && buffersOnPause(app().settings.liveBuffer, tile.stream)) startBuffer(id);
+}
+
+/** Moves a paused tile's direct stream onto a buffer that starts now. */
+async function startBuffer(id: string) {
+  const tile = tileById(id);
+  const from = tile?.stream;
+  if (!tile || !from || tile.startingBuffer) return;
+  update(id, { startingBuffer: true });
+  try {
+    const buffered = await api.startTimeshift(from.url);
+    // Swapped, retried, gone live or removed meanwhile: that buffer isn't wanted.
+    if (tileById(id)?.stream !== from) {
+      api.releaseStream(buffered.url).catch(() => {});
+      return;
+    }
+    update(id, { stream: buffered, startingBuffer: false, holdAtStart: true });
+  } catch (error) {
+    api.log("warn", `a Multiview tile's buffer couldn't start: ${errorText(error)}`).catch(() => {});
+    if (tileById(id)?.stream !== from) return;
+    update(id, { startingBuffer: false, retune: true });
+    app().showToast(`Pause and rewind isn't available on ${tile.channel.name}.`, "error");
+  }
+}
+
+/** Pauses every tile, or plays them all when they're all paused. */
+export function toggleAllPaused() {
+  const { tiles } = state();
+  const paused = !allPaused(tiles);
+  for (const tile of tiles) setTilePaused(tile.id, paused);
+}
+
+/**
+ * Back to live: a tile on a buffer lets it go and plays its channel
+ * directly again, so the buffer's ffmpeg and disk go with it. The buffer's
+ * connection closes before the channel's own opens.
+ */
+export async function goLiveTile(id: string) {
+  const tile = tileById(id);
+  if (!tile) return;
+  if (!tile.stream?.timeshift) return setTilePaused(id, false);
+  const attempt = tile.attempt + 1;
+  update(id, { stream: null, attempt, ...live });
+  await api.releaseStream(tile.stream.url).catch(() => {});
+  if (tileById(id)?.attempt === attempt) load(id);
+}
+
+/** Skips `by` seconds back (negative) or forward within a tile's buffer. A tile playing directly has nothing to skip through. */
+export function skipTile(id: string, by: number) {
+  const tile = tileById(id);
+  const video = tileVideo(id);
+  const range = tile?.stream?.timeshift && video ? bufferRange(video) : null;
+  if (video && range) video.currentTime = skipInBuffer(range, video.currentTime, by);
+}
+
+/** How far behind live a tile plays, as its video reports it. */
+export function reportBehind(id: string, behind: number) {
+  if (tileById(id) && tileById(id)?.behind !== behind) update(id, { behind });
+}
+
+/** The tile heard, which the keys and the menu bar's Playback items act on. */
+export function heardTile() {
+  const { tiles, audio } = state();
+  return tiles.find((t) => t.id === audio) ?? null;
+}
+
+export function toggleHeardPaused() {
+  const tile = heardTile();
+  if (tile) setTilePaused(tile.id, !tile.paused);
 }
 
 export function choose(picker: Picker | null) {

@@ -2,11 +2,30 @@
 // checked on their own (`node src/player/playerRules.test.ts`): when a
 // stream that dropped is opened again and what to say when it can't be,
 // channel numbers typed on the keyboard, how long zapping waits before a
-// stream opens, the corner the mini player goes to, and audio and subtitles
-// remembered for a series.
+// stream opens, the corner the mini player goes to, audio and subtitles
+// remembered for a series, and a live buffer's range.
 
 import { isMac } from "../lib/platform.ts";
 import type { TrackChoice } from "../lib/types.ts";
+
+// MARK: Live buffer
+
+/** A video's seekable ranges, as `HTMLVideoElement.seekable` has them. */
+interface Seekable {
+  seekable: { length: number; start(index: number): number; end(index: number): number };
+}
+
+/** The buffered stretch of a live channel, in the stream's own seconds. Until the playlist loads, WebKit can report no range or an endless one. */
+export function bufferRange(video: Seekable) {
+  const s = video.seekable;
+  if (!s.length) return null;
+  const start = s.start(0);
+  const end = s.end(s.length - 1);
+  return Number.isFinite(start) && Number.isFinite(end) && end > start ? { start, end } : null;
+}
+
+/** Within this of the live edge counts as live. */
+export const LIVE_EDGE = 8;
 
 // MARK: Failures
 
