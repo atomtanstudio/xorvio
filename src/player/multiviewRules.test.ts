@@ -6,10 +6,14 @@ import {
   afterRemove,
   allPaused,
   buffersOnPause,
+  canInset,
   fitGrid,
   focusAfterAdd,
   focusAfterRemove,
+  hideChanges,
+  insetChanges,
   layoutFor,
+  limitTitle,
   listenTo,
   moveTile,
   resumeAt,
@@ -19,6 +23,7 @@ import {
   tileForKey,
   tileToKeep,
   toggleExpanded,
+  usesConnection,
   watchingFrom,
 } from "./multiviewRules.ts";
 import { bufferRange } from "./playerRules.ts";
@@ -126,5 +131,42 @@ check("all paused", allPaused([{ paused: true, error: null }, { paused: true, er
 check("one playing", allPaused([{ paused: true, error: null }, { paused: false, error: null }]), false);
 check("a failed tile doesn't count", allPaused([{ paused: true, error: null }, { paused: false, error: "offline" }]), true);
 check("none to pause", allPaused([]), false);
+
+// Connections
+check("a provider's film takes a connection", usesConnection("xtream", false), true);
+check("so does its channel", usesConnection("xtream", true), true);
+check("a playlist's channel too", usesConnection("m3uUrl", true), true);
+check("a media server's film doesn't take a tuner", usesConnection("jellyfin", false), false);
+check("its channel does", usesConnection("plex", true), true);
+check("a media folder's video takes nothing", usesConnection("folder", false), false);
+check("a source not known yet counts", usesConnection(null, false), true);
+check("a media server's limit is its tuners", limitTitle("plex"), "All your server's tuners are in use");
+check("a provider's limit is its streams", limitTitle("xtream"), "Over your provider's limit");
+
+// The inset
+check("the inset is for two", [canInset(1), canInset(2), canInset(3)], [false, true, false]);
+const inset = layoutFor(["a", "b"], null, true);
+check("the first fills the view", inset.places.map((p) => [p.id, p.column, p.row, p.span]), [["a", 1, 1, 1]]);
+check("the second is the inset", inset.inset, "b");
+check("in one 16:9 cell", [inset.columns, inset.rows], [1, 1]);
+check("nothing out of sight or invited", [inset.hidden, inset.invite], [[], null]);
+check("three tiles make the grid, inset or not", layoutFor(["a", "b", "c"], null, true).inset, null);
+check("the inset wins over an expanded tile", layoutFor(["a", "b"], "b", true).places.map((p) => p.id), ["a"]);
+check("without it, no inset", layoutFor(["a", "b"], null).inset, null);
+
+const tile = (id: string, live: boolean, paused = false, insetPaused = false) => ({ id, live, paused, insetPaused });
+check("the film going small pauses", insetChanges(tile("game", true), tile("film", false)), [{ id: "film", paused: true, insetPaused: true }]);
+check("the game going small plays on", insetChanges(tile("film", false), tile("game", true)), []);
+check("the film the inset paused plays when it's big", insetChanges(tile("film", false, true, true), tile("game", true)), [{ id: "film", paused: false, insetPaused: false }]);
+check("one someone paused stays paused when it's big", insetChanges(tile("film", false, true), tile("game", true)), []);
+check("a film already paused going small isn't the inset's to play later", insetChanges(tile("game", true), tile("film", false, true)), []);
+check("two films: the big one plays, the small one waits", insetChanges(tile("a", false, true, true), tile("b", false)), [
+  { id: "a", paused: false, insetPaused: false },
+  { id: "b", paused: true, insetPaused: true },
+]);
+check("a channel paused into its buffer stays so when it's big", insetChanges(tile("game", true, true), tile("film", false, true, true)), []);
+check("hiding a film playing small pauses it", hideChanges(tile("film", false)), [{ id: "film", paused: true, insetPaused: true }]);
+check("hiding a channel lets it play on", hideChanges(tile("game", true)), []);
+check("hiding a paused film changes nothing", hideChanges(tile("film", false, true)), []);
 
 console.log(`Multiview rules: ${checks} checks passed`);

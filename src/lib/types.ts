@@ -599,7 +599,18 @@ export interface XtreamAccountCheck {
 
 /** What the menu bar's items can do now (src-tauri/src/menu.rs). The main window sends `app`; the window the video is in sends `playback`. */
 export interface MenuState {
-  app?: { hasSources: boolean; canGoBack: boolean; sidebarHidden: boolean; multiview: boolean };
+  app?: {
+    hasSources: boolean;
+    canGoBack: boolean;
+    sidebarHidden: boolean;
+    multiview: boolean;
+    /** Something plays in the main window's player, so an inset can be added to it. */
+    canAddInset: boolean;
+    /** Multiview has two tiles, which can be an inset. */
+    canInset: boolean;
+    /** The two are an inset. */
+    inset: boolean;
+  };
   playback?: {
     playing: boolean;
     paused: boolean;

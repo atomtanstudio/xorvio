@@ -22,8 +22,8 @@ import type { AddonInfo, MenuState } from "./lib/types";
 import { reportPlaybackSupport } from "./player/engine";
 import { leavePlayerFullscreen } from "./player/fullscreen";
 import { MultiviewHost } from "./player/Multiview";
-import { allPaused } from "./player/multiviewRules";
-import { closeMultiview, heardTile, toggleExpand, toggleMultiview, useMultiview } from "./player/multiviewStore";
+import { allPaused, canInset } from "./player/multiviewRules";
+import { closeMultiview, heardTile, insetCommand, swapInset, tileChannel, toggleExpand, toggleInset, toggleMultiview, useMultiview } from "./player/multiviewStore";
 import { LIVE_EDGE } from "./player/playerRules";
 import { PlayerHost } from "./player/Player";
 import { OnboardingHost } from "./screens/Onboarding";
@@ -485,6 +485,12 @@ function useShellCommands(toggleSidebar: () => void, sidebarHidden: boolean) {
           // A sheet over the window has the keys.
           if (!document.querySelector(".sheet-backdrop")) toggleMultiview();
         },
+        "playback.inset": () => {
+          if (document.querySelector(".sheet-backdrop")) return;
+          if (useMultiview.getState().inset) toggleInset();
+          else insetCommand();
+        },
+        "playback.swapInset": swapInset,
       }),
     [toggleSidebar],
   );
@@ -502,7 +508,7 @@ function useShellCommands(toggleSidebar: () => void, sidebarHidden: boolean) {
       // In Multiview, Play/Pause, the skips and Go Live are the heard tile's.
       const tile = multiview.open ? heardTile() : null;
       const tileState = tile
-        ? { paused: tile.paused, seekable: !!tile.stream?.timeshift, behindLive: !!tile.stream?.timeshift && tile.behind >= LIVE_EDGE }
+        ? { paused: tile.paused, seekable: !!tile.stream?.timeshift || !tileChannel(tile), behindLive: !!tile.stream?.timeshift && tile.behind >= LIVE_EDGE }
         : {};
       return {
         app: {
@@ -510,6 +516,9 @@ function useShellCommands(toggleSidebar: () => void, sidebarHidden: boolean) {
           canGoBack: stack.length > 0 || (presentation === "full" && !!nowPlaying) || multiview.open,
           sidebarHidden: hidden.current,
           multiview: multiview.open,
+          canAddInset: !multiview.open && !!nowPlaying && !useApp.getState().poppedOut,
+          canInset: multiview.open && canInset(multiview.tiles.length),
+          inset: multiview.open && multiview.inset,
         },
         playback: {
           ...report,

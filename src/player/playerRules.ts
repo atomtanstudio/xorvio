@@ -3,7 +3,8 @@
 // stream that dropped is opened again and what to say when it can't be,
 // channel numbers typed on the keyboard, how long zapping waits before a
 // stream opens, the corner the mini player goes to, audio and subtitles
-// remembered for a series, and a live buffer's range.
+// remembered for a series, a live buffer's range, and when a title counts
+// as watched.
 
 import { isMac } from "../lib/platform.ts";
 import type { TrackChoice } from "../lib/types.ts";
@@ -26,6 +27,13 @@ export function bufferRange(video: Seekable) {
 
 /** Within this of the live edge counts as live. */
 export const LIVE_EDGE = 8;
+
+// MARK: Progress
+
+/** A film or episode counts as watched once this much of it has played: the credits needn't be sat through. */
+export function watchedEnough(position: number, duration: number) {
+  return duration > 0 && position / duration > 0.93;
+}
 
 // MARK: Failures
 

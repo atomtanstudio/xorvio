@@ -1,7 +1,8 @@
 // Multiview's rules, kept apart from React and the backend so they can be
 // checked on their own (`node src/player/multiviewRules.test.ts`): where
-// tiles go, which one is heard, when Multiview gives way to the player, and
-// pausing and rewinding tiles.
+// tiles go, which one is heard, when Multiview gives way to the player,
+// pausing and rewinding tiles, and the inset (one tile small in a corner of
+// the other).
 
 /** Tiles at once: four streams is about what a provider and a Mac manage. */
 export const MAX_TILES = 4;
@@ -23,28 +24,33 @@ export interface MultiviewLayout {
   hidden: string[];
   /** The cell beside a lone tile that asks for another channel. */
   invite: { column: number; row: number } | null;
+  /** The tile shown small in a corner, over the one filling the view. */
+  inset: string | null;
 }
 
 /**
  * Two side by side; three as one large tile with two stacked beside it (as
  * the Swift app had them, sized so their edges line up); four in a 2×2
- * grid. An expanded tile fills the view on its own.
+ * grid. An expanded tile fills the view on its own. With the inset on, two
+ * tiles are one filling the view (the first) and the other small over it.
  */
-export function layoutFor(ids: string[], expanded: string | null): MultiviewLayout {
+export function layoutFor(ids: string[], expanded: string | null, inset = false): MultiviewLayout {
   const at = (id: string, column: number, row: number, span = 1): TilePlace => ({ id, column, row, span });
-  if (expanded && ids.includes(expanded)) return { columns: 1, rows: 1, places: [at(expanded, 1, 1)], hidden: ids.filter((id) => id !== expanded), invite: null };
+  const none = { hidden: [], invite: null, inset: null };
+  if (inset && canInset(ids.length)) return { ...none, columns: 1, rows: 1, places: [at(ids[0], 1, 1)], inset: ids[1] };
+  if (expanded && ids.includes(expanded)) return { ...none, columns: 1, rows: 1, places: [at(expanded, 1, 1)], hidden: ids.filter((id) => id !== expanded) };
   const [a, b, c, d] = ids;
   switch (ids.length) {
     case 0:
-      return { columns: 1, rows: 1, places: [], hidden: [], invite: { column: 1, row: 1 } };
+      return { ...none, columns: 1, rows: 1, places: [], invite: { column: 1, row: 1 } };
     case 1:
-      return { columns: 2, rows: 1, places: [at(a, 1, 1)], hidden: [], invite: { column: 2, row: 1 } };
+      return { ...none, columns: 2, rows: 1, places: [at(a, 1, 1)], invite: { column: 2, row: 1 } };
     case 2:
-      return { columns: 2, rows: 1, places: [at(a, 1, 1), at(b, 2, 1)], hidden: [], invite: null };
+      return { ...none, columns: 2, rows: 1, places: [at(a, 1, 1), at(b, 2, 1)] };
     case 3:
-      return { columns: 3, rows: 2, places: [at(a, 1, 1, 2), at(b, 3, 1), at(c, 3, 2)], hidden: [], invite: null };
+      return { ...none, columns: 3, rows: 2, places: [at(a, 1, 1, 2), at(b, 3, 1), at(c, 3, 2)] };
     default:
-      return { columns: 2, rows: 2, places: [at(a, 1, 1), at(b, 2, 1), at(c, 1, 2), at(d, 2, 2)], hidden: ids.slice(MAX_TILES), invite: null };
+      return { ...none, columns: 2, rows: 2, places: [at(a, 1, 1), at(b, 2, 1), at(c, 1, 2), at(d, 2, 2)], hidden: ids.slice(MAX_TILES) };
   }
 }
 
@@ -130,6 +136,25 @@ export function watchingFrom(tiles: { id: string; sourceId: string }[], sourceId
   return tiles.filter((t) => t.sourceId === sourceId && t.id !== except).length;
 }
 
+/**
+ * Whether a tile's stream takes one of its source's connections: a
+ * provider's films count as its channels do, a media server's films and
+ * episodes don't take its tuners (only its channels do), and a media
+ * folder's videos are files on this computer.
+ */
+export function usesConnection(sourceKind: string | null | undefined, live: boolean): boolean {
+  if (sourceKind === "folder") return false;
+  if (isMediaServer(sourceKind)) return live;
+  return true;
+}
+
+const isMediaServer = (sourceKind: string | null | undefined) => sourceKind === "plex" || sourceKind === "jellyfin" || sourceKind === "emby";
+
+/** The title of the warning before a tile goes over a source's limit: a media server's is its tuners. */
+export function limitTitle(sourceKind: string | null | undefined): string {
+  return isMediaServer(sourceKind) ? "All your server's tuners are in use" : "Over your provider's limit";
+}
+
 // MARK: Pausing and rewinding
 
 /** The live buffer setting: never, from a pause, or always. */
@@ -164,4 +189,44 @@ export function resumeAt(range: { start: number; end: number } | null, current: 
 export function allPaused(tiles: { paused: boolean; error: string | null }[]): boolean {
   const playing = tiles.filter((t) => !t.error);
   return playing.length > 0 && playing.every((t) => t.paused);
+}
+
+// MARK: The inset
+
+/** Swaps the inset and the big picture; in the player, adds an inset. */
+export const INSET_KEY = "x";
+
+/** The inset is for two tiles: something on in a corner of what's being watched. */
+export function canInset(count: number): boolean {
+  return count === 2;
+}
+
+/** What the inset needs to know of a tile: a channel plays on, a film or episode can wait. */
+export interface InsetTile {
+  id: string;
+  live: boolean;
+  paused: boolean;
+  /** Paused by going small, rather than by someone. */
+  insetPaused: boolean;
+}
+
+export type PauseChange = { id: string; paused: boolean; insetPaused: boolean };
+
+/**
+ * What the two do once one is big and the other small (after a swap, or as
+ * the inset starts): a film or episode going small pauses, so nothing is
+ * missed while it's out of the way, and one the inset paused plays again
+ * when it's big. A channel plays on either way, silently when it's small,
+ * so you see when the game's back on. A tile someone paused stays paused.
+ */
+export function insetChanges(big: InsetTile, small: InsetTile): PauseChange[] {
+  const changes: PauseChange[] = [];
+  if (big.insetPaused) changes.push({ id: big.id, paused: false, insetPaused: false });
+  if (!small.live && !small.paused) changes.push({ id: small.id, paused: true, insetPaused: true });
+  return changes;
+}
+
+/** Hiding the inset: a film or episode playing in it waits until it's shown again, and a channel plays on out of sight. */
+export function hideChanges(small: InsetTile): PauseChange[] {
+  return !small.live && !small.paused ? [{ id: small.id, paused: true, insetPaused: true }] : [];
 }
