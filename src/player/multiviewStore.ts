@@ -42,6 +42,7 @@ import {
   focusAfterRemove,
   hideChanges,
   insetChanges,
+  limitTitle,
   listenTo,
   MAX_TILES,
   moveTile as moved,
@@ -215,11 +216,12 @@ const connected = (tiles: { id: string; item: NowPlaying }[]) =>
  * right.
  */
 async function roomFor(item: NowPlaying, others: { id: string; item: NowPlaying }[], except?: string) {
-  if (!usesConnection(sourceKind(item.sourceId), isLiveItem(item))) return true;
+  const kind = sourceKind(item.sourceId);
+  if (!usesConnection(kind, isLiveItem(item))) return true;
   const warning = await api.connectionWarning(item.sourceId, watchingFrom(connected(others), item.sourceId, except)).catch(() => null);
   if (!warning) return true;
   return confirmAction({
-    title: "Over your provider's limit",
+    title: limitTitle(kind),
     message: `${warning} ${item.title} may not start, or another stream may stop.`,
     confirmLabel: "Add Anyway",
   });

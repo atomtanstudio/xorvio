@@ -13,6 +13,7 @@ import {
   hideChanges,
   insetChanges,
   layoutFor,
+  limitTitle,
   listenTo,
   moveTile,
   resumeAt,
@@ -139,6 +140,8 @@ check("a media server's film doesn't take a tuner", usesConnection("jellyfin", f
 check("its channel does", usesConnection("plex", true), true);
 check("a media folder's video takes nothing", usesConnection("folder", false), false);
 check("a source not known yet counts", usesConnection(null, false), true);
+check("a media server's limit is its tuners", limitTitle("plex"), "All your server's tuners are in use");
+check("a provider's limit is its streams", limitTitle("xtream"), "Over your provider's limit");
 
 // The inset
 check("the inset is for two", [canInset(1), canInset(2), canInset(3)], [false, true, false]);
