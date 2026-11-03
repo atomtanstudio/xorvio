@@ -1,5 +1,5 @@
 //! Home's New Releases and New Episodes rows, and new episodes of followed
-//! series found by the six-hourly check.
+//! series found by the hourly check.
 
 use chrono::Datelike;
 
@@ -131,16 +131,16 @@ async fn new_episodes_of_followed_series() {
     let start = now();
     assert!(core.new_episodes_due(start).unwrap(), "never looked");
     let asked = server.count("/player_api.php", Some("get_series_info"));
-    assert!(core.check_new_episodes(start).await.unwrap().is_empty(), "the first look only notes where each series is");
+    assert!(core.check_new_episodes(start, vec![]).await.unwrap().is_empty(), "the first look only notes where each series is");
     assert_eq!(server.count("/player_api.php", Some("get_series_info")), asked + 3, "every followed series asked again");
-    assert!(!core.new_episodes_due(start + 3600).unwrap());
-    assert!(core.new_episodes_due(start + CHECK_INTERVAL_SECONDS).unwrap());
+    assert!(!core.new_episodes_due(start + 1800).unwrap());
+    assert!(core.new_episodes_due(start + CHECK_INTERVAL_SECONDS).unwrap(), "every hour");
 
     shows.set("30", 3, None);
     shows.set("31", 2, None);
     shows.set("32", 3, None);
     let later = start + CHECK_INTERVAL_SECONDS;
-    let mut found = core.check_new_episodes(later).await.unwrap();
+    let mut found = core.check_new_episodes(later, vec![]).await.unwrap();
     found.sort_by(|a, b| a.series_id.cmp(&b.series_id));
     let said: Vec<(&str, &str, usize)> = found.iter().map(|f| (f.title.as_str(), f.body.as_str(), f.count)).collect();
     let mut expected = [
@@ -154,39 +154,143 @@ async fn new_episodes_of_followed_series() {
 
     let counts = core.new_episode_counts().unwrap();
     assert_eq!((counts.get(&tidewater), counts.get(&harbour), counts.get(&low)), (Some(&2), Some(&1), None));
-    assert_eq!(core.new_episode_series(10).unwrap().len(), 2, "both lead New Episodes");
+    let none = HashMap::new();
+    let row = |core: &Core| -> Vec<String> { core.new_episode_series(10, &none).unwrap().into_iter().map(|s| s.title).collect() };
+    let mut listed = row(&core);
+    listed.sort();
+    assert_eq!(listed, ["Harbour Lights", "Tidewater"], "both are in New Episodes, and Low Country isn't");
 
-    // Opening a series clears its badge.
+    // Opening a series clears its badge, but it stays in the row until it's watched.
     assert!(core.mark_episodes_seen(&tidewater).unwrap());
     assert!(!core.mark_episodes_seen(&tidewater).unwrap());
     assert_eq!(core.new_episode_counts().unwrap().keys().collect::<Vec<_>>(), [&harbour]);
+    assert_eq!(row(&core).len(), 2);
+    let tidewater_episodes = core.episodes(&tidewater).await.unwrap();
+    core.set_watched(&[watched(&tidewater, &tidewater_episodes[1])], true).unwrap();
+    assert_eq!(row(&core).len(), 2, "one of its two new episodes is still to watch");
+    core.set_watched(&[watched(&tidewater, &tidewater_episodes[2])], true).unwrap();
+    assert_eq!(row(&core), ["Harbour Lights"], "Tidewater's new episodes are watched");
 
     // Marking the rest of Low Country watched follows it from there.
     let low_episodes = core.episodes(&low).await.unwrap();
     let rest: Vec<PlaybackProgress> = low_episodes.iter().map(|episode| watched(&low, episode)).collect();
     core.set_watched(&rest, true).unwrap();
     shows.set("32", 4, None);
-    let found = core.check_new_episodes(later + CHECK_INTERVAL_SECONDS).await.unwrap();
+    let found = core.check_new_episodes(later + CHECK_INTERVAL_SECONDS, vec![]).await.unwrap();
     assert_eq!(found.iter().map(|f| f.title.as_str()).collect::<Vec<_>>(), ["New episode of Low Country"]);
-    assert!(core.check_new_episodes(later + 2 * CHECK_INTERVAL_SECONDS).await.unwrap().is_empty(), "each is announced once");
+    assert!(core.check_new_episodes(later + 2 * CHECK_INTERVAL_SECONDS, vec![]).await.unwrap().is_empty(), "each is announced once");
 }
 
 #[tokio::test]
-async fn new_episodes_row_shows_series_with_episodes_just_aired() {
+async fn new_episodes_row_lists_followed_series_with_an_episode_just_aired() {
     let (server, shows) = series_panel().await;
     let (_folder, core, _) = open_core();
     let source = add_panel(&core, &server).await;
     core.refresh_source(&source.id, &|_| {}).await.unwrap();
-    assert!(core.new_episode_series(10).unwrap().is_empty(), "no episodes known yet");
+    let none = HashMap::new();
+    assert!(core.new_episode_series(10, &none).unwrap().is_empty(), "nothing followed yet");
 
+    // Each series' second episode: Harbour Lights' and Low Country's aired today, Tidewater's years ago.
     let today = chrono::Utc::now().format("%Y-%m-%d").to_string();
+    shows.set("30", 2, Some("2019-05-01"));
     shows.set("31", 2, Some(&today));
-    shows.set("32", 2, Some("2019-05-01"));
-    for show in core.series_list(&BrowseQuery::default()).unwrap() {
+    shows.set("32", 3, Some(&today));
+    let series = core.series_list(&BrowseQuery { sort: BrowseSort::Title, ..Default::default() }).unwrap();
+    for show in &series {
         core.episodes(&show.id).await.unwrap();
     }
-    let row: Vec<String> = core.new_episode_series(10).unwrap().into_iter().map(|s| s.title).collect();
-    assert_eq!(row, ["Harbour Lights"], "an episode aired this month; one from years ago isn't new");
+    let id_of = |title: &str| series.iter().find(|s| s.title == title).unwrap().id.clone();
+    for title in ["Tidewater", "Harbour Lights"] {
+        let series_id = id_of(title);
+        let first = core.episodes(&series_id).await.unwrap().remove(0);
+        let progress = PlaybackProgress {
+            item_id: first.id.clone(),
+            kind: MediaKind::Episode,
+            source_id: source.id.clone(),
+            series_id: Some(series_id),
+            position_seconds: 0.0,
+            duration_seconds: 0.0,
+            finished: true,
+            updated_at: now(),
+        };
+        core.set_watched(&[progress], true).unwrap();
+    }
+    let row: Vec<String> = core.new_episode_series(10, &none).unwrap().into_iter().map(|s| s.title).collect();
+    assert_eq!(row, ["Harbour Lights"], "its next episode aired today; Tidewater's is years old, and nothing of Low Country is watched");
+}
+
+#[tokio::test]
+async fn new_episodes_of_followed_addon_series() {
+    let (_folder, core, _) = open_core();
+    let id = "addon|series|tt9";
+    let show = Series {
+        id: id.into(),
+        source_id: "addon".into(),
+        title: "Quiet Harbour".into(),
+        year: None,
+        poster_url: None,
+        backdrop_url: None,
+        category_id: None,
+        rating: None,
+        added_at: None,
+        plot: None,
+        genre: None,
+        tmdb_id: None,
+        imdb_id: Some("tt9".into()),
+        remote_id: None,
+    };
+    let episode = |number: i64| Episode {
+        id: format!("{id}|ep|1:{number}"),
+        series_id: id.into(),
+        source_id: "addon".into(),
+        season: 1,
+        number,
+        title: format!("Chapter {number}"),
+        plot: None,
+        duration_seconds: None,
+        still_url: None,
+        stream: StreamLocator::Url { url: format!("https://example.com/1/{number}") },
+        air_date: None,
+    };
+    let saved = WatchlistEntry {
+        id: id.into(),
+        kind: MediaKind::Series,
+        source_id: "addon".into(),
+        title: "Quiet Harbour".into(),
+        subtitle: None,
+        artwork_url: None,
+        added_at: 0,
+        channel_id: None,
+        start: None,
+        end: None,
+        remind: false,
+    };
+    core.set_watchlisted(saved, true).unwrap();
+    let start = now();
+    assert_eq!(core.followed_addon_series(start).unwrap(), [id], "the app fetches it from its add-on");
+    assert!(core.check_new_episodes(start, vec![(show.clone(), vec![episode(1)])]).await.unwrap().is_empty());
+
+    let later = start + CHECK_INTERVAL_SECONDS;
+    let found = core.check_new_episodes(later, vec![(show.clone(), vec![episode(1), episode(2)])]).await.unwrap();
+    assert_eq!(found.iter().map(|f| f.title.as_str()).collect::<Vec<_>>(), ["New episode of Quiet Harbour"]);
+    assert_eq!(core.pending_addon_series().unwrap(), [id]);
+    let shows = HashMap::from([(id.to_string(), (show.clone(), vec![episode(1), episode(2)]))]);
+    let row: Vec<String> = core.new_episode_series(10, &shows).unwrap().into_iter().map(|s| s.title).collect();
+    assert_eq!(row, ["Quiet Harbour"]);
+
+    let progress = PlaybackProgress {
+        item_id: episode(2).id,
+        kind: MediaKind::Episode,
+        source_id: "addon".into(),
+        series_id: Some(id.into()),
+        position_seconds: 0.0,
+        duration_seconds: 0.0,
+        finished: true,
+        updated_at: now(),
+    };
+    core.set_watched(&[progress], true).unwrap();
+    assert!(core.new_episode_series(10, &shows).unwrap().is_empty(), "watched");
+    assert!(core.pending_addon_series().unwrap().is_empty(), "and forgotten");
 }
 
 #[test]

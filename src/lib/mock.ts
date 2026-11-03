@@ -184,6 +184,8 @@ airedAgo("2005", "s1e8", 2);
 airedAgo("2006", "s1e6", 30);
 /** Series with new episodes not looked at yet (the check's badges), and when each was found. */
 const unseenEpisodes = new Map<string, { count: number; foundAt: number }>(liveOnly ? [] : [[`${S}|se|2005`, { count: 1, foundAt: now() - 3600 }]]);
+/** Series in Home's New Episodes: found new, and not watched yet (opening one keeps it here). */
+const pendingEpisodes = new Map([...unseenEpisodes].map(([id, { foundAt }]) => [id, foundAt]));
 
 const categoryList: Category[] = [
   ...(data.channelCategories as [string, string][]).map(([key, name], i) => ({ id: `${S}|livecat|${key}`, sourceId: S, kind: "live" as const, name, sortIndex: i })),
@@ -2065,14 +2067,9 @@ export function createMockBackend(): Backend {
     },
     newEpisodeSeries: async (limit) => {
       const out = excluded();
-      const unseen = [...unseenEpisodes].sort((a, b) => b[1].foundAt - a[1].foundAt).map(([id]) => id);
-      const aired = [...episodesBySeries]
-        .map(([id, eps]) => [id, Math.max(...eps.filter((e) => e.season > 0).map((e) => e.airDate ?? 0))] as const)
-        .filter(([, latest]) => latest > now() - 30 * day && latest <= now() + day)
+      return [...pendingEpisodes]
         .sort((a, b) => b[1] - a[1])
-        .map(([id]) => id);
-      return [...new Set([...unseen, ...aired])]
-        .map((id) => shows.find((s) => s.id === id))
+        .map(([id]) => shows.find((s) => s.id === id))
         .filter((s): s is Series => !!s && !out.has(s.categoryId ?? ""))
         .slice(0, limit);
     },

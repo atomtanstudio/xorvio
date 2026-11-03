@@ -818,6 +818,22 @@ async fn cached_meta(state: &AppState, media_type: &str, media_id: &str) -> anyh
     Ok(meta)
 }
 
+/// A followed add-on series as its add-on has it now, for the new-episode
+/// check. It replaces the session's copy, so its page and Continue Watching
+/// have the new episodes too.
+pub(crate) async fn fresh_addon_series(state: &AppState, id: &str) -> Option<(Series, Vec<Episode>)> {
+    let (media_type, media_id) = addon_ref(id)?;
+    let meta = match state.addons.meta(media_type, media_id).await {
+        Ok(meta) => meta,
+        Err(error) => {
+            tracing::warn!("an add-on series couldn't be looked at for new episodes: {error:#}");
+            return None;
+        }
+    };
+    state.addon_metas.lock().unwrap().insert(format!("{media_type}|{media_id}"), meta.clone());
+    Some((meta.series?, meta.episodes))
+}
+
 #[tauri::command]
 pub async fn movies(state: State<'_, AppState>, query: BrowseQueryArg) -> CmdResult<Vec<Movie>> {
     state.core.movies(&query.into_query()).map_err(fail)
@@ -1217,10 +1233,20 @@ pub async fn new_releases(state: State<'_, AppState>, limit: usize) -> CmdResult
     state.core.new_releases(limit.min(100)).map_err(fail)
 }
 
-/// Home's New Episodes: followed series with new episodes, then series with episodes just aired.
+/// Home's New Episodes: followed series with episodes aired that haven't been watched.
 #[tauri::command]
 pub async fn new_episode_series(state: State<'_, AppState>, limit: usize) -> CmdResult<Vec<Series>> {
-    state.core.new_episode_series(limit.min(100)).map_err(fail)
+    // Add-on series aren't in the catalog: their episodes come from their add-on.
+    let mut addon_shows = std::collections::HashMap::new();
+    for id in state.core.pending_addon_series().map_err(fail)? {
+        if let Some((media_type, media_id)) = addon_ref(&id)
+            && let Ok(meta) = cached_meta(&state, media_type, media_id).await
+            && let Some(series) = meta.series
+        {
+            addon_shows.insert(id, (series, meta.episodes));
+        }
+    }
+    state.core.new_episode_series(limit.min(100), &addon_shows).map_err(fail)
 }
 
 /// Series with new episodes not looked at yet, and how many, for their badges.
