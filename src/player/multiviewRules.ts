@@ -144,8 +144,15 @@ export function watchingFrom(tiles: { id: string; sourceId: string }[], sourceId
  */
 export function usesConnection(sourceKind: string | null | undefined, live: boolean): boolean {
   if (sourceKind === "folder") return false;
-  if (sourceKind === "plex" || sourceKind === "jellyfin" || sourceKind === "emby") return live;
+  if (isMediaServer(sourceKind)) return live;
   return true;
+}
+
+const isMediaServer = (sourceKind: string | null | undefined) => sourceKind === "plex" || sourceKind === "jellyfin" || sourceKind === "emby";
+
+/** The title of the warning before a tile goes over a source's limit: a media server's is its tuners. */
+export function limitTitle(sourceKind: string | null | undefined): string {
+  return isMediaServer(sourceKind) ? "All your server's tuners are in use" : "Over your provider's limit";
 }
 
 // MARK: Pausing and rewinding
