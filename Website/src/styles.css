@@ -114,6 +114,7 @@ body::after {
 .textlink { display: inline-flex; gap: 6px; margin-top: 26px; color: var(--accent); font-weight: 600; font-size: 17px; }
 .textlink:hover span { transform: translateX(3px); }
 .textlink span { transition: transform 200ms var(--ease-out); }
+.textlink svg { width: 20px; height: 20px; flex: none; }
 
 /* -------------------------------------------------------------------- nav */
 
@@ -452,6 +453,41 @@ button.shot:focus-visible { outline-offset: 6px; border-radius: 2.22% / 3.56%; }
 .get__meta a { color: var(--text-2); text-decoration: underline; text-decoration-color: rgba(166, 176, 189, 0.35); text-underline-offset: 3px; }
 .get__meta a:hover { color: var(--text); text-decoration-color: currentColor; }
 .get__actions { margin-top: 36px; }
+
+/* -------------------------------------------------------------------- film */
+
+.film {
+  position: relative; text-align: center; isolation: isolate;
+  padding: clamp(120px, 15vh, 180px) var(--gutter) clamp(100px, 11vw, 150px);
+}
+.film__player { position: relative; max-width: 1280px; margin: clamp(44px, 6vw, 72px) auto 0; }
+.film__frame {
+  position: relative; z-index: 1; aspect-ratio: 16 / 9; overflow: hidden; background: #000;
+  border-radius: var(--radius-l); border: 1px solid var(--line-strong);
+  box-shadow: 0 50px 90px -30px rgba(0, 0, 0, 0.75), 0 14px 30px -10px rgba(0, 0, 0, 0.5);
+}
+.film__frame video { display: block; width: 100%; height: 100%; }
+/* A play button over the poster, added by site.js and gone once the film plays. It sits
+   below the lockup in the poster frame, so it never covers the name. */
+.film__play {
+  position: absolute; inset: 0; z-index: 2; margin: 0; padding: 0; border: 0; background: none;
+  cursor: pointer; color: #05070a;
+}
+.film__play span {
+  position: absolute; left: 50%; top: 74%; width: 96px; height: 96px; margin: -48px 0 0 -48px;
+  display: grid; place-items: center; border-radius: 50%; background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.25);
+  transition: background-color 200ms, transform 200ms var(--ease-out);
+}
+.film__play:hover span { background: #fff; transform: scale(1.04); }
+.film__play:focus-visible { outline: none; }
+.film__play:focus-visible span { outline: 2px solid var(--accent); outline-offset: 4px; }
+.film__play svg { width: 40px; height: 40px; margin-left: 5px; }
+@media (max-width: 640px) {
+  .film__frame { border-radius: 14px; }
+  .film__play span { width: 68px; height: 68px; margin: -34px 0 0 -34px; }
+  .film__play svg { width: 28px; height: 28px; margin-left: 3px; }
+}
 
 /* ------------------------------------------------------------------ footer */
 

@@ -11,6 +11,11 @@
     { "pattern": "xorvio.com/*", "zone_name": "xorvio.com" },
     { "pattern": "www.xorvio.com/*", "zone_name": "xorvio.com" }
   ],
+  "r2_buckets": [
+    // The launch film and any other large media, served at /media/<key> by the Worker.
+    // Upload: npx wrangler r2 object put xorvio-media/<key> --file <path> --content-type video/mp4
+    { "binding": "MEDIA", "bucket_name": "xorvio-media" }
+  ],
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",

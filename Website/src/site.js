@@ -50,6 +50,27 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // The launch film: the page's own play button stands in for the browser's controls
+  // until the film plays (Safari would otherwise draw its play glyph over the poster's
+  // lockup); then the browser's controls take over for pause, scrubbing and full screen.
+  for (const figure of document.querySelectorAll("[data-film]")) {
+    const video = figure.querySelector("video");
+    if (!video) continue;
+    video.controls = false;
+    const play = document.createElement("button");
+    play.type = "button";
+    play.className = "film__play";
+    play.setAttribute("aria-label", "Play the film");
+    play.innerHTML = '<span><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 4.5v15l12.5-7.5z"/></svg></span>';
+    const started = () => {
+      play.remove();
+      video.controls = true;
+    };
+    play.addEventListener("click", () => video.play().catch(started));
+    video.addEventListener("play", started, { once: true });
+    video.after(play);
+  }
+
   // Screenshot viewer: click a screenshot to see it at full size.
   const zoomables = document.querySelectorAll("[data-zoom]");
   if (zoomables.length && "HTMLDialogElement" in window) {
