@@ -51,7 +51,8 @@ pub fn swift_sources_available() -> bool {
 }
 
 /// Reads the Swift app's provider sources and their logins. macOS asks the
-/// person to allow access to the other app's keychain items.
+/// person to allow access to the other app's keychain items: the one place
+/// Xorvio lets it ask, since the person chose to import them.
 pub fn read_swift_sources() -> anyhow::Result<Vec<NewSource>> {
     let path = swift_sources_file().ok_or_else(|| anyhow::anyhow!("Xorvio for Mac's sources weren't found on this Mac."))?;
     let sources: Vec<SwiftSource> = serde_json::from_slice(&std::fs::read(path)?)?;
@@ -63,8 +64,7 @@ pub fn read_swift_sources() -> anyhow::Result<Vec<NewSource>> {
             // Playlist files were sandbox bookmarks; they have to be chosen again.
             _ => continue,
         };
-        let secrets: SwiftSecrets = keyring::Entry::new(SWIFT_KEYCHAIN_SERVICE, &source.id)
-            .and_then(|entry| entry.get_password())
+        let secrets: SwiftSecrets = xorvio_core::allowing_keychain_dialogs(|| keyring::Entry::new(SWIFT_KEYCHAIN_SERVICE, &source.id).and_then(|entry| entry.get_password()))
             .ok()
             .and_then(|json| serde_json::from_str(&json).ok())
             .unwrap_or_default();
@@ -122,8 +122,7 @@ pub fn swift_library_available() -> bool {
 /// Personal's add-on links. macOS asks the person to allow reading them.
 /// They can hold an account key, so they're never logged.
 pub fn read_personal_addons() -> Vec<String> {
-    keyring::Entry::new(PERSONAL_ADDONS_SERVICE, PERSONAL_ADDONS_ACCOUNT)
-        .and_then(|entry| entry.get_secret())
+    xorvio_core::allowing_keychain_dialogs(|| keyring::Entry::new(PERSONAL_ADDONS_SERVICE, PERSONAL_ADDONS_ACCOUNT).and_then(|entry| entry.get_secret()))
         .ok()
         .and_then(|bytes| serde_json::from_slice::<Vec<String>>(&bytes).ok())
         .unwrap_or_default()
