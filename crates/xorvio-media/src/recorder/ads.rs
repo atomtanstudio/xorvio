@@ -13,7 +13,7 @@ use anyhow::bail;
 use tokio::sync::{Notify, watch};
 use xorvio_model::RecordingStatus;
 
-use super::{Recorder, lock};
+use super::{Recorder, files, lock};
 use crate::adbreaks::{self, AdBreaks};
 
 /// How long the finder sleeps when there's nothing to do before checking
@@ -29,6 +29,10 @@ struct Queue {
     waiting: VecDeque<String>,
     /// The recording being looked through, and how to stop it.
     running: Option<(String, watch::Sender<bool>)>,
+    /// Its files, when it was deleted meanwhile: they go once ffmpeg (or
+    /// comskip) has let go of them, as Windows can't delete a file another
+    /// program has open.
+    deleted: Vec<String>,
     /// Look through recordings by themselves when they finish.
     automatic: bool,
     comskip: Option<PathBuf>,
@@ -40,6 +44,7 @@ impl AdFinder {
             queue: Mutex::new(Queue {
                 waiting: VecDeque::new(),
                 running: None,
+                deleted: Vec::new(),
                 automatic: true,
                 comskip: crate::tools::comskip(),
             }),
@@ -99,15 +104,21 @@ impl Recorder {
         }
     }
 
-    /// A recording was deleted: it isn't looked through any more.
-    pub(super) fn stop_finding_ad_breaks(&self, id: &str) {
+    /// A recording was deleted: it isn't looked through any more. When it's
+    /// being looked through right now, its `files` are deleted once that has
+    /// stopped, and this says so; otherwise they're the caller's to delete.
+    pub(super) fn stop_finding_ad_breaks(&self, id: &str, files: &[String]) -> bool {
         let mut queue = lock(&self.ads.queue);
         queue.waiting.retain(|waiting| waiting != id);
-        if let Some((running, stop)) = &queue.running
-            && running == id
-        {
-            stop.send_replace(true);
+        let Some((running, stop)) = &queue.running else {
+            return false;
+        };
+        if running != id {
+            return false;
         }
+        stop.send_replace(true);
+        queue.deleted.extend_from_slice(files);
+        true
     }
 
     /// Starts the finder on `runtime`, with what was waiting when Xorvio last quit.
@@ -189,6 +200,9 @@ impl Recorder {
             tracing::error!("a recording's ad breaks couldn't be saved: {error:#}");
         }
         queue.running = None;
+        let deleted = std::mem::take(&mut queue.deleted);
+        drop(queue);
+        files::remove(&deleted);
     }
 }
 
@@ -274,6 +288,42 @@ mod tests {
         failed.conclude("show", RecordingStatus::Failed, Some("No video arrived."));
         assert_eq!(failed.ad_breaks("show").unwrap().state, AdBreakState::Never, "nothing to look through");
         assert!(failed.find_ad_breaks("show").is_err());
+    }
+
+    #[tokio::test]
+    async fn a_recording_deleted_while_looked_through_goes_once_the_finder_lets_go() {
+        let dir = tempfile::tempdir().unwrap();
+        let busy = recorder(dir.path());
+        let file = dir.path().join("Show.ts");
+        std::fs::write(&file, b"recorded").unwrap();
+        let path = file.to_string_lossy().into_owned();
+        let progress = super::super::store::Progress { parts: vec![path.clone()], file_size_bytes: 8, recorded_seconds: 1.0, covered_seconds: 1.0 };
+        busy.store().set_progress("show", &progress).unwrap();
+        busy.store().set_status("show", RecordingStatus::Completed, None).unwrap();
+        let (stop, stopped) = watch::channel(false);
+        lock(&busy.ads.queue).running = Some(("show".into(), stop));
+
+        busy.delete("show", true).unwrap();
+        assert!(*stopped.borrow(), "the finder is told to stop");
+        assert!(file.exists(), "left for the finder, which may still have it open");
+        assert_eq!(lock(&busy.ads.queue).deleted, std::slice::from_ref(&path));
+
+        // The finder stops (its ffmpeg gone), then deletes it.
+        busy.look_through("show", stopped).await;
+        assert!(!file.exists());
+        assert!(lock(&busy.ads.queue).running.is_none());
+        assert!(lock(&busy.ads.queue).deleted.is_empty());
+
+        // One that isn't being looked through goes at once.
+        let dir = tempfile::tempdir().unwrap();
+        let idle = recorder(dir.path());
+        let file = dir.path().join("Other.ts");
+        std::fs::write(&file, b"recorded").unwrap();
+        let progress = super::super::store::Progress { parts: vec![file.to_string_lossy().into_owned()], file_size_bytes: 8, recorded_seconds: 1.0, covered_seconds: 1.0 };
+        idle.store().set_progress("show", &progress).unwrap();
+        idle.store().set_status("show", RecordingStatus::Completed, None).unwrap();
+        idle.delete("show", true).unwrap();
+        assert!(!file.exists());
     }
 
     #[test]
