@@ -325,10 +325,13 @@ impl Recorder {
             })
         });
         self.forget_airing(&row);
-        self.stop_finding_ad_breaks(id);
+        let paths = if delete_file { row.parts.as_slice() } else { &[] };
+        let looked_through = self.stop_finding_ad_breaks(id, paths);
         self.store().delete(id)?;
-        // A running recording deletes its own files once ffmpeg has let go of them.
-        if running.is_none() && delete_file {
+        // A running recording deletes its own files once ffmpeg has let go of
+        // them, and so does the ad-break finder for one it's looking through:
+        // Windows can't delete a file another program has open.
+        if running.is_none() && !looked_through && delete_file {
             files::remove(&row.parts);
         }
         self.list_changed();

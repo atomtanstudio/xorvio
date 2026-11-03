@@ -4,13 +4,16 @@
 //! so it only runs when asked:
 //!
 //!     cargo test -p xorvio --test end_to_end -- --ignored --nocapture
+//!
+//! A media server's channel goes the same way when the Docker test servers
+//! are up (Scripts/test-servers/jellyfin-emby.sh, which prints the variables).
 
 use std::sync::Arc;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use xorvio_core::{ChannelFilter, Core, MemorySecrets};
 use xorvio_media::{ChannelResolver, Gateway, PlayHint, Recorder, Tools};
-use xorvio_model::{PlaybackMode, RecordingStatus, ScheduleRequest, StreamTarget};
+use xorvio_model::{Channel, NewSource, PlaybackMode, RecordingStatus, ScheduleRequest, SourceKind, SourceSecrets, StreamTarget};
 
 struct Resolver(Arc<Core>);
 
@@ -100,6 +103,94 @@ async fn demo_plays_and_records() -> anyhow::Result<()> {
         .await?;
     println!("recording plays as {:?}", played.mode);
 
+    let _ = std::fs::remove_dir_all(&dir);
+    Ok(())
+}
+
+/// Records `channel` for `seconds` with the app's recorder, and the file's length.
+async fn record(core: &Arc<Core>, tools: &Tools, dir: &std::path::Path, channel: &Channel, seconds: i64) -> anyhow::Result<f64> {
+    let recorder = Recorder::open(dir, dir.join("Recordings"), Some(tools.clone()), Arc::new(Resolver(core.clone())))?;
+    let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel();
+    recorder.start(Arc::new(move |r| {
+        let _ = tx.send(r);
+    }));
+    let start = now();
+    let recording = recorder.record_now(ScheduleRequest {
+        source_id: channel.source_id.clone(),
+        channel_id: channel.id.clone(),
+        channel_name: channel.name.clone(),
+        channel_logo_url: None,
+        title: "End-to-end test".into(),
+        subtitle: None,
+        summary: None,
+        artwork_url: None,
+        program_id: None,
+        start,
+        end: start + seconds,
+        padding_before_seconds: 0,
+        padding_after_seconds: 0,
+    })?;
+    let deadline = tokio::time::Instant::now() + Duration::from_secs(90);
+    let finished = loop {
+        let update = tokio::time::timeout_at(deadline, rx.recv()).await?.expect("updates keep coming");
+        if update.id == recording.id && matches!(update.status, RecordingStatus::Completed | RecordingStatus::Partial | RecordingStatus::Failed) {
+            break update;
+        }
+    };
+    assert_ne!(finished.status, RecordingStatus::Failed, "{:?}", finished.error);
+    let path = finished.file_path.expect("a file");
+    let probe = std::process::Command::new(&tools.ffprobe).args(["-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", &path]).output()?;
+    Ok(String::from_utf8_lossy(&probe.stdout).trim().parse().unwrap_or(0.0))
+}
+
+#[tokio::test(flavor = "multi_thread")]
+#[ignore = "needs the Docker test servers (Scripts/test-servers/jellyfin-emby.sh) and ffmpeg"]
+async fn a_media_servers_channel_plays_pauses_and_records() -> anyhow::Result<()> {
+    let variable = |name: &str| std::env::var(name).ok().filter(|value| !value.is_empty());
+    let (Some(address), Some(username), Some(password)) =
+        (variable("XORVIO_TEST_JELLYFIN"), variable("XORVIO_TEST_SERVER_USER"), variable("XORVIO_TEST_SERVER_PASSWORD"))
+    else {
+        eprintln!("XORVIO_TEST_JELLYFIN and the test login aren't set; skipped");
+        return Ok(());
+    };
+    let dir = std::env::temp_dir().join(format!("xorvio-e2e-server-{}", std::process::id()));
+    std::fs::create_dir_all(&dir)?;
+    let core = Core::open(&dir, Arc::new(MemorySecrets::default()))?;
+    let secrets = SourceSecrets { server_url: Some(address), username: Some(username), password: Some(password), ..Default::default() };
+    let source = core
+        .add_source(NewSource { name: String::new(), kind: SourceKind::Jellyfin, secrets, file_path: None, live_format: Default::default(), user_agent: None })
+        .await?;
+    core.refresh_source(&source.id, &|_| {}).await?;
+    let channel = core.channels(&ChannelFilter { source_id: Some(source.id.clone()), ..Default::default() })?.into_iter().next().expect("a channel");
+    println!("{} ({:?})", channel.name, channel.stream);
+
+    // Played as the player plays a channel: MPEG-TS straight through the gateway.
+    let tools = Tools::locate().expect("ffmpeg is installed");
+    let gateway = Gateway::start(Some(tools.clone())).await?;
+    let target = core.stream_target(&channel.source_id, &channel.stream, true)?;
+    let hint = PlayHint { extension: channel.stream.extension(), ..Default::default() };
+    let stream = gateway.prepare(target.clone(), hint.clone()).await?;
+    assert_eq!(stream.mode, PlaybackMode::Mpegts);
+    let mut response = reqwest::get(&stream.url).await?.error_for_status()?;
+    let mut received = 0;
+    while received < 50_000 {
+        received += tokio::time::timeout(Duration::from_secs(10), response.chunk()).await??.expect("the stream goes on").len();
+    }
+    drop(response);
+    gateway.release(&stream.url);
+
+    // Paused and rewound: the live buffer reads the same address.
+    let buffered = gateway.timeshift(target, hint, 600.0).await?;
+    let playlist = reqwest::get(&buffered.url).await?.error_for_status()?.text().await?;
+    assert!(playlist.starts_with("#EXTM3U"), "the buffer's playlist");
+    gateway.release(&buffered.url);
+
+    // Recorded by the app's own recorder.
+    let seconds = record(&core, &tools, &dir, &channel, 20).await?;
+    println!("recorded {seconds:.1}s");
+    assert!(seconds > 10.0, "the file holds the channel");
+
+    core.let_go_of_tuners().await;
     let _ = std::fs::remove_dir_all(&dir);
     Ok(())
 }

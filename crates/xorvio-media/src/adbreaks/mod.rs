@@ -97,7 +97,7 @@ async fn with_ffmpeg(ffmpeg: &Path, file: &Path, mut stop: watch::Receiver<bool>
     let mut lines = BufReader::new(stderr).lines();
     let mut detected = rules::Detected::default();
     let mut tail: Vec<String> = Vec::new();
-    loop {
+    let stopped = loop {
         tokio::select! {
             line = lines.next_line() => match line {
                 Ok(Some(line)) => {
@@ -107,13 +107,16 @@ async fn with_ffmpeg(ffmpeg: &Path, file: &Path, mut stop: watch::Receiver<bool>
                     }
                     tail.push(line);
                 }
-                _ => break,
+                _ => break false,
             },
-            _ = stop.wait_for(|stopped| *stopped) => {
-                let _ = child.start_kill();
-                bail!(STOPPED);
-            }
+            _ = stop.wait_for(|stopped| *stopped) => break true,
         }
+    };
+    if stopped {
+        // Until it has gone, so the recording is free to delete: Windows
+        // can't delete a file another program has open.
+        let _ = child.kill().await;
+        bail!(STOPPED);
     }
     let status = child.wait().await?;
     // A recording cut off part-way can end in a way ffmpeg complains of
@@ -141,12 +144,13 @@ async fn with_comskip(comskip: &Path, file: &Path, mut stop: watch::Receiver<boo
         .kill_on_drop(true)
         .spawn()
         .context("comskip couldn't be started")?;
-    let status = tokio::select! {
-        status = child.wait() => status?,
-        _ = stop.wait_for(|stopped| *stopped) => {
-            let _ = child.start_kill();
-            bail!(STOPPED);
-        }
+    let finished = tokio::select! {
+        status = child.wait() => Some(status?),
+        _ = stop.wait_for(|stopped| *stopped) => None,
+    };
+    let Some(status) = finished else {
+        let _ = child.kill().await;
+        bail!(STOPPED);
     };
     // 0: breaks found; 1: none found. Anything else went wrong.
     if !matches!(status.code(), Some(0 | 1)) {

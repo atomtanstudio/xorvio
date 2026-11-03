@@ -1,7 +1,10 @@
 //! Media servers: Plex, Jellyfin and Emby. They hold a person's own films
 //! and series, with artwork, details and what's been watched, and play their
-//! files directly. This module is all the rest of Xorvio sees of them;
-//! [`plex`] and [`jellyfin`] (which speaks to Emby too) know each server's API.
+//! files directly. Those with tuners set up (an HDHomeRun, an M3U tuner,
+//! Plex's DVR) have live channels and a guide too, read with the catalog
+//! unless the source leaves live TV out. This module is all the rest of
+//! Xorvio sees of them; [`plex`] and [`jellyfin`] (which speaks to Emby too)
+//! know each server's API.
 //!
 //! Tokens stay out of the catalog and the interface: titles keep the
 //! server's own keys ([`StreamLocator::Server`]), artwork keeps the server's
@@ -11,13 +14,14 @@
 //! [`plex`]: super::plex
 //! [`jellyfin`]: super::jellyfin
 
-use xorvio_model::{MediaKind, SourceKind, SourceSecrets, StreamTarget, Timestamp};
+use serde::{Deserialize, Serialize};
+use xorvio_model::{Category, Channel, MediaKind, SourceKind, SourceSecrets, StreamTarget, Timestamp};
 
 use super::{jellyfin, plex};
 use crate::details::DetailsRecord;
 use crate::error::SourceError;
 use crate::http::Http;
-use crate::snapshot::CatalogSnapshot;
+use crate::snapshot::{CatalogSnapshot, KeptKind, Listings};
 
 /// The scheme of artwork addresses, served by the app (see [`artwork_url`]).
 /// Not `xorvio-art`, which names the demo library's drawn artwork.
@@ -153,18 +157,165 @@ pub(crate) async fn sign_in(
 
 /// The server's whole library as a catalog: its film and series libraries
 /// as categories, every film, series and episode, the details its lists
-/// carry, and what's been watched. `report` is called with a
-/// [`super::phase`] step as the work moves on.
+/// carry, and what's been watched; with `live_tv`, its live channels and
+/// their guide too. `report` is called with a [`super::phase`] step as the
+/// work moves on.
+///
+/// Live TV that can't be read this time keeps the channels (and guide) from
+/// the last refresh, with a note saying so; the films and series go on.
 pub(crate) async fn fetch_catalog(
     http: &Http,
     session: &ServerSession,
     source_id: &str,
+    live_tv: bool,
     report: &(dyn Fn(&str) + Send + Sync),
 ) -> Result<CatalogSnapshot, SourceError> {
+    let mut snapshot = match session.kind {
+        SourceKind::Plex => plex::fetch_catalog(http, session, source_id, report).await?,
+        SourceKind::Jellyfin | SourceKind::Emby => jellyfin::fetch_catalog(http, session, source_id, report).await?,
+        _ => return Err(not_a_server()),
+    };
+    // Left out, or none on the server: any channels and guide from before go.
+    snapshot.listings = Some(Listings::default());
+    if !live_tv {
+        return Ok(snapshot);
+    }
+    match fetch_live_tv(http, session, source_id).await {
+        Ok(Some(live)) => {
+            snapshot.categories.extend(live.categories);
+            snapshot.channels = live.channels;
+            snapshot.capabilities.live = !snapshot.channels.is_empty();
+            snapshot.max_connections = live.tuners;
+            snapshot.listings = Some(live.listings);
+        }
+        Ok(None) => {}
+        Err(error) => {
+            tracing::warn!("the server's live TV couldn't be read: {error}");
+            snapshot.listings = None;
+            snapshot.keep(KeptKind::Channels);
+            snapshot.warnings.push(format!(
+                "Live TV couldn't be read ({}), so the channels from the last refresh are still shown.",
+                error.to_string().trim_end_matches('.')
+            ));
+        }
+    }
+    Ok(snapshot)
+}
+
+// MARK: - Live TV
+
+/// How far back the guide is read: earlier today's programmes still show in it.
+pub(crate) const GUIDE_HOURS_BACK: i64 = 12;
+/// How far ahead the guide is read, for reminders and series recordings.
+pub(crate) const GUIDE_DAYS_AHEAD: i64 = 7;
+/// The category a server's TV channels are listed in, and its radio stations.
+pub(crate) const TV_CATEGORY: &str = "Live TV";
+pub(crate) const RADIO_CATEGORY: &str = "Radio";
+
+/// A server's live TV as read for the catalog.
+#[derive(Debug, Default)]
+pub(crate) struct LiveTv {
+    pub categories: Vec<Category>,
+    pub channels: Vec<Channel>,
+    pub listings: Listings,
+    /// How many channels its tuners can play at once, when the server says.
+    pub tuners: Option<i64>,
+}
+
+/// The server's live channels and their guide; `None` when it has none for
+/// this sign-in (live TV isn't set up, the account may not watch it, or the
+/// server wants a subscription for it).
+pub(crate) async fn fetch_live_tv(http: &Http, session: &ServerSession, source_id: &str) -> Result<Option<LiveTv>, SourceError> {
+    let found = match session.kind {
+        SourceKind::Plex => plex::fetch_live_tv(http, session, source_id).await,
+        SourceKind::Jellyfin | SourceKind::Emby => jellyfin::fetch_live_tv(http, session, source_id).await,
+        _ => return Err(not_a_server()),
+    };
+    match found {
+        // Live TV the account isn't allowed, or that this server doesn't have, isn't a problem.
+        Err(SourceError::AuthenticationFailed | SourceError::Http(403 | 404)) => Ok(None),
+        Ok(Some(live)) if live.channels.is_empty() => Ok(None),
+        other => other,
+    }
+}
+
+/// Only the guide, read again for the channels the server has now.
+pub(crate) async fn fetch_listings(http: &Http, session: &ServerSession, source_id: &str) -> Result<Option<Listings>, SourceError> {
+    Ok(Some(fetch_live_tv(http, session, source_id).await?.map(|live| live.listings).unwrap_or_default()))
+}
+
+/// A channel tuned on its server: where its stream is read, and what lets
+/// the tuner go again.
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct Tuned {
+    pub url: String,
+    /// The server's sign-in headers, for reading `url`.
+    pub headers: Vec<(String, String)>,
+    /// An HLS playlist rather than a transport stream.
+    pub playlist: bool,
+    pub release: Release,
+}
+
+/// What a server is told to keep a tuner, or to let it go.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "server", rename_all = "camelCase")]
+pub(crate) enum Release {
+    /// Jellyfin and Emby: the live stream opened for the channel. Everyone
+    /// who opens a channel shares its stream, and each opening is closed
+    /// once (Emby wants the playback session that opened it named too).
+    #[serde(rename_all = "camelCase")]
+    LiveStream { live_stream_id: String, play_session: Option<String> },
+    /// Plex: the live TV session tuning made ("/livetv/sessions/…"), the
+    /// grab recording it into Plex's buffer, the transcoder session reading
+    /// that out as HLS, and the playback session they belong to.
+    #[serde(rename_all = "camelCase")]
+    PlexSession { session: String, rating_key: Option<String>, grab: Option<String>, transcode: String, playback: String },
+}
+
+impl Release {
+    /// Whether the server lets the tuner go unless it hears from a player
+    /// every so often (Plex, after five minutes).
+    pub fn wants_keepalive(&self) -> bool {
+        matches!(self, Self::PlexSession { .. })
+    }
+}
+
+/// Tunes a live channel (`key`, and Plex's `dvr`) on its server.
+pub(crate) async fn tune(http: &Http, session: &ServerSession, key: &str, dvr: Option<&str>) -> Result<Tuned, SourceError> {
     match session.kind {
-        SourceKind::Plex => plex::fetch_catalog(http, session, source_id, report).await,
-        SourceKind::Jellyfin | SourceKind::Emby => jellyfin::fetch_catalog(http, session, source_id, report).await,
+        SourceKind::Plex => plex::tune(http, session, key, dvr).await,
+        SourceKind::Jellyfin | SourceKind::Emby => jellyfin::tune(http, session, key).await,
         _ => Err(not_a_server()),
+    }
+}
+
+/// Lets a tuner go. Letting go of one the server already has is fine.
+pub(crate) async fn release(http: &Http, session: &ServerSession, release: &Release) -> Result<(), SourceError> {
+    match (session.kind, release) {
+        (SourceKind::Plex, Release::PlexSession { .. }) => plex::release(http, session, release, false).await,
+        (SourceKind::Jellyfin | SourceKind::Emby, Release::LiveStream { live_stream_id, play_session }) => {
+            jellyfin::release(http, session, live_stream_id, play_session.as_deref()).await
+        }
+        _ => Err(not_a_server()),
+    }
+}
+
+/// Tells the server the channel is still being watched, for those that
+/// want to hear it ([`Release::wants_keepalive`]).
+pub(crate) async fn keep_alive(http: &Http, session: &ServerSession, release: &Release) -> Result<(), SourceError> {
+    match (session.kind, release) {
+        (SourceKind::Plex, Release::PlexSession { .. }) => plex::release(http, session, release, true).await,
+        _ => Ok(()),
+    }
+}
+
+/// A programme's episode as the guide shows it ("S2 E5"), from 1-based numbers.
+pub(crate) fn episode_label(season: Option<i64>, episode: Option<i64>) -> Option<String> {
+    match (season.filter(|s| *s > 0), episode.filter(|e| *e > 0)) {
+        (Some(season), Some(episode)) => Some(format!("S{season} E{episode}")),
+        (None, Some(episode)) => Some(format!("E{episode}")),
+        (Some(season), None) => Some(format!("S{season}")),
+        (None, None) => None,
     }
 }
 

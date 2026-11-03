@@ -12,6 +12,13 @@
 # series with their own artwork and .nfo details, so the servers never look
 # anything up online) and mounted read-only.
 #
+# Both servers also get live TV: an M3U tuner with three made-up channels
+# (test clips looped at broadcast pace by live-channels.py, in a small
+# Python container on a private Docker network) and an XMLTV guide written
+# around the time of the start.
+# Emby may want Emby Premiere for its live TV; if it refuses, its films and
+# series are still set up and the script says so.
+#
 # Needs Docker (Colima or Docker Desktop: the media folder is under your home
 # folder so either can mount it), ffmpeg, curl and jq. The Emby image is the
 # Apple silicon one; on an Intel Mac, run with EMBY_IMAGE=emby/embyserver.
@@ -25,18 +32,24 @@ JELLYFIN_PORT=18096
 EMBY_PORT=18097
 JELLYFIN_CONTAINER=xorvio-test-jellyfin
 EMBY_CONTAINER=xorvio-test-emby
+# The live channels' streams and guide, reached by the servers by name.
+STREAMS_CONTAINER=xorvio-test-streams
+STREAMS_IMAGE="${STREAMS_IMAGE:-python:3.13-alpine}"
+NETWORK=xorvio-test-net
+STREAMS="http://$STREAMS_CONTAINER:8000"
 # Throwaway credentials for servers that only ever hold test media.
 TEST_USER=xorvio
 TEST_PASSWORD=xorvio-test-password
 CLIENT_HEADER='MediaBrowser Client="Xorvio test setup", Device="script", DeviceId="xorvio-test-setup", Version="1.0"'
 
 stop_servers() {
-  docker rm -f -v "$JELLYFIN_CONTAINER" "$EMBY_CONTAINER" >/dev/null 2>&1 || true
+  docker rm -f -v "$JELLYFIN_CONTAINER" "$EMBY_CONTAINER" "$STREAMS_CONTAINER" >/dev/null 2>&1 || true
+  docker network rm "$NETWORK" >/dev/null 2>&1 || true
 }
 
 if [[ "${1:-}" == "stop" ]]; then
   stop_servers
-  echo "Stopped and removed $JELLYFIN_CONTAINER and $EMBY_CONTAINER."
+  echo "Stopped and removed $JELLYFIN_CONTAINER, $EMBY_CONTAINER and $STREAMS_CONTAINER."
   exit 0
 fi
 
@@ -178,6 +191,92 @@ NFO
   done
 }
 
+# MARK: - Live TV
+
+# A twenty-minute live channel clip in MPEG-TS, with a channel's own colour
+# and tone. live-channels.py loops it forever.
+channel_clip() {
+  local out="$1" colour="$2" tone="$3"
+  [[ -f "$out" ]] && return
+  local tmp="${out:r}.partial.ts"
+  ffmpeg -hide_banner -loglevel error -y -f lavfi -i "color=c=${colour}:size=640x360:rate=25:duration=1200" \
+    -f lavfi -i "testsrc=size=640x360:rate=25:duration=1200" -f lavfi -i "sine=frequency=${tone}:sample_rate=48000:duration=1200" \
+    -filter_complex "[0][1]blend=all_mode=overlay:all_opacity=0.3[v]" -map "[v]" -map 2 \
+    -c:v libx264 -preset ultrafast -crf 34 -g 50 -pix_fmt yuv420p -c:a aac -b:a 64k -ac 2 -f mpegts "$tmp"
+  mv "$tmp" "$out"
+}
+
+# The guide: half-hour programmes on each channel from six hours ago to two
+# days ahead, with episode numbers and new and repeat marks.
+write_guide() {
+  local out="$1" start now step=1800 slot
+  now=$(date -u +%s)
+  start=$(( (now / step) * step - 6 * 3600 ))
+  {
+    print -r -- '<?xml version="1.0" encoding="UTF-8"?>'
+    print -r -- '<tv generator-info-name="Xorvio test servers">'
+    print -r -- '  <channel id="north.test"><display-name>North Test News</display-name></channel>'
+    print -r -- '  <channel id="harbor.test"><display-name>Harbor Test One</display-name></channel>'
+    print -r -- '  <channel id="meadow.test"><display-name>Meadow Test Radio</display-name></channel>'
+    for slot in {0..107}; do
+      local from=$(( start + slot * step )) to=$(( start + (slot + 1) * step ))
+      local a="$(date -u -r "$from" +%Y%m%d%H%M%S) +0000" b="$(date -u -r "$to" +%Y%m%d%H%M%S) +0000"
+      print -r -- "  <programme start=\"$a\" stop=\"$b\" channel=\"north.test\"><title>North Bulletin</title><desc>Made-up news on the half hour.</desc><category>News</category><new/></programme>"
+      print -r -- "  <programme start=\"$a\" stop=\"$b\" channel=\"harbor.test\"><title>Harbor Lights</title><sub-title>Tide $slot</sub-title><desc>Episode $(( slot % 12 + 1 )) of a made-up drama about a harbour town.</desc><category>Drama</category><episode-num system=\"xmltv_ns\">1.$(( slot % 12 )).</episode-num>$( (( slot % 2 )) && print -r -- '<previously-shown/>' )</programme>"
+      print -r -- "  <programme start=\"$a\" stop=\"$b\" channel=\"meadow.test\"><title>Meadow Sessions</title><desc>Made-up music.</desc><category>Music</category></programme>"
+    done
+    print -r -- '</tv>'
+  } > "$out"
+}
+
+make_live_media() {
+  local live="$MEDIA/Live"
+  mkdir -p "$live"
+  channel_clip "$live/north.ts" navy 440
+  channel_clip "$live/harbor.ts" darkred 550
+  channel_clip "$live/meadow.ts" darkgreen 660
+  image "$live/north.png" 256x256 navy
+  image "$live/harbor.png" 256x256 darkred
+  cat > "$live/channels.m3u" <<M3U
+#EXTM3U
+#EXTINF:-1 tvg-id="north.test" tvg-chno="2" tvg-logo="$STREAMS/north.png" group-title="News",North Test News
+$STREAMS/north.ts
+#EXTINF:-1 tvg-id="harbor.test" tvg-chno="5" tvg-logo="$STREAMS/harbor.png" group-title="Drama",Harbor Test One
+$STREAMS/harbor.ts
+#EXTINF:-1 tvg-id="meadow.test" tvg-chno="9" group-title="Music",Meadow Test Radio
+$STREAMS/meadow.ts
+M3U
+  # Written each start, so the guide is always around now.
+  write_guide "$live/guide.xml"
+}
+
+start_streams() {
+  docker network create "$NETWORK" >/dev/null
+  docker run -d --name "$STREAMS_CONTAINER" --network "$NETWORK" -v "${MEDIA}/Live:/srv:ro" \
+    -v "$ROOT/Scripts/test-servers/live-channels.py:/live-channels.py:ro" \
+    "$STREAMS_IMAGE" python3 -u /live-channels.py /srv 8000 1200 >/dev/null
+}
+
+# The M3U tuner and the XMLTV guide, then a guide refresh. Returns non-zero
+# when the server turns live TV down.
+add_live_tv() {
+  local base="$1" token="$2" name="$3" task found
+  api POST "$base/LiveTv/TunerHosts" \
+    "{\"Type\":\"m3u\",\"Url\":\"$STREAMS/channels.m3u\",\"FriendlyName\":\"Test tuner\",\"TunerCount\":2,\"ImportFavoritesOnly\":false,\"AllowHWTranscoding\":false,\"EnableStreamLooping\":false,\"AllowStreamSharing\":true}" \
+    "$token" >/dev/null || return 1
+  api POST "$base/LiveTv/ListingProviders" \
+    "{\"Type\":\"xmltv\",\"Path\":\"$STREAMS/guide.xml\",\"EnableAllTuners\":true}" "$token" >/dev/null || return 1
+  task="$(api GET "$base/ScheduledTasks" "" "$token" | jq -r '.[] | select(.Key == "RefreshGuide") | .Id')"
+  [[ -n "$task" ]] && api POST "$base/ScheduledTasks/Running/$task" "" "$token" >/dev/null
+  for _ in {1..120}; do
+    found="$(api GET "$base/LiveTv/Programs?Limit=1&HasAired=false" "" "$token" 2>/dev/null | jq -r '.TotalRecordCount // (.Items | length) // 0' 2>/dev/null || echo 0)"
+    [[ "$found" =~ ^[1-9] ]] && return 0
+    sleep 1
+  done
+  echo "$name's guide didn't load within two minutes." >&2
+  return 1
+}
+
 # MARK: - Servers
 
 # Waits until a server answers its public info.
@@ -264,7 +363,7 @@ wait_for_scan() {
 
 start_jellyfin() {
   local base="http://localhost:$JELLYFIN_PORT"
-  docker run -d --name "$JELLYFIN_CONTAINER" -p "${JELLYFIN_PORT}:8096" \
+  docker run -d --name "$JELLYFIN_CONTAINER" --network "$NETWORK" -p "${JELLYFIN_PORT}:8096" \
     -v "${MEDIA}:/media:ro" "$JELLYFIN_IMAGE" >/dev/null
   wait_for "$base" Jellyfin
   # The startup wizard, through its API.
@@ -277,11 +376,12 @@ start_jellyfin() {
   token="$(sign_in "$base")"
   add_libraries "$base" "$token"
   wait_for_scan "$base" "$token" Jellyfin
+  add_live_tv "$base" "$token" Jellyfin || echo "Jellyfin's live TV couldn't be set up." >&2
 }
 
 start_emby() {
   local base="http://localhost:$EMBY_PORT"
-  docker run -d --name "$EMBY_CONTAINER" -p "${EMBY_PORT}:8096" \
+  docker run -d --name "$EMBY_CONTAINER" --network "$NETWORK" -p "${EMBY_PORT}:8096" \
     -v "${MEDIA}:/media:ro" "$EMBY_IMAGE" >/dev/null
   wait_for "$base" Emby
   api POST "$base/Startup/Configuration" '{"UICulture":"en-US","MetadataCountryCode":"US","PreferredMetadataLanguage":"en"}' >/dev/null
@@ -291,6 +391,7 @@ start_emby() {
   token="$(sign_in "$base")"
   add_libraries "$base" "$token"
   wait_for_scan "$base" "$token" Emby
+  add_live_tv "$base" "$token" Emby || echo "Emby's live TV couldn't be set up (it may want Emby Premiere); its films and series are ready." >&2
 }
 
 for tool in docker ffmpeg curl jq; do
@@ -299,7 +400,9 @@ done
 
 echo "Making test media in $MEDIA (once)…"
 make_media
+make_live_media
 stop_servers
+start_streams
 echo "Starting Jellyfin on port $JELLYFIN_PORT…"
 start_jellyfin
 echo "Starting Emby on port $EMBY_PORT…"
@@ -307,7 +410,8 @@ start_emby
 
 cat <<DONE
 
-Both servers are up with two films and a two-season series.
+Both servers are up with two films, a two-season series and (where the
+server allows it) three live channels with a guide.
 
   Jellyfin  http://localhost:$JELLYFIN_PORT
   Emby      http://localhost:$EMBY_PORT

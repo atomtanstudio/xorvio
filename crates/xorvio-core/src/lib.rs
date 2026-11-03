@@ -49,6 +49,7 @@ mod titles;
 mod tmdb;
 mod track_choices;
 mod trakt;
+mod tuners;
 mod watchlist;
 mod wikidata;
 
@@ -228,6 +229,8 @@ pub struct Core {
     wikidata: wikidata::Wikidata,
     /// When this was opened: media folders are read again once each launch.
     opened_at: Timestamp,
+    /// Media servers' live channels, tuned while they're read (tuners.rs).
+    tuners: Mutex<Option<Arc<tuners::TunerRelay>>>,
 }
 
 impl Core {
@@ -277,6 +280,7 @@ impl Core {
             plex_sign_ins: Mutex::default(),
             plex_tv_base: Mutex::new(sources::plex::PLEX_TV.into()),
             opened_at: now(),
+            tuners: Mutex::default(),
         }))
     }
 
@@ -434,6 +438,7 @@ impl Core {
             created_at: now,
             sort_index: self.next_sort_index(),
             guide_offset_minutes: 0,
+            include_live_tv: true,
         };
         secrets::save(self.secrets.as_ref(), &config.id, &secrets)?;
         self.save_configs(|configs| configs.push(config.clone()))?;
@@ -457,6 +462,7 @@ impl Core {
             created_at: now(),
             sort_index: self.next_sort_index(),
             guide_offset_minutes: 0,
+            include_live_tv: true,
         };
         secrets::save(self.secrets.as_ref(), &config.id, secrets)?;
         self.save_configs(|configs| configs.push(config.clone()))?;
@@ -591,6 +597,7 @@ impl Core {
             created_at: now(),
             sort_index: self.next_sort_index(),
             guide_offset_minutes: 0,
+            include_live_tv: true,
         };
         self.save_configs(|configs| configs.push(config))?;
         self.install_demo(now())?;

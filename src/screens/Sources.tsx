@@ -28,6 +28,7 @@ import { Sheet } from "../components/Sheet";
 import { api, errorText } from "../lib/api";
 import { duration, shortDate } from "../lib/format";
 import { isMac, keychainName, networkShare, trayName } from "../lib/platform";
+import { Toggle } from "./Settings";
 import { useSources } from "../lib/sources";
 import { useApp } from "../lib/store";
 import { openMediaFolder } from "./MediaLibrary";
@@ -325,9 +326,9 @@ export function SourcesScreen() {
                   </div>
                   <div className="source-counts">
                     {isLibrary(s.config.kind)
-                      ? `${st.movieCount.toLocaleString()} films · ${st.seriesCount.toLocaleString()} series`
+                      ? `${st.channelCount ? `${st.channelCount.toLocaleString()} channels · ` : ""}${st.movieCount.toLocaleString()} films · ${st.seriesCount.toLocaleString()} series`
                       : `${st.channelCount.toLocaleString()} channels · ${st.movieCount.toLocaleString()} films · ${st.seriesCount.toLocaleString()} series · ${st.programCount.toLocaleString()} listings`}
-                    {st.maxConnections ? ` · ${st.maxConnections} connection${st.maxConnections === 1 ? "" : "s"}` : ""}
+                    {st.maxConnections ? ` · ${st.maxConnections} ${isMediaServer(s.config.kind) ? "tuner" : "connection"}${st.maxConnections === 1 ? "" : "s"}` : ""}
                     {st.accountExpires ? ` · Expires ${shortDate(st.accountExpires)}` : ""}
                   </div>
                   {running && (
@@ -437,6 +438,8 @@ export function SourceSheet({
   // Plex is signed in to through plex.tv unless an address is asked for.
   const [plexByAddress, setPlexByAddress] = useState(false);
   const [refreshInterval, setRefreshInterval] = useState<RefreshInterval>(existing?.refreshInterval ?? "daily");
+  // A media server's live channels and guide, read unless left out.
+  const [includeLiveTv, setIncludeLiveTv] = useState(existing?.includeLiveTv ?? true);
   const [test, setTest] = useState<{ ok: boolean; text: string } | "testing" | null>(null);
   // An Xtream login found in the playlist link, to offer the Xtream connection instead.
   const [xtreamInLink, setXtreamInLink] = useState<SourceSecrets | null>(null);
@@ -556,9 +559,9 @@ export function SourceSheet({
                   : !!secrets.serverUrl
                 : false;
 
-  /** A new source keeps the refresh schedule chosen here (adding one always starts daily). */
+  /** A new source keeps the refresh schedule (and live TV choice) made here; adding one always starts daily, with live TV. */
   const scheduled = async (config: SourceConfig) => {
-    if (config.refreshInterval !== refreshInterval) await api.updateSource({ ...config, refreshInterval }, null);
+    if (config.refreshInterval !== refreshInterval || config.includeLiveTv !== includeLiveTv) await api.updateSource({ ...config, refreshInterval, includeLiveTv }, null);
     return config.id;
   };
 
@@ -573,7 +576,7 @@ export function SourceSheet({
         onSaved(existing?.id ?? (await scheduled(await api.addFolderSource(name.trim(), folders))));
       } else if (existing) {
         await api.updateSource(
-          { ...existing, name: name || existing.name, liveFormat, userAgent: userAgent || null, filePath: playlistFile, guideOffsetMinutes: guideOffset, refreshInterval },
+          { ...existing, name: name || existing.name, liveFormat, userAgent: userAgent || null, filePath: playlistFile, guideOffsetMinutes: guideOffset, refreshInterval, includeLiveTv },
           secrets,
         );
         if ((existing.kind === "jellyfin" || existing.kind === "emby") && secrets.password) await api.signInToSourceAgain(existing.id, secrets.password);
@@ -848,6 +851,15 @@ export function SourceSheet({
             <p className="muted small field-note">
               {folderKind ? "Folders are also read each time Xorvio opens." : refreshInterval === "manual" ? "Only when you refresh it in Sources." : `While Xorvio is open, or running in ${trayName}.`}
             </p>
+            {server && (
+              <>
+                <div className="form-row">
+                  <label>Live TV</label>
+                  <Toggle on={includeLiveTv} onChange={setIncludeLiveTv} label="Include the server's channels and guide" />
+                </div>
+                <p className="muted small field-note">When the server has tuners set up. Channels play and record through Xorvio, using one of the server's tuners while they do.</p>
+              </>
+            )}
           </>
         )}
         {test && test !== "testing" && (

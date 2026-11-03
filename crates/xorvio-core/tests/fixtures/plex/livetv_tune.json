@@ -1,0 +1,48 @@
+{
+  "MediaContainer": {
+    "size": 1,
+    "MediaSubscription": [
+      {
+        "key": "5",
+        "type": 4,
+        "createdAt": 1793457551,
+        "title": "This Episode",
+        "channelIdentifier": "5.1",
+        "MediaGrabOperation": [
+          {
+            "rolling": true,
+            "mediaSubscriptionID": 5,
+            "mediaIndex": 0,
+            "id": "5.1-xorviotestsession",
+            "key": "/media/grabbers/operations/5.1-xorviotestsession",
+            "grabberIdentifier": "tv.plex.grabbers.hdhomerun",
+            "grabberProtocol": "livetv",
+            "status": "inprogress",
+            "provider": "tv.plex.providers.epg.xmltv:2",
+            "Metadata": {
+              "ratingKey": "56",
+              "key": "/livetv/sessions/6d0f3b52-1c4e-4a8b-9e27-5b3c9a1d0e44",
+              "type": "episode",
+              "title": "Tide 4",
+              "grandparentTitle": "Harbor Lights",
+              "onAir": "1",
+              "Media": [
+                {
+                  "beginsAt": 1793457551,
+                  "endsAt": 1793457851,
+                  "channelIdentifier": "5.1",
+                  "container": "mpegts",
+                  "protocol": "hls",
+                  "uuid": "6d0f3b52-1c4e-4a8b-9e27-5b3c9a1d0e44",
+                  "Part": [
+                    { "container": "mpegts", "protocol": "hls", "key": "/livetv/sessions/6d0f3b52-1c4e-4a8b-9e27-5b3c9a1d0e44/xorviotestsession/index.m3u8?offset=-1.000000" }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  }
+}
