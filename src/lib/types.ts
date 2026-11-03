@@ -24,6 +24,8 @@ export interface SourceConfig {
   sortIndex: number;
   /** Moves every programme in the source's guide; applied when the guide loads. */
   guideOffsetMinutes: number;
+  /** Media servers: their live channels and guide are read too. */
+  includeLiveTv: boolean;
 }
 
 export interface SourceSecrets {
@@ -90,7 +92,8 @@ export type StreamLocator =
   | { type: "xtream"; path: "live" | "movie" | "series"; streamId: string; extension: string }
   | { type: "file"; path: string }
   | { type: "addon"; mediaType: string; mediaId: string }
-  | { type: "server"; key: string; part: string | null; extension: string | null };
+  | { type: "server"; key: string; part: string | null; extension: string | null }
+  | { type: "serverChannel"; key: string; dvr: string | null };
 
 /** Trakt: whether it can be used, who's connected, and how the last sync went. */
 export interface TraktStatus {

@@ -1,0 +1,16 @@
+{
+  "TunerHosts": [
+    {
+      "Id": "1f4dc78d8a584cb2a85356fabce2b8d3",
+      "Url": "http://xorvio-test-streams:8000/channels.m3u",
+      "Type": "m3u",
+      "FriendlyName": "Test tuner",
+      "TunerCount": 2,
+      "ImportFavoritesOnly": false,
+      "AllowHWTranscoding": false,
+      "AllowStreamSharing": true
+    }
+  ],
+  "EnableRecordingSubfolders": false,
+  "GuideDays": null
+}

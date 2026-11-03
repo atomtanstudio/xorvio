@@ -632,13 +632,17 @@ impl CatalogStore {
         // Kinds the provider couldn't send this time keep their previous rows.
         let keep_movies = snapshot.kept_kinds.contains(&KeptKind::Movies);
         let keep_series = snapshot.kept_kinds.contains(&KeptKind::Series);
+        let keep_channels = snapshot.kept_kinds.contains(&KeptKind::Channels);
         let kept_categories: Vec<CategoryKind> = snapshot.kept_kinds.iter().map(|kind| kind.category_kind()).collect();
         let replaced_categories: Vec<&str> = [CategoryKind::Live, CategoryKind::Movie, CategoryKind::Series]
             .into_iter()
             .filter(|kind| !kept_categories.contains(kind))
             .map(CategoryKind::as_str)
             .collect();
-        let mut replaced_search = vec![SearchKind::Channel.as_str()];
+        let mut replaced_search = Vec::new();
+        if !keep_channels {
+            replaced_search.push(SearchKind::Channel.as_str());
+        }
         if !keep_movies {
             replaced_search.push(SearchKind::Movie.as_str());
         }
@@ -652,7 +656,9 @@ impl CatalogStore {
                 "DELETE FROM categories WHERE source_id = ?1 AND kind IN (SELECT value FROM json_each(?2))",
                 params![source_id, json_list(&replaced_categories)],
             )?;
-            tx.execute("DELETE FROM channels WHERE source_id = ?1", [source_id])?;
+            if !keep_channels {
+                tx.execute("DELETE FROM channels WHERE source_id = ?1", [source_id])?;
+            }
             tx.execute("DELETE FROM stream_options WHERE source_id = ?1", [source_id])?;
             if !keep_movies {
                 tx.execute("DELETE FROM movies WHERE source_id = ?1", [source_id])?;

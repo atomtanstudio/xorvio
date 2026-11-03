@@ -1,6 +1,7 @@
 //! Xorvio against real Jellyfin and Emby servers, through its public API:
-//! signing in, a refresh, details, playing, and what's been watched going
-//! both ways. Ignored unless asked for, since it needs the servers:
+//! signing in, a refresh, details, playing, what's been watched going both
+//! ways, and live TV (channels, the guide, and tuning through the relay).
+//! Ignored unless asked for, since it needs the servers:
 //!
 //! ```text
 //! Scripts/test-servers/jellyfin-emby.sh      # starts both, prints these
@@ -19,19 +20,19 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 use serde_json::{Value, json};
-use xorvio_core::{BrowseQuery, Core, MemorySecrets, SecretStore, parse_artwork_path};
+use xorvio_core::{BrowseQuery, ChannelFilter, Core, MemorySecrets, SecretStore, parse_artwork_path};
 use xorvio_model::{
-    CategoryKind, Episode, MediaKind, Movie, NewSource, PlaybackProgress, Series, SourceKind, SourceSecrets,
+    CategoryKind, Episode, MediaKind, Movie, NewSource, PlaybackProgress, Series, SourceConfig, SourceKind, SourceSecrets,
     StreamLocator, StreamTarget,
 };
 
-#[tokio::test]
+#[tokio::test(flavor = "multi_thread")]
 #[ignore = "needs the Docker test servers (Scripts/test-servers/jellyfin-emby.sh)"]
 async fn jellyfin_through_xorvio() {
     run(SourceKind::Jellyfin, "XORVIO_TEST_JELLYFIN").await;
 }
 
-#[tokio::test]
+#[tokio::test(flavor = "multi_thread")]
 #[ignore = "needs the Docker test servers (Scripts/test-servers/jellyfin-emby.sh)"]
 async fn emby_through_xorvio() {
     run(SourceKind::Emby, "XORVIO_TEST_EMBY").await;
@@ -116,7 +117,7 @@ async fn run(kind: SourceKind, variable: &str) {
     assert_eq!(status.last_error, None);
     assert_eq!(status.catalog_warning, None);
     assert_eq!((status.movie_count, status.series_count), (2, 1));
-    assert!(status.capabilities.movies && status.capabilities.series && !status.capabilities.live);
+    assert!(status.capabilities.movies && status.capabilities.series);
     let film_categories = core.categories(CategoryKind::Movie).unwrap();
     let show_categories = core.categories(CategoryKind::Series).unwrap();
     assert_eq!(film_categories.iter().map(|category| category.name.as_str()).collect::<Vec<_>>(), ["Films"]);
@@ -235,6 +236,94 @@ async fn run(kind: SourceKind, variable: &str) {
 
     // Leave the servers as they were found.
     server.set_played(&episode_keys[1], false).await;
+
+    live_tv(&core, &config, &server, &token).await;
+}
+
+/// The server's live channels and guide in Xorvio, played through the relay.
+/// The script's tuner plays two channels at once.
+async fn live_tv(core: &Core, config: &SourceConfig, server: &ServerApi, token: &str) {
+    let status = core.list_sources().unwrap().into_iter().find(|source| source.config.id == config.id).unwrap().status;
+    let channels = core.channels(&ChannelFilter { source_id: Some(config.id.clone()), ..Default::default() }).unwrap();
+    if server.channel_ids().await.is_empty() {
+        // Emby without Emby Premiere lists no channels: no live TV, and no problem.
+        eprintln!("{:?} has no live channels here; live TV skipped", server.kind);
+        assert!(channels.is_empty() && !status.capabilities.live && status.catalog_warning.is_none());
+        return;
+    }
+    assert!(status.capabilities.live && status.capabilities.guide, "{status:?}");
+    assert_eq!(status.channel_count, 3);
+    assert_eq!(status.max_connections, Some(2), "the tuner's count");
+    let shown: Vec<(&str, Option<i64>)> = channels.iter().map(|channel| (channel.name.as_str(), channel.number)).collect();
+    assert_eq!(shown, [("North Test News", Some(2)), ("Harbor Test One", Some(5)), ("Meadow Test Radio", Some(9))]);
+    let categories = core.categories(CategoryKind::Live).unwrap();
+    assert_eq!(categories.iter().map(|category| category.name.as_str()).collect::<Vec<_>>(), ["Live TV"]);
+    assert!(channels.iter().all(|channel| channel.category_id.as_deref() == Some(categories[0].id.as_str())));
+    let north = &channels[0];
+    let harbor = &channels[1];
+    assert!(matches!(&north.stream, StreamLocator::ServerChannel { dvr: None, .. }));
+    let logo = north.logo_url.as_deref().expect("the channel's logo");
+    let (_, path) = parse_artwork_path(url::Url::parse(logo).unwrap().path()).unwrap();
+    assert!(core.artwork(&config.id, &path).await.unwrap().0.len() > 100);
+
+    // The guide, from the server's own.
+    let now = chrono::Utc::now().timestamp();
+    let rows = core.guide(&[north.id.clone(), harbor.id.clone()], now - 3600, now + 4 * 3600).unwrap();
+    assert!(rows.iter().all(|row| row.programs.len() >= 8), "half-hour programmes: {:?}", rows.iter().map(|row| row.programs.len()).collect::<Vec<_>>());
+    let drama = &rows[1].programs;
+    assert!(drama.iter().all(|program| program.title == "Harbor Lights" && program.category.as_deref() == Some("Drama")));
+    assert!(drama.iter().all(|program| program.subtitle.as_deref().is_some_and(|tide| tide.starts_with("Tide "))));
+    assert!(drama.iter().all(|program| program.episode.as_deref().is_some_and(|episode| episode.starts_with("S2 E"))));
+    assert!(drama.iter().any(|program| program.flags.is_repeat) && drama.iter().any(|program| !program.flags.is_repeat));
+    assert!(rows[0].programs.iter().any(|program| program.is_airing(now)));
+
+    // Playing: an address on this computer, with nothing secret in it.
+    let target = core.stream_target(&config.id, &north.stream, true).unwrap();
+    assert!(target.is_live && target.headers.is_empty());
+    assert!(target.url.starts_with("http://127.0.0.1:") && !target.url.contains(token));
+    assert_eq!(core.stream_target(&config.id, &north.stream, true).unwrap().url, target.url, "the same address each time");
+    assert_eq!(probe(&target).as_deref(), Some("h264 aac"));
+    // Two readers at once share one tuning.
+    let (one, two) = tokio::join!(read_for(&target, Duration::from_secs(3)), read_for(&target, Duration::from_secs(3)));
+    assert!(one > 10_000 && two > 10_000, "{one} and {two} bytes");
+
+    // The tuner is let go once nobody reads: then both of the server's tuners are free.
+    tokio::time::sleep(Duration::from_secs(13)).await;
+    let held = [server.open(&channels[1]).await, server.open(&channels[2]).await];
+    // With both busy, Xorvio's reader is told so.
+    let busy = reqwest::get(&target.url).await.unwrap();
+    let (status, text) = (busy.status().as_u16(), busy.text().await.unwrap());
+    // Let go before checking, so a failure leaves no tuner held on the server.
+    let free = held.iter().all(Option::is_some);
+    for id in held.into_iter().flatten() {
+        server.close(&id).await;
+    }
+    assert!(free, "the server had a tuner free for each");
+    assert_eq!(status, 503);
+    assert!(text.contains("tuners may all be in use"), "{text}");
+
+    // Left out: the channels and their guide go at the next refresh.
+    let without = SourceConfig { include_live_tv: false, ..config.clone() };
+    core.update_source(without, None).unwrap();
+    let status = core.refresh_source(&config.id, &|_| {}).await.unwrap();
+    assert_eq!((status.channel_count, status.capabilities.live, status.max_connections), (0, false, None));
+    assert!(core.channels(&ChannelFilter { source_id: Some(config.id.clone()), ..Default::default() }).unwrap().is_empty());
+    core.update_source(SourceConfig { include_live_tv: true, ..config.clone() }, None).unwrap();
+}
+
+/// How many bytes a reader of `target` gets in `time`.
+async fn read_for(target: &StreamTarget, time: Duration) -> usize {
+    let mut response = reqwest::get(&target.url).await.unwrap();
+    assert_eq!(response.status().as_u16(), 200);
+    let mut count = 0;
+    let deadline = Instant::now() + time;
+    while Instant::now() < deadline {
+        match tokio::time::timeout(Duration::from_secs(5), response.chunk()).await {
+            Ok(Ok(Some(chunk))) => count += chunk.len(),
+            _ => break,
+        }
+    }
+    count
 }
 
 fn movie<'a>(movies: &'a [Movie], title: &str) -> &'a Movie {
@@ -287,7 +376,14 @@ fn probe(target: &StreamTarget) -> Option<String> {
         .output()
         .unwrap();
     assert!(output.status.success(), "ffprobe: {}", String::from_utf8_lossy(&output.stderr));
-    Some(String::from_utf8_lossy(&output.stdout).split_whitespace().collect::<Vec<_>>().join(" "))
+    // A transport stream's streams are listed again under its programme.
+    let mut codecs: Vec<String> = Vec::new();
+    for codec in String::from_utf8_lossy(&output.stdout).split_whitespace() {
+        if !codecs.iter().any(|seen| seen == codec) {
+            codecs.push(codec.to_string());
+        }
+    }
+    Some(codecs.join(" "))
 }
 
 /// The length of the first 100 bytes, asked for as a range with the target's headers.
@@ -371,6 +467,31 @@ impl ServerApi {
         let played_at = chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Secs, true);
         let body = json!({ "PlaybackPositionTicks": (seconds * 10_000_000.0) as i64, "LastPlayedDate": played_at });
         assert!(self.request(reqwest::Method::POST, &path).json(&body).send().await.unwrap().status().is_success());
+    }
+
+    async fn channel_ids(&self) -> Vec<String> {
+        let reply: Value =
+            self.request(reqwest::Method::GET, &format!("/LiveTv/Channels?UserId={}", self.user_id)).send().await.unwrap().json().await.unwrap();
+        reply["Items"].as_array().cloned().unwrap_or_default().iter().filter_map(|item| item["Id"].as_str().map(str::to_string)).collect()
+    }
+
+    /// Opens a channel on the server as another app would, holding a tuner;
+    /// its live stream id, or `None` when the server refuses.
+    async fn open(&self, channel: &xorvio_model::Channel) -> Option<String> {
+        let StreamLocator::ServerChannel { key, .. } = &channel.stream else { panic!("{:?}", channel.stream) };
+        let body = json!({ "UserId": self.user_id, "AutoOpenLiveStream": true });
+        let path = format!("/Items/{key}/PlaybackInfo?UserId={}&AutoOpenLiveStream=true", self.user_id);
+        let response = self.request(reqwest::Method::POST, &path).json(&body).send().await.unwrap();
+        if !response.status().is_success() {
+            return None;
+        }
+        let reply: Value = response.json().await.unwrap();
+        reply["MediaSources"][0]["LiveStreamId"].as_str().map(str::to_string)
+    }
+
+    async fn close(&self, live_stream_id: &str) {
+        let path = format!("/LiveStreams/Close?LiveStreamId={live_stream_id}");
+        assert!(self.request(reqwest::Method::POST, &path).send().await.unwrap().status().is_success());
     }
 
     /// Waits for Xorvio's report (sent in the background) to show on the server.

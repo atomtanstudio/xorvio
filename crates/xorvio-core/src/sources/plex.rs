@@ -7,17 +7,27 @@
 //! rating keys and file paths; artwork keeps the server's own paths, resized
 //! by its photo transcoder, behind [`artwork_url`]; files are played as they
 //! are, without Plex's transcoder, since Xorvio's gateway converts what it must.
+//!
+//! Live TV comes from the server's DVRs (its tuners, with a guide). A tuned
+//! channel is read only through Plex's transcoder, which copies it into HLS;
+//! Xorvio's tuner relay (tuners.rs) tunes, reads, keeps the tuning alive
+//! and lets it go.
 
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::time::Duration;
 
 use serde_json::Value;
+use futures_util::StreamExt;
 use xorvio_model::{
-    CastMember, Category, CategoryKind, Episode, MediaKind, Movie, SeasonInfo, Series, StreamLocator, StreamTarget,
-    VideoFormat,
+    CastMember, Category, CategoryKind, Channel, Episode, MediaKind, Movie, Program, ProgramFlags, SeasonInfo, Series,
+    StreamLocator, StreamTarget, VideoFormat,
 };
 
-use super::server::{ServerLogin, ServerProgress, ServerSession, artwork_url, is_server_path, normalize_address};
+use super::server::{
+    LiveTv, Release, ServerLogin, ServerProgress, ServerSession, Tuned, artwork_url, episode_label, is_server_path,
+    normalize_address,
+};
+use super::xmltv::ChannelName;
 use super::{ids, phase, xtream};
 use crate::details::DetailsRecord;
 use crate::error::SourceError;
@@ -469,11 +479,7 @@ pub(crate) fn build(source_id: &str, libraries: &[LibraryRead]) -> CatalogSnapsh
     snapshot.episodes.sort_by(|a, b| (&a.series_id, a.season, a.number).cmp(&(&b.series_id, b.season, b.number)));
     snapshot.derive_capabilities();
     for kind in kept {
-        match kind {
-            KeptKind::Movies => snapshot.capabilities.movies = true,
-            KeptKind::Series => snapshot.capabilities.series = true,
-        }
-        snapshot.kept_kinds.insert(kind);
+        snapshot.keep(kind);
     }
     snapshot
 }
@@ -805,6 +811,356 @@ fn milliseconds(seconds: f64) -> i64 {
     json::finite_int((seconds.max(0.0) * 1000.0).round()).unwrap_or(0)
 }
 
+// MARK: - Live TV
+
+/// Guide requests sent together: Plex is asked for one channel's day at a time.
+const GUIDE_REQUESTS_AT_ONCE: usize = 6;
+
+/// A DVR's guide on the server, as `/media/providers` lists it
+/// ("tv.plex.providers.epg.cloud:2", whose DVR is 2).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct LiveProvider {
+    pub identifier: String,
+    pub dvr: String,
+    /// The guide grid's path.
+    pub grid: String,
+}
+
+/// The server's live TV guides. Only those for the server's own tuners
+/// count: Plex's free channels come from plex.tv, never from the server.
+/// An account that may not watch live TV isn't shown them.
+pub(crate) fn live_providers(reply: &Value) -> Vec<LiveProvider> {
+    let providers = container(reply).map(|found| json::objects(found.get("MediaProvider"))).unwrap_or_default();
+    providers
+        .into_iter()
+        .filter_map(|provider| {
+            let identifier = text(provider.get("identifier"))?;
+            let live = json::string(provider.get("protocols")).is_some_and(|list| list.split(',').any(|item| item.trim() == "livetv"));
+            if !live || !identifier.starts_with("tv.plex.providers.epg.") {
+                return None;
+            }
+            let dvr = text(provider.get("parentID")).or_else(|| identifier.rsplit_once(':').map(|(_, key)| key.to_string()))?;
+            let grid = json::objects(provider.get("Feature"))
+                .into_iter()
+                .find(|feature| json::string(feature.get("type")).as_deref() == Some("grid"))
+                .and_then(|feature| text(feature.get("key")))
+                .filter(|key| is_server_path(key))
+                .unwrap_or_else(|| format!("/{identifier}/grid"));
+            Some(LiveProvider { identifier, dvr, grid })
+        })
+        .collect()
+}
+
+/// What `/livetv/dvrs` says of a DVR.
+#[derive(Debug, Clone, Default, PartialEq)]
+pub(crate) struct DvrFacts {
+    /// Its guide's name ("Antenna").
+    pub title: Option<String>,
+    /// Its devices' tuners added up; `None` when one doesn't say.
+    pub tuners: Option<i64>,
+    /// The guide channels its devices have turned on, when it lists them.
+    pub enabled: Option<HashSet<String>>,
+}
+
+pub(crate) fn dvr_facts(reply: &Value) -> HashMap<String, DvrFacts> {
+    let dvrs = container(reply).map(|found| json::objects(found.get("Dvr").or_else(|| found.get("DVR")))).unwrap_or_default();
+    dvrs.into_iter()
+        .filter_map(|dvr| {
+            let key = text(dvr.get("key"))?;
+            let devices = json::objects(dvr.get("Device"));
+            let tuners = (!devices.is_empty())
+                .then(|| devices.iter().map(|device| json::int(device.get("tuners")).filter(|count| *count > 0)).sum::<Option<i64>>())
+                .flatten();
+            let mappings: Vec<&Object> = devices.iter().flat_map(|device| json::objects(device.get("ChannelMapping"))).collect();
+            let enabled = (!mappings.is_empty()).then(|| {
+                mappings
+                    .iter()
+                    .filter(|mapping| flag(mapping.get("enabled")))
+                    .filter_map(|mapping| text(mapping.get("channelKey")))
+                    .collect::<HashSet<String>>()
+            });
+            Some((key, DvrFacts { title: text(dvr.get("lineupTitle")), tuners, enabled }))
+        })
+        .collect()
+}
+
+/// The server's live channels (each DVR's in a category of its own) and
+/// their guide; `None` when it has no DVR this account may watch.
+pub(crate) async fn fetch_live_tv(http: &Http, session: &ServerSession, source_id: &str) -> Result<Option<LiveTv>, SourceError> {
+    let headers = api_headers(&session.device_id, session.token.as_deref());
+    let get = |path: Vec<String>, query: Vec<(String, String)>| {
+        let segments: Vec<&str> = path.iter().map(String::as_str).collect();
+        let query: Vec<(&str, &str)> = query.iter().map(|(name, value)| (name.as_str(), value.as_str())).collect();
+        let url = link(&session.base_url, &segments, &query);
+        let headers = headers.clone();
+        async move { http.api_json(ApiCall::get(&url, &headers)).await }
+    };
+    let providers = live_providers(&get(vec!["media".into(), "providers".into()], Vec::new()).await?);
+    if providers.is_empty() {
+        return Ok(None);
+    }
+    // The tuner counts and enabled channels; the channels play without them.
+    let dvrs = match get(vec!["livetv".into(), "dvrs".into()], Vec::new()).await {
+        Ok(reply) => dvr_facts(&reply),
+        Err(error) => {
+            tracing::info!("Plex's DVR settings couldn't be read: {error}");
+            HashMap::new()
+        }
+    };
+    let mut live = LiveTv::default();
+    let mut grids: Vec<(String, String, String)> = Vec::new();
+    for provider in &providers {
+        let facts = dvrs.get(&provider.dvr).cloned().unwrap_or_default();
+        let reply = get(vec![provider.identifier.clone(), "lineups".into(), "dvr".into(), "channels".into()], Vec::new()).await?;
+        let listed = container(&reply).map(|found| json::objects(found.get("Channel"))).unwrap_or_default();
+        let category_id = ids::category(source_id, CategoryKind::Live, &provider.dvr);
+        let mut added = false;
+        for raw in listed {
+            let Some(key) = text(raw.get("id")) else { continue };
+            if facts.enabled.as_ref().is_some_and(|enabled| !enabled.contains(&key)) {
+                continue;
+            }
+            let Some(name) = text(raw.get("title")).or_else(|| text(raw.get("callSign"))) else { continue };
+            // Two DVRs can both have a channel "2.1".
+            let catalog_key = format!("{}/{key}", provider.dvr);
+            if live.channels.iter().any(|channel| channel.epg_id.as_deref() == Some(catalog_key.as_str())) {
+                continue;
+            }
+            let grid_key = text(raw.get("gridKey")).unwrap_or_else(|| key.clone());
+            live.listings.channels.push(ChannelName { epg_id: catalog_key.clone(), display_name: name.clone() });
+            live.channels.push(Channel {
+                id: ids::channel(source_id, &catalog_key),
+                source_id: source_id.to_string(),
+                name,
+                // "2.1" (a broadcast subchannel) isn't a whole number; the lineup's order keeps its place.
+                number: text(raw.get("vcn")).and_then(|vcn| vcn.parse().ok()),
+                logo_url: artwork(source_id, raw.get("thumb"), Art::Original),
+                category_id: Some(category_id.clone()),
+                epg_id: Some(catalog_key.clone()),
+                stream: StreamLocator::ServerChannel { key, dvr: Some(provider.dvr.clone()) },
+                catchup_days: 0,
+                catchup_source: None,
+                sort_index: live.channels.len() as i64,
+                catchup_offset_minutes: 0,
+                versions: Vec::new(),
+            });
+            grids.push((catalog_key, provider.grid.clone(), grid_key));
+            added = true;
+        }
+        if added {
+            let name = match (&facts.title, providers.len()) {
+                (Some(title), count) if count > 1 => title.clone(),
+                _ => super::server::TV_CATEGORY.to_string(),
+            };
+            live.categories.push(Category {
+                id: category_id,
+                source_id: source_id.to_string(),
+                kind: CategoryKind::Live,
+                name,
+                sort_index: live.categories.len() as i64,
+            });
+        }
+    }
+    if live.channels.is_empty() {
+        return Ok(None);
+    }
+    let used: HashSet<&String> = providers.iter().map(|provider| &provider.dvr).collect();
+    live.tuners = used.into_iter().map(|dvr| dvrs.get(dvr).and_then(|facts| facts.tuners)).sum();
+
+    // The guide: each channel's days, as Plex's own apps ask for it. A day
+    // that can't be read leaves a gap until the next refresh.
+    let now = crate::now();
+    let (from, to) = (now - super::server::GUIDE_HOURS_BACK * 3600, now + super::server::GUIDE_DAYS_AHEAD * 86_400);
+    let days = guide_days(from, to);
+    let asks: Vec<(String, String, String, String)> = grids
+        .iter()
+        .flat_map(|(epg_id, grid, grid_key)| days.iter().map(move |day| (epg_id.clone(), grid.clone(), grid_key.clone(), day.clone())))
+        .collect();
+    let mut pages = futures_util::stream::iter(asks)
+        .map(|(epg_id, grid, grid_key, day)| {
+            let url = format!("{}{grid}?{}", session.base_url, url::form_urlencoded::Serializer::new(String::new())
+                .append_pair("channelGridKey", &grid_key)
+                .append_pair("date", &day)
+                .finish());
+            let headers = &headers;
+            async move { (epg_id, http.api_json(ApiCall::get(&url, headers)).await) }
+        })
+        .buffer_unordered(GUIDE_REQUESTS_AT_ONCE);
+    let mut seen = HashSet::new();
+    let mut gaps = 0;
+    while let Some((epg_id, page)) = futures_util::StreamExt::next(&mut pages).await {
+        let Ok(page) = page else {
+            gaps += 1;
+            continue;
+        };
+        for raw in container(&page).map(|found| json::objects(found.get("Metadata"))).unwrap_or_default() {
+            for program in grid_programs(source_id, &epg_id, raw) {
+                if program.end > from && program.start < to && seen.insert((program.epg_id.clone(), program.start)) {
+                    live.listings.programs.push(program);
+                }
+            }
+        }
+    }
+    if gaps > 0 {
+        tracing::info!("{gaps} days of Plex's guide couldn't be read");
+    }
+    live.listings.programs.sort_by(|a, b| (&a.epg_id, a.start).cmp(&(&b.epg_id, b.start)));
+    Ok(Some(live))
+}
+
+/// The UTC days ("2026-11-02") from `from` to `to`, as Plex's guide is asked for them.
+fn guide_days(from: i64, to: i64) -> Vec<String> {
+    let day = |at: i64| chrono::DateTime::from_timestamp(at, 0).unwrap_or_default().date_naive();
+    let (first, last) = (day(from), day(to));
+    first.iter_days().take_while(|date| *date <= last).map(|date| date.format("%Y-%m-%d").to_string()).collect()
+}
+
+/// A guide item's airings on a channel: one programme for each of its
+/// `Media` (Plex lists a programme on again straight after as one item).
+pub(crate) fn grid_programs(source_id: &str, epg_id: &str, raw: &Object) -> Vec<Program> {
+    let episode = json::string(raw.get("type")).as_deref() == Some("episode");
+    let own = text(raw.get("title"));
+    let (title, subtitle) = match (episode, text(raw.get("grandparentTitle"))) {
+        (true, Some(show)) => (Some(show), own.filter(|title| !title.is_empty())),
+        _ => (own, None),
+    };
+    let Some(title) = title else { return Vec::new() };
+    let image_url = artwork(source_id, raw.get("thumb"), Art::Still).or_else(|| artwork(source_id, raw.get("grandparentThumb"), Art::Still));
+    let label = if episode { episode_label(json::int(raw.get("parentIndex")), json::int(raw.get("index"))) } else { None };
+    json::objects(raw.get("Media"))
+        .into_iter()
+        .filter_map(|media| {
+            let start = json::int(media.get("beginsAt"))?;
+            let end = json::int(media.get("endsAt")).filter(|end| *end > start)?;
+            Some(Program {
+                id: Program::make_id(source_id, epg_id, start),
+                source_id: source_id.to_string(),
+                epg_id: epg_id.to_string(),
+                start,
+                end,
+                title: title.clone(),
+                subtitle: subtitle.clone(),
+                summary: text(raw.get("summary")),
+                category: tags(raw, "Genre").into_iter().next(),
+                image_url: image_url.clone(),
+                episode: label.clone(),
+                flags: ProgramFlags { is_premiere: flag(media.get("premiere")), ..ProgramFlags::default() },
+                age_rating: age_rating(raw.get("contentRating")),
+                star_rating: None,
+                year: json::int(raw.get("year")).filter(|year| (1870..=2200).contains(year)),
+                genre: None,
+            })
+        })
+        .collect()
+}
+
+/// Tunes a channel through its DVR (which takes a tuner and starts
+/// recording into Plex's buffer) and reads it out through Plex's
+/// transcoder, copying the picture and sound into HLS: a tuned channel
+/// can't be read any other way.
+pub(crate) async fn tune(http: &Http, session: &ServerSession, key: &str, dvr: Option<&str>) -> Result<Tuned, SourceError> {
+    let dvr = dvr.ok_or_else(|| SourceError::Unsupported("Xorvio doesn't know this channel's DVR yet. Refresh the source, then try again.".into()))?;
+    let playback = uuid::Uuid::new_v4().simple().to_string();
+    let mut headers = api_headers(&session.device_id, session.token.as_deref());
+    headers.push(("X-Plex-Session-Identifier".into(), playback.clone()));
+    let url = link(&session.base_url, &["livetv", "dvrs", dvr, "channels", key, "tune"], &[]);
+    let reply = match http.api_json(ApiCall::post(&url, &headers, None)).await {
+        Ok(reply) => reply,
+        // "Tuning failed": no tuner free, or the tuner can't get the channel.
+        Err(SourceError::Http(500 | 503)) => return Err(busy()),
+        Err(error) => return Err(error),
+    };
+    let (live_session, rating_key, grab) = tuned_session(&reply).ok_or_else(busy)?;
+    let transcode = uuid::Uuid::new_v4().simple().to_string();
+    let query = [
+        ("path", live_session.as_str()),
+        ("mediaIndex", "0"),
+        ("partIndex", "0"),
+        ("protocol", "hls"),
+        ("directPlay", "0"),
+        ("directStream", "1"),
+        ("directStreamAudio", "1"),
+        ("fastSeek", "1"),
+        ("hasMDE", "1"),
+        ("location", "lan"),
+        ("session", transcode.as_str()),
+        ("X-Plex-Session-Identifier", playback.as_str()),
+        ("X-Plex-Client-Identifier", session.device_id.as_str()),
+        ("X-Plex-Product", PRODUCT),
+        ("X-Plex-Platform", "Generic"),
+        ("X-Plex-Client-Profile-Name", "Generic"),
+    ];
+    let mut reading = vec![("X-Plex-Client-Identifier".to_string(), session.device_id.clone()), ("X-Plex-Session-Identifier".to_string(), playback.clone())];
+    reading.extend(session.token.iter().map(|token| ("X-Plex-Token".to_string(), token.clone())));
+    Ok(Tuned {
+        url: link(&session.base_url, &["video", ":", "transcode", "universal", "start.m3u8"], &query),
+        headers: reading,
+        playlist: true,
+        release: Release::PlexSession { session: live_session, rating_key, grab, transcode, playback },
+    })
+}
+
+fn busy() -> SourceError {
+    SourceError::Unavailable("Plex couldn't tune this channel. Its tuners may all be in use.".into())
+}
+
+/// The live session a tune made ("/livetv/sessions/…"), its rating key and
+/// its grab's id, from the tune's reply. Plex sends the grab's item as an
+/// object; some servers send the item list directly.
+pub(crate) fn tuned_session(reply: &Value) -> Option<(String, Option<String>, Option<String>)> {
+    let found = container(reply)?;
+    let one_or_many = |value: Option<&Value>| -> Vec<Object> {
+        match value {
+            Some(Value::Object(item)) => vec![item.clone()],
+            other => json::objects(other).into_iter().cloned().collect(),
+        }
+    };
+    let grabs: Vec<Object> = json::objects(found.get("MediaSubscription"))
+        .into_iter()
+        .flat_map(|subscription| json::objects(subscription.get("MediaGrabOperation")).into_iter().cloned().collect::<Vec<_>>())
+        .collect();
+    let from_grab = grabs.iter().find_map(|grab| {
+        let item = one_or_many(grab.get("Metadata")).into_iter().next()?;
+        Some((item, text(grab.get("id"))))
+    });
+    let (item, grab) = from_grab.or_else(|| one_or_many(found.get("Metadata")).into_iter().next().map(|item| (item, None)))?;
+    let session = text(item.get("key")).filter(|key| key.starts_with("/livetv/sessions/"))?;
+    Some((session, text(item.get("ratingKey")), grab))
+}
+
+/// Tells Plex the channel is still watched (`keep`), or lets it go: the
+/// player's "stopped", the transcoder stopped, and the grab cancelled,
+/// each of which frees the tuner by itself on some servers.
+pub(crate) async fn release(http: &Http, session: &ServerSession, release: &Release, keep: bool) -> Result<(), SourceError> {
+    let Release::PlexSession { session: live_session, rating_key, grab, transcode, playback } = release else {
+        return Err(SourceError::Unsupported("That isn't a Plex tuning.".into()));
+    };
+    let mut headers = api_headers(&session.device_id, session.token.as_deref());
+    headers.push(("X-Plex-Session-Identifier".into(), playback.clone()));
+    let state = if keep { "playing" } else { "stopped" };
+    // A live channel has no length; a position past its length is refused.
+    let mut query = vec![("key", live_session.as_str()), ("state", state), ("hasMDE", "1"), ("time", "0"), ("duration", "0")];
+    if let Some(key) = rating_key.as_deref() {
+        query.push(("ratingKey", key));
+    }
+    let timeline = http.api(ApiCall::get(&link(&session.base_url, &[":", "timeline"], &query), &headers)).await.map(drop);
+    if keep {
+        return timeline;
+    }
+    let stop = link(&session.base_url, &["video", ":", "transcode", "universal", "stop"], &[("session", transcode.as_str())]);
+    let stopped = http.api(ApiCall::get(&stop, &headers)).await.map(drop);
+    let cancelled = match grab {
+        Some(grab) => http.api(ApiCall::delete(&link(&session.base_url, &["media", "grabbers", "operations", grab], &[]), &headers)).await.map(drop),
+        None => Ok(()),
+    };
+    // Already gone counts as let go.
+    let gone = |result: &Result<(), SourceError>| matches!(result, Ok(()) | Err(SourceError::Http(404)));
+    if gone(&timeline) || gone(&cancelled) || gone(&stopped) {
+        return Ok(());
+    }
+    timeline.and(cancelled)
+}
+
 // MARK: - Reading Plex's fields
 
 /// The sizes artwork is asked for, by where it's shown.
@@ -976,6 +1332,11 @@ mod tests {
     const MOVIE_DETAILS: &str = include_str!("../../tests/fixtures/plex/movie_details.json");
     const SEASONS: &str = include_str!("../../tests/fixtures/plex/seasons.json");
     const RESOURCES: &str = include_str!("../../tests/fixtures/plex/resources.json");
+    const LIVE_PROVIDERS: &str = include_str!("../../tests/fixtures/plex/livetv_providers.json");
+    const LIVE_DVRS: &str = include_str!("../../tests/fixtures/plex/livetv_dvrs.json");
+    const LIVE_CHANNELS: &str = include_str!("../../tests/fixtures/plex/livetv_channels.json");
+    const LIVE_GRID: &str = include_str!("../../tests/fixtures/plex/livetv_grid.json");
+    const LIVE_TUNE: &str = include_str!("../../tests/fixtures/plex/livetv_tune.json");
 
     fn fixture(text: &str) -> Value {
         serde_json::from_str(text).unwrap()
@@ -1783,6 +2144,158 @@ mod tests {
     }
 
     // MARK: Through Xorvio
+
+    // MARK: Live TV
+
+    #[test]
+    fn live_tv_from_plex_lists() {
+        let providers = live_providers(&fixture(LIVE_PROVIDERS));
+        assert_eq!(providers, [LiveProvider {
+            identifier: "tv.plex.providers.epg.xmltv:2".into(),
+            dvr: "2".into(),
+            grid: "/tv.plex.providers.epg.xmltv:2/grid".into()
+        }]);
+        // plex.tv's own free channels are never the server's, and a provider without a grid still has one.
+        let other = json!({"MediaContainer": {"MediaProvider": [
+            {"identifier": "tv.plex.provider.epg", "protocols": "livetv"},
+            {"identifier": "tv.plex.providers.epg.cloud:7", "protocols": "livetv"}
+        ]}});
+        assert_eq!(live_providers(&other), [LiveProvider {
+            identifier: "tv.plex.providers.epg.cloud:7".into(),
+            dvr: "7".into(),
+            grid: "/tv.plex.providers.epg.cloud:7/grid".into()
+        }]);
+
+        let dvrs = dvr_facts(&fixture(LIVE_DVRS));
+        let facts = &dvrs["2"];
+        assert_eq!((facts.title.as_deref(), facts.tuners), (Some("Test Guide"), Some(2)));
+        assert_eq!(facts.enabled, Some(HashSet::from(["2".to_string(), "5.1".to_string()])), "the turned-off channel isn't tuned");
+        let unknown = dvr_facts(&json!({"MediaContainer": {"Dvr": [{"key": "3", "Device": [{"tuners": "2"}, {"key": "x"}]}]}}));
+        assert_eq!((unknown["3"].tuners, unknown["3"].enabled.clone()), (None, None));
+
+        let grid = metadata(LIVE_GRID);
+        let programs: Vec<Program> = grid.iter().flat_map(|raw| grid_programs("src", "2/5.1", raw)).collect();
+        assert_eq!(programs.len(), 3, "an item on twice is two programmes");
+        let first = &programs[0];
+        assert_eq!((first.title.as_str(), first.subtitle.as_deref(), first.episode.as_deref()), ("Harbor Lights", Some("Tide 4"), Some("S2 E4")));
+        assert_eq!((first.start, first.end, first.category.as_deref()), (1_793_453_400, 1_793_455_200, Some("Drama")));
+        assert_eq!((first.age_rating.as_deref(), first.flags.is_premiere, programs[1].flags.is_premiere), (Some("12"), true, false));
+        assert_eq!(first.id, Program::make_id("src", "2/5.1", 1_793_453_400));
+        assert_eq!(first.image_url.as_deref(), Some(sized("src", 640, 360, "/library/metadata/901/thumb/1793454568").as_str()));
+        let film = &programs[2];
+        assert_eq!((film.title.as_str(), film.subtitle.as_deref(), film.episode.as_deref(), film.year), ("Harbor Evening", None, None, Some(2026)));
+
+        let (session, rating_key, grab) = tuned_session(&fixture(LIVE_TUNE)).unwrap();
+        assert_eq!(session, "/livetv/sessions/6d0f3b52-1c4e-4a8b-9e27-5b3c9a1d0e44");
+        assert_eq!((rating_key.as_deref(), grab.as_deref()), (Some("56"), Some("5.1-xorviotestsession")));
+        // Some servers answer with the item itself.
+        let plain = json!({"MediaContainer": {"Metadata": [{"key": "/livetv/sessions/abc", "ratingKey": "7"}]}});
+        assert_eq!(tuned_session(&plain), Some(("/livetv/sessions/abc".into(), Some("7".into()), None)));
+        assert_eq!(tuned_session(&json!({"MediaContainer": {"size": 0}})), None, "a conflict, not a tuning");
+
+        // From an hour before 31 October (UTC) to a day after it began.
+        assert_eq!(guide_days(1_793_404_800 - 3600, 1_793_404_800 + 86_400), ["2026-10-30", "2026-10-31", "2026-11-01"]);
+    }
+
+    /// A Plex server with live TV: the fixtures' DVR and channels, and a guide
+    /// of half-hour programmes around now for each channel and day asked for.
+    fn live_plex(token: &'static str) -> impl Fn(&Seen) -> (u16, String) + Send + Sync + 'static {
+        move |request| {
+            if request.header("x-plex-token") != Some(token) {
+                return (401, String::new());
+            }
+            match (request.method.as_str(), request.path.as_str()) {
+                ("GET", "/media/providers") => (200, LIVE_PROVIDERS.into()),
+                ("GET", "/livetv/dvrs") => (200, LIVE_DVRS.into()),
+                ("GET", "/tv.plex.providers.epg.xmltv:2/lineups/dvr/channels") => (200, LIVE_CHANNELS.into()),
+                ("GET", "/tv.plex.providers.epg.xmltv:2/grid") => {
+                    let key = request.query("channelGridKey").unwrap_or_default();
+                    let now = crate::now() - crate::now() % 1800;
+                    // Today's and tomorrow's programmes only, whichever day was asked.
+                    let media: Vec<Value> = (0..4)
+                        .map(|slot| json!({"channelIdentifier": key, "beginsAt": now + slot * 1800, "endsAt": now + (slot + 1) * 1800}))
+                        .collect();
+                    ok(json!({"MediaContainer": {"Metadata": [{"type": "movie", "title": format!("On {key}"), "Media": media}]}}))
+                }
+                ("POST", "/livetv/dvrs/2/channels/5.1/tune") => (200, LIVE_TUNE.into()),
+                ("POST", _) => (500, "Tuning failed".into()),
+                _ => (200, String::new()),
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn live_tv_is_read_from_the_server() {
+        let stand = Stand::start(live_plex("tok")).await;
+        let http = Http::new().unwrap();
+        let live = fetch_live_tv(&http, &session(&stand.base, Some("tok")), "src").await.unwrap().unwrap();
+        let shown: Vec<(&str, Option<i64>)> = live.channels.iter().map(|channel| (channel.name.as_str(), channel.number)).collect();
+        assert_eq!(shown, [("North Test News", Some(2)), ("Harbor Test One", None)], "the turned-off channel is left out");
+        assert_eq!(live.categories.iter().map(|category| category.name.as_str()).collect::<Vec<_>>(), ["Live TV"]);
+        assert_eq!(live.tuners, Some(2));
+        let harbor = &live.channels[1];
+        assert_eq!((harbor.id.as_str(), harbor.epg_id.as_deref()), ("src|ch|2/5.1", Some("2/5.1")));
+        assert_eq!(harbor.stream, StreamLocator::ServerChannel { key: "5.1".into(), dvr: Some("2".into()) });
+        assert_eq!(live.channels[0].logo_url.as_deref(), Some(artwork_url("src", "/library/metadata/900/thumb/1793454568").as_str()));
+        // Each channel's programmes, each once, whatever days asked for them.
+        assert_eq!(live.listings.programs.len(), 8);
+        assert_eq!(live.listings.programs.iter().filter(|program| program.epg_id == "2/5.1").count(), 4);
+        let grid: Vec<Seen> = stand.seen().into_iter().filter(|request| request.path.ends_with("/grid")).collect();
+        let days = guide_days(crate::now() - super::super::server::GUIDE_HOURS_BACK * 3600, crate::now() + super::super::server::GUIDE_DAYS_AHEAD * 86_400);
+        assert_eq!(grid.len(), 2 * days.len(), "each channel's days");
+        assert!(stand.seen().iter().all(|request| !request.target.contains("tok")), "the token stays in a header");
+
+        // Without live TV, or not allowed it: none.
+        let none = Stand::start(|request| match request.path.as_str() {
+            "/media/providers" => (200, json!({"MediaContainer": {"MediaProvider": [{"identifier": "com.plexapp.plugins.library"}]}}).to_string()),
+            _ => (403, String::new()),
+        })
+        .await;
+        assert!(fetch_live_tv(&http, &session(&none.base, Some("tok")), "src").await.unwrap().is_none());
+        let refused = Stand::start(|_| (403, String::new())).await;
+        let shared = session(&refused.base, Some("tok"));
+        assert!(super::super::server::fetch_live_tv(&http, &shared, "src").await.unwrap().is_none());
+    }
+
+    #[tokio::test]
+    async fn tuning_keeping_and_letting_go() {
+        let stand = Stand::start(live_plex("tok")).await;
+        let http = Http::new().unwrap();
+        let server = session(&stand.base, Some("tok"));
+        let tuned = tune(&http, &server, "5.1", Some("2")).await.unwrap();
+        let tuning = stand.seen().into_iter().find(|request| request.path.ends_with("/tune")).unwrap();
+        let playback = tuning.header("x-plex-session-identifier").unwrap().to_string();
+        let url = url::Url::parse(&tuned.url).unwrap();
+        assert_eq!(url.path(), "/video/:/transcode/universal/start.m3u8");
+        let query: HashMap<String, String> = url.query_pairs().map(|(name, value)| (name.into_owned(), value.into_owned())).collect();
+        assert_eq!(query["path"], "/livetv/sessions/6d0f3b52-1c4e-4a8b-9e27-5b3c9a1d0e44");
+        assert_eq!(query["X-Plex-Session-Identifier"], playback, "the transcoder reads the tuned session");
+        assert_eq!((query["directStream"].as_str(), query["directStreamAudio"].as_str(), query["protocol"].as_str()), ("1", "1", "hls"));
+        assert!(!tuned.url.contains("tok") && tuned.playlist);
+        assert!(tuned.headers.contains(&("X-Plex-Token".to_string(), "tok".to_string())));
+        let Release::PlexSession { transcode, .. } = &tuned.release else { panic!("{:?}", tuned.release) };
+        assert_eq!(&query["session"], transcode);
+
+        super::super::server::keep_alive(&http, &server, &tuned.release).await.unwrap();
+        super::super::server::release(&http, &server, &tuned.release).await.unwrap();
+        let after: Vec<Seen> = stand.seen().into_iter().skip(1).collect();
+        let lines: Vec<String> = after.iter().map(|request| format!("{} {}", request.method, request.path)).collect();
+        assert_eq!(lines, [
+            "GET /:/timeline",
+            "GET /:/timeline",
+            "GET /video/:/transcode/universal/stop",
+            "DELETE /media/grabbers/operations/5.1-xorviotestsession"
+        ]);
+        assert_eq!((after[0].query("state"), after[1].query("state")), (Some("playing"), Some("stopped")));
+        assert_eq!(after[0].query("key"), Some("/livetv/sessions/6d0f3b52-1c4e-4a8b-9e27-5b3c9a1d0e44"));
+        assert_eq!((after[0].query("time"), after[0].query("duration")), (Some("0"), Some("0")), "a live channel has no length");
+        assert_eq!(after[2].query("session"), Some(transcode.as_str()));
+        assert!(after.iter().all(|request| request.header("x-plex-session-identifier") == Some(playback.as_str())));
+
+        let busy_now = tune(&http, &server, "2", Some("2")).await.unwrap_err();
+        assert_eq!(busy_now, busy());
+        assert!(matches!(tune(&http, &server, "2", None).await, Err(SourceError::Unsupported(_))));
+    }
 
     #[tokio::test]
     async fn signing_in_with_plex_adds_a_server_and_its_catalog() {

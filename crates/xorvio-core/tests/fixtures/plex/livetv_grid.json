@@ -1,0 +1,40 @@
+{
+  "MediaContainer": {
+    "size": 2,
+    "Metadata": [
+      {
+        "ratingKey": "tv%2Eplex%2Exmltv%3A%2F%2Fepisode%2FHarbor%2520Lights%2F2%2F4",
+        "key": "/tv.plex.providers.epg.xmltv:2/metadata/tv%2Eplex%2Exmltv%3A%2F%2Fepisode%2FHarbor%2520Lights%2F2%2F4",
+        "guid": "tv.plex.xmltv://episode/Harbor%20Lights/2/4",
+        "type": "episode",
+        "title": "Tide 4",
+        "grandparentTitle": "Harbor Lights",
+        "parentTitle": "Season 2",
+        "summary": "A made-up drama about a harbour town.",
+        "index": 4,
+        "parentIndex": 2,
+        "duration": 1800000,
+        "contentRating": "gb/12",
+        "grandparentThumb": "/library/metadata/901/thumb/1793454568",
+        "Media": [
+          { "id": 1, "duration": 1800000, "channelCallSign": "HTO", "channelIdentifier": "5.1", "channelTitle": "5.1 Harbor Test One", "channelVcn": "5.1", "premiere": "1", "protocol": "livetv", "beginsAt": 1793453400, "endsAt": 1793455200, "channelID": 2 },
+          { "id": 2, "duration": 1800000, "channelCallSign": "HTO", "channelIdentifier": "5.1", "channelTitle": "5.1 Harbor Test One", "channelVcn": "5.1", "protocol": "livetv", "beginsAt": 1793455200, "endsAt": 1793457000, "channelID": 2 }
+        ],
+        "Genre": [{ "id": 4, "filter": "genre=4", "tag": "Drama" }]
+      },
+      {
+        "ratingKey": "tv%2Eplex%2Exmltv%3A%2F%2Fmovie%2FHarbor%2520Evening",
+        "key": "/tv.plex.providers.epg.xmltv:2/metadata/tv%2Eplex%2Exmltv%3A%2F%2Fmovie%2FHarbor%2520Evening",
+        "guid": "tv.plex.xmltv://movie/Harbor%20Evening",
+        "type": "movie",
+        "title": "Harbor Evening",
+        "summary": "The day's made-up headlines.",
+        "duration": 1800000,
+        "year": 2026,
+        "Media": [
+          { "id": 4, "duration": 1800000, "channelCallSign": "HTO", "channelIdentifier": "5.1", "channelTitle": "5.1 Harbor Test One", "channelVcn": "5.1", "protocol": "livetv", "beginsAt": 1793457000, "endsAt": 1793458800, "channelID": 2 }
+        ]
+      }
+    ]
+  }
+}
