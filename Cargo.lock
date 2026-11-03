@@ -6452,6 +6452,7 @@ dependencies = [
  "regex",
  "reqwest 0.12.28",
  "rusqlite",
+ "security-framework 2.11.1",
  "serde",
  "serde_json",
  "sha2",
