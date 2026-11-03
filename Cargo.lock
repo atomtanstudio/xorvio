@@ -6359,7 +6359,7 @@ dependencies = [
 
 [[package]]
 name = "xorvio"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "block2",
@@ -6395,7 +6395,7 @@ dependencies = [
 
 [[package]]
 name = "xorvio-addons"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "axum",
@@ -6416,7 +6416,7 @@ dependencies = [
 
 [[package]]
 name = "xorvio-cast"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "axum",
@@ -6435,7 +6435,7 @@ dependencies = [
 
 [[package]]
 name = "xorvio-core"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "argon2",
@@ -6468,7 +6468,7 @@ dependencies = [
 
 [[package]]
 name = "xorvio-media"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "axum",
@@ -6496,7 +6496,7 @@ dependencies = [
 
 [[package]]
 name = "xorvio-model"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "serde",
 ]
