@@ -1332,20 +1332,6 @@ impl CatalogStore {
         })
     }
 
-    /// Series of these sources with a regular episode that aired between
-    /// `from` and `to`, the latest airing first. Only episodes the catalog
-    /// holds count: a provider's are there once its series was opened.
-    pub fn series_with_episodes_aired(&self, source_ids: &[String], from: Timestamp, to: Timestamp, limit: usize) -> anyhow::Result<Vec<String>> {
-        self.read(|db| {
-            let mut statement = db.prepare_cached(
-                "SELECT series_id FROM episodes
-                 WHERE source_id IN (SELECT value FROM json_each(?1)) AND season > 0 AND air_date BETWEEN ?2 AND ?3
-                 GROUP BY series_id ORDER BY MAX(air_date) DESC LIMIT ?4",
-            )?;
-            statement.query_map(params![json_list(source_ids), from, to, sql_limit(Some(limit))], |row| row.get(0))?.collect()
-        })
-    }
-
     pub fn episodes_by_ids(&self, ids: &[String]) -> anyhow::Result<Vec<Episode>> {
         let rows = self.read(|db| {
             let mut statement =

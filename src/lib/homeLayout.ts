@@ -110,8 +110,11 @@ export interface HomeLayout {
   rows: HomeRow[];
 }
 
-/** 2: Trakt's Top 10 films and series join Home. */
-const VERSION = 2;
+/**
+ * 2: Trakt's Top 10 films and series join Home.
+ * 3: New Episodes, now the shows you follow with episodes to watch, sits under Continue Watching.
+ */
+const VERSION = 3;
 
 /** The libraries Home knows of; null until the sources are first read. */
 let knownLibraries: Library[] | null = null;
@@ -203,8 +206,8 @@ const traktTop10 = (visible = true) => [traktChartRow("trending", "movies", visi
 
 /**
  * Home as it was before it could be changed, plus a row for each of the
- * profile's favourite genres, and New Releases and New Episodes as Xorvio for
- * Mac has them, and Trakt's Top 10s. Rows Home didn't have are there, switched off. When the
+ * profile's favourite genres, New Episodes under Continue Watching, New
+ * Releases as Xorvio for Mac has it, and Trakt's Top 10s. Rows Home didn't have are there, switched off. When the
  * sources carry channels but no films or series (`liveOnly`), the live rows
  * lead instead, as they do on the Mac.
  */
@@ -226,6 +229,7 @@ export function standardLayout(mode: HomeMode, profile?: LibraryProfile, liveOnl
       : mode === "addons"
       ? [
           builtIn("continueWatching"),
+          builtIn("newEpisodes"),
           ...traktTop10(),
           builtIn("addonRows"),
           builtIn("watchlist"),
@@ -235,6 +239,7 @@ export function standardLayout(mode: HomeMode, profile?: LibraryProfile, liveOnl
         ]
       : [
           builtIn("continueWatching"),
+          builtIn("newEpisodes"),
           builtIn("watchlist"),
           builtIn("recordings"),
           builtIn("tonight"),
@@ -243,7 +248,6 @@ export function standardLayout(mode: HomeMode, profile?: LibraryProfile, liveOnl
           builtIn("newReleases"),
           builtIn("addonRows"),
           ...genres,
-          builtIn("newEpisodes"),
           builtIn("recentMovies"),
           builtIn("topRatedSeries"),
           builtIn("newSeries"),
@@ -279,10 +283,28 @@ export function normalized(saved: unknown, mode: HomeMode, profile?: LibraryProf
     rows.splice(after + 1, 0, ...top10);
     top10.forEach((row) => seen.add(row.id));
   }
+  if ((layout.version ?? 1) < 3 && !(mode === "sources" && liveOnly)) {
+    rows = withNewEpisodesFirst(rows);
+    seen.add("newEpisodes");
+  }
   for (const kind of BUILT_INS) if (!seen.has(kind)) rows.push(builtIn(kind, false));
   // Until the sources are read, library rows stay as they were.
   if (libraries) rows = withLibraries(rows, libraries);
   return { version: VERSION, showHero: layout.showHero !== false, rows: rows.map((row) => ({ ...row, visible: row.visible !== false })) };
+}
+
+/**
+ * New Episodes moved under Continue Watching (or to the top), shown. It used
+ * to be series anyone's provider had updated, and switched off in some
+ * layouts; now it's only the shows someone follows, and it hides itself
+ * while there's nothing new.
+ */
+function withNewEpisodesFirst(rows: HomeRow[]): HomeRow[] {
+  const row = rows.find((r) => r.id === "newEpisodes") ?? builtIn("newEpisodes");
+  const rest = rows.filter((r) => r.id !== "newEpisodes");
+  const after = rest.findIndex((r) => r.id === "continueWatching");
+  rest.splice(after + 1, 0, { ...row, visible: true });
+  return rest;
 }
 
 const TITLES: Partial<Record<HomeRowKind, string>> = {
@@ -331,7 +353,7 @@ const NOTES: Partial<Record<HomeRowKind, string>> = {
   top10Movies: "This year's films your sources carry the most copies of",
   top10Series: "This year's series your sources carry the most copies of",
   newReleases: "Newest films by release year",
-  newEpisodes: "Series with the newest episodes",
+  newEpisodes: "Shows you follow with episodes you haven't watched",
   addonRows: "Every catalogue from your add-ons that hasn't a row of its own",
   genreMovies: "Films of this genre, newest first",
   genreSeries: "Series of this genre, newest first",
