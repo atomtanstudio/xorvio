@@ -171,7 +171,7 @@ pub fn run() {
                 tracing::warn!("secrets are kept in memory for this run (XORVIO_MEMORY_SECRETS)");
                 Arc::new(xorvio_core::MemorySecrets::new())
             } else {
-                Arc::new(KeyringSecrets)
+                Arc::new(KeyringSecrets::default())
             };
             // A restore chosen before the restart goes in before anything opens the data.
             let restored = backup::apply_pending_restore(&data_dir, secrets.as_ref());

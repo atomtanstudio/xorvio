@@ -74,7 +74,7 @@ pub use images::{IMAGE_SCHEME, image_url, parse_image_path};
 pub use new_episodes::NewEpisodes;
 pub use redact::redact;
 pub use reminders::Reminder;
-pub use secrets::{KEYCHAIN_SERVICE, KeyringSecrets, MemorySecrets, SecretStore};
+pub use secrets::{KEYCHAIN_SERVICE, KeyringSecrets, MemorySecrets, SecretStore, allowing_keychain_dialogs};
 pub use servers::{PlexServerChoice, PlexSignInStart};
 pub use source_sheet::{XtreamAccountCheck, xtream_login_in_link};
 pub use sources::folder::{FOLDER_SCHEME, parse_folder_path};

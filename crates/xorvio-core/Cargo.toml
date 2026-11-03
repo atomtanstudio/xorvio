@@ -47,5 +47,10 @@ getrandom = "0.4.3"
 # The computer's name, for backups and the sync folder (Apache-2.0).
 gethostname = "1.1.0"
 
+# Reading the macOS keychain with its dialogs turned off (secrets.rs): the
+# version keyring itself uses, so nothing new is built.
+[target.'cfg(target_os = "macos")'.dependencies]
+security-framework = "2.11"
+
 [dev-dependencies]
 tokio = { workspace = true }
