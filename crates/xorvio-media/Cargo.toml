@@ -23,11 +23,11 @@ chrono.workspace = true
 regex.workspace = true
 axum = "0.8.9"
 tower = { version = "0.5.3", features = ["util"] }
-tower-http = { version = "0.6.11", features = ["fs"] }
+tower-http = { version = "0.7.1", features = ["fs"] }
 # Recordings a series clears out go to the Trash rather than being deleted.
 trash = "5.2.9"
 # Naming the frames taken for videos' cards (stills.rs).
-sha2 = "0.10.9"
+sha2 = "0.11.1"
 
 [target.'cfg(unix)'.dependencies]
 # The user's id, to check the folder for temporary files is theirs (scratch.rs).

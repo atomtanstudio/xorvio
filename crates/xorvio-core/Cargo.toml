@@ -23,7 +23,7 @@ tracing.workspace = true
 futures-util.workspace = true
 regex.workspace = true
 # Streaming XMLTV, with the encodings older guides still declare (ISO-8859-1).
-quick-xml = { version = "0.37.5", features = ["encoding"] }
+quick-xml = { version = "0.42.0", features = ["encoding"] }
 # Compressed guides (.xml.gz).
 flate2 = "1.1.1"
 # The operating system's keychain. Without a platform feature keyring falls
@@ -34,12 +34,12 @@ unicode-normalization = "0.1.24"
 # Downloaded guides wait in a temporary file that removes itself.
 tempfile = "3.20.0"
 # The parental PIN is kept as a salted hash.
-sha2 = "0.10.9"
+sha2 = "0.11.1"
 # Backups (backup/): one zip file, and the logins in it sealed with a key
 # from the person's passphrase (Argon2id, then XChaCha20-Poly1305). The
 # crypto crates are pinned exactly, so they change only when we choose to.
 # All three are MIT or MIT/Apache-2.0, which GPL-3.0 can include.
-zip = { version = "=8.6.0", default-features = false, features = ["deflate-flate2"] }
+zip = { version = "=9.1.3", default-features = false, features = ["deflate-flate2"] }
 argon2 = { version = "=0.6.0", default-features = false, features = ["alloc"] }
 chacha20poly1305 = { version = "=0.11.0", default-features = false, features = ["alloc"] }
 # Random salts, nonces and keys from the operating system (MIT/Apache-2.0).
@@ -50,7 +50,7 @@ gethostname = "1.1.0"
 # Reading the macOS keychain with its dialogs turned off (secrets.rs): the
 # version keyring itself uses, so nothing new is built.
 [target.'cfg(target_os = "macos")'.dependencies]
-security-framework = "2.11"
+security-framework = "3.7"
 
 [dev-dependencies]
 tokio = { workspace = true }
