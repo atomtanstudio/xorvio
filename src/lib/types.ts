@@ -622,6 +622,21 @@ export interface SearchResults {
   movies: Movie[];
   series: Series[];
   programs: ProgramHit[];
+  /** People the search names, with titles of theirs the sources carry. */
+  people: SearchPerson[];
+  /** Why a film or series was found when its name isn't it ("With Tom Hanks", "Comedy", a few words of its story), by id. */
+  reasons: Record<string, string>;
+}
+
+/** Someone a search names: in, or behind, films and series the sources carry. */
+export interface SearchPerson {
+  name: string;
+  photoUrl: string | null;
+  tmdbId: string | null;
+  /** A title of theirs, which tells people of one name apart on their page. */
+  fromId: string;
+  /** How many of the titles found they're in. */
+  titles: number;
 }
 
 export type PlaybackMode = "native" | "hls" | "mpegts" | "remux";
@@ -1097,6 +1112,8 @@ export interface Settings {
   tvmaze: boolean;
   /** TMDB is asked for details at all (with the person's key or the built-in one). */
   tmdb: boolean;
+  /** Every film and series whose source names no one in it is looked up on TMDB in the background, so search finds it by its cast too. */
+  tmdbSearch: boolean;
   /** Episodes' intros, recaps and credits are looked up on IntroDB. */
   introDb: boolean;
   /** Home's Trakt charts and lists load before an account is connected. */
@@ -1229,6 +1246,7 @@ export const defaultSettings: Settings = {
   onboardingDone: false,
   tvmaze: true,
   tmdb: true,
+  tmdbSearch: true,
   introDb: true,
   traktRowsWithoutAccount: false,
   preferredLiveFormat: "hls",

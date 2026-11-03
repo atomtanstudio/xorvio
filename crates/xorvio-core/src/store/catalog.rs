@@ -21,10 +21,12 @@ use crate::snapshot::{CatalogSnapshot, KeptKind};
 use crate::sources::xmltv::ChannelName;
 
 mod folders;
+mod terms;
 
 pub(crate) use folders::{FolderFilter, FolderPage, VideoMove};
+pub(crate) use terms::{TermColumn, TitleWantingTerms};
 
-const SCHEMA_VERSION: i64 = 6;
+const SCHEMA_VERSION: i64 = 7;
 
 /// Changes to tables made by an earlier version, run before [`SCHEMA`] (whose
 /// `CREATE … IF NOT EXISTS` leaves existing tables as they are). Version 3
@@ -33,7 +35,9 @@ const SCHEMA_VERSION: i64 = 6;
 /// version 5 the index films are grouped into versions by, list posters
 /// found on TMDB and filmographies from Wikidata, all of which the schema
 /// makes. Version 6 adds what media folders' video files hold (file_facts),
-/// which the schema makes too.
+/// which the schema makes too. Version 7 adds what films and series are
+/// found by besides their names (title_terms, with its index, and TMDB's
+/// terms), which the schema makes and `open` then fills from what's kept.
 const MIGRATIONS: &[(i64, &str)] = &[
     (
         2,
@@ -163,6 +167,41 @@ CREATE VIRTUAL TABLE IF NOT EXISTS search USING fts5(
     title, item_id UNINDEXED, kind UNINDEXED, source_id UNINDEXED,
     tokenize = 'unicode61 remove_diacritics 2'
 );
+
+-- What a film or series is found by besides its name (crate::terms): the
+-- people in it and behind it, its genres and story, from its source and
+-- TMDB, one row a title. The index over it is kept in step by the triggers,
+-- and a title's row is found by its id, so writing one never reads the rest.
+CREATE TABLE IF NOT EXISTS title_terms (
+    id INTEGER PRIMARY KEY, item_id TEXT NOT NULL UNIQUE, kind TEXT NOT NULL, source_id TEXT NOT NULL,
+    people TEXT NOT NULL, genres TEXT NOT NULL, story TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS title_terms_source ON title_terms(source_id);
+CREATE VIRTUAL TABLE IF NOT EXISTS title_terms_index USING fts5(
+    people, genres, story, content = 'title_terms', content_rowid = 'id',
+    tokenize = 'unicode61 remove_diacritics 2'
+);
+CREATE TRIGGER IF NOT EXISTS title_terms_added AFTER INSERT ON title_terms BEGIN
+    INSERT INTO title_terms_index (rowid, people, genres, story) VALUES (new.id, new.people, new.genres, new.story);
+END;
+CREATE TRIGGER IF NOT EXISTS title_terms_removed AFTER DELETE ON title_terms BEGIN
+    INSERT INTO title_terms_index (title_terms_index, rowid, people, genres, story)
+        VALUES ('delete', old.id, old.people, old.genres, old.story);
+END;
+CREATE TRIGGER IF NOT EXISTS title_terms_changed AFTER UPDATE ON title_terms BEGIN
+    INSERT INTO title_terms_index (title_terms_index, rowid, people, genres, story)
+        VALUES ('delete', old.id, old.people, old.genres, old.story);
+    INSERT INTO title_terms_index (rowid, people, genres, story) VALUES (new.id, new.people, new.genres, new.story);
+END;
+-- What TMDB said a film or series is found by (crate::terms::SearchTerms),
+-- for titles whose source names no one in them, by catalog id with TMDB's
+-- id, so copies of a title share it; no terms when TMDB had nothing.
+CREATE TABLE IF NOT EXISTS tmdb_terms (
+    item_id TEXT PRIMARY KEY, source_id TEXT NOT NULL, kind TEXT NOT NULL, tmdb_id INTEGER, json TEXT,
+    looked_up_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS tmdb_terms_source ON tmdb_terms(source_id);
+CREATE INDEX IF NOT EXISTS tmdb_terms_tmdb ON tmdb_terms(kind, tmdb_id);
 ";
 
 /// Programme flags as stored: one bit each.
@@ -555,6 +594,9 @@ impl CatalogStore {
                 }
             }
             writer.execute_batch(SCHEMA)?;
+            if version > 0 && version < 7 {
+                terms::reindex(&writer, terms::Titles::All)?;
+            }
             writer.pragma_update(None, "user_version", SCHEMA_VERSION)?;
         }
         let readers = (0..3).map(|_| open_connection(path).map(Mutex::new)).collect::<anyhow::Result<Vec<_>>>()?;
@@ -726,6 +768,7 @@ impl CatalogStore {
                 )?;
             }
             merge_details(&tx, source_id, &snapshot.details, None)?;
+            terms::reindex(&tx, terms::Titles::Source(source_id))?;
             resolve_guide_links(&tx, Some(source_id), links)?;
             tx.commit()?;
             Ok(())
@@ -755,6 +798,8 @@ impl CatalogStore {
         self.write(|connection| {
             let tx = connection.transaction_with_behavior(TransactionBehavior::Immediate)?;
             merge_details(&tx, source_id, details, fetched_at)?;
+            let ids: Vec<String> = details.keys().cloned().collect();
+            terms::reindex(&tx, terms::Titles::Ids(&ids))?;
             tx.commit()?;
             Ok(())
         })
@@ -780,11 +825,14 @@ impl CatalogStore {
         year: Option<i64>,
     ) -> anyhow::Result<()> {
         self.write(|connection| {
-            connection.execute(
+            let tx = connection.transaction_with_behavior(TransactionBehavior::Immediate)?;
+            tx.execute(
                 "UPDATE movies SET plot = COALESCE(plot, ?1), genre = COALESCE(genre, ?2), duration = COALESCE(?3, duration),
                     year = COALESCE(year, ?4) WHERE id = ?5",
                 params![plot, genre, duration_seconds, year, id],
             )?;
+            terms::reindex(&tx, terms::Titles::Ids(&[id.to_string()]))?;
+            tx.commit()?;
             Ok(())
         })
     }
@@ -806,6 +854,8 @@ impl CatalogStore {
                 "media_details",
                 "tmdb_posters",
                 "file_facts",
+                "title_terms",
+                "tmdb_terms",
             ] {
                 tx.execute(&format!("DELETE FROM {table} WHERE source_id = ?1"), [source_id])?;
             }
@@ -2005,6 +2055,33 @@ mod tests {
         assert_eq!(store.guide_link("s|ch|1").unwrap(), Some(("guide-x".into(), "one.uk".into())));
         assert_eq!(store.guide_channel("guide-x", "one.uk", 0).unwrap().name.as_deref(), Some("Channel One"));
         assert_eq!(store.channel("s|ch|1").unwrap().map(|c| c.name), Some("One".into()), "existing rows are kept");
+    }
+
+    #[test]
+    fn catalogs_from_version_6_index_what_titles_are_found_by() {
+        let folder = tempfile::tempdir().unwrap();
+        let path = folder.path().join("catalog.sqlite");
+        {
+            let sixth = SCHEMA.split("-- What a film or series is found by besides its name").next().unwrap();
+            let db = Connection::open(&path).unwrap();
+            db.execute_batch(sixth).unwrap();
+            db.execute(
+                "INSERT INTO movies (id, source_id, title, title_key, plot, genre, stream)
+                 VALUES ('s|mv|1', 's', 'Paper Boats', 'paperboats', 'Two sisters sail a lake.', 'Drama', '{}')",
+                [],
+            )
+            .unwrap();
+            db.execute("INSERT INTO media_details (item_id, source_id, json) VALUES ('s|mv|1', 's', '{\"cast\": [\"Ines Okafor\"]}')", [])
+                .unwrap();
+            db.pragma_update(None, "user_version", 6).unwrap();
+        }
+        let store = CatalogStore::open(&path).unwrap();
+        let sources = ["s".to_string()];
+        let find = |column, text| store.search_terms(column, text, SearchKind::Movie, &sources, 10, &[], &[]).unwrap();
+        assert_eq!(find(TermColumn::People, "okafor")[0].0, "s|mv|1");
+        assert_eq!(find(TermColumn::Genres, "drama")[0].0, "s|mv|1");
+        assert_eq!(find(TermColumn::Story, "sisters")[0].1.as_deref(), Some("Two sisters sail a lake."));
+        assert!(find(TermColumn::People, "drama").is_empty(), "each column on its own");
     }
 
     #[test]

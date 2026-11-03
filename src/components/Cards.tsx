@@ -56,10 +56,12 @@ interface PosterCardProps {
   eager?: boolean;
   /** Over the poster's corner: "New Episode". */
   badge?: ReactNode;
+  /** Under the year: why search found it ("With Tom Hanks"), up to two lines. */
+  note?: string | null;
 }
 
 /** A 2:3 poster with the title and year below. */
-export function PosterCard({ title, meta, posterUrl, progress, saved, watched, versions, onClick, onContextMenu, hideText, eager, badge }: PosterCardProps) {
+export function PosterCard({ title, meta, posterUrl, progress, saved, watched, versions, onClick, onContextMenu, hideText, eager, badge, note }: PosterCardProps) {
   return (
     <button className="card poster-card" onClick={onClick} onContextMenu={onContextMenu} title={hideText ? title : undefined}>
       <Art className="card-art" src={posterUrl} fallback={title} eager={eager}>
@@ -91,6 +93,7 @@ export function PosterCard({ title, meta, posterUrl, progress, saved, watched, v
         <>
           <div className="card-title">{title}</div>
           {meta && <div className="card-meta">{meta}</div>}
+          {note && <div className="card-note">{note}</div>}
         </>
       )}
     </button>

@@ -32,6 +32,7 @@ import type {
   ResolvedStream,
   RefreshProgress,
   ScheduleRequest,
+  SearchPerson,
   Series,
   SeriesRule,
   SeriesRuleOptions,
@@ -401,6 +402,43 @@ function guideChannel(channel: Channel): GuideChannel {
     name: channel.name,
     nowTitle: guideByChannel.get(channel.id)?.find((p) => p.start <= t && t < p.end)?.title ?? null,
   };
+}
+
+/** Words as search compares them: in lower case, without accents. */
+function searchWords(text: string): string[] {
+  return text.normalize("NFKD").replace(/\p{M}/gu, "").toLowerCase().split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+}
+
+/** Films and series found by the people in them, their genres or a few words of their story, as Core finds them after names: people first, then genres, then stories. */
+function termMatches<T extends Movie | Series>(text: string, items: T[]): { found: [T, string][]; people: [string, string][] } {
+  const wanted = searchWords(text);
+  const letters = wanted.join("").length;
+  const everyWord = (name: string) => {
+    const have = searchWords(name);
+    return wanted.length > 0 && wanted.every((w) => have.some((h) => h.startsWith(w)));
+  };
+  const byPeople: [T, string][] = [];
+  const byGenre: [T, string][] = [];
+  const byStory: [T, string][] = [];
+  const people: [string, string][] = [];
+  if (letters < 3) return { found: [], people };
+  for (const item of items) {
+    const d = detailsFor(item.id);
+    const credits: [string, string][] = [...(d.director ? [[d.director, "Directed by"] as [string, string]] : []), ...d.creators.map((n): [string, string] => [n, "Created by"]), ...d.people.map((p): [string, string] => (p.name.startsWith("Narrated by ") ? [p.name.slice(12), "Narrated by"] : [p.name, "With"]))];
+    const person = credits.find(([name]) => everyWord(name));
+    const genre = d.genres.find(everyWord);
+    if (person) {
+      byPeople.push([item, `${person[1]} ${person[0]}`]);
+      people.push([person[0], item.id]);
+    } else if (genre) byGenre.push([item, genre]);
+    else if (letters >= 4 && item.plot && everyWord(item.plot)) {
+      const words = item.plot.split(/\s+/);
+      const at = Math.max(0, words.findIndex((w) => searchWords(w).some((h) => h.startsWith(wanted[0]))));
+      const from = Math.max(0, at - 4);
+      byStory.push([item, `${from > 0 ? "…" : ""}${words.slice(from, at + 5).join(" ")}${at + 5 < words.length ? "…" : ""}`]);
+    }
+  }
+  return { found: [...byPeople, ...byGenre, ...byStory], people };
 }
 
 function detailsFor(itemId: string): MediaDetails {
@@ -1364,6 +1402,8 @@ export function createMockBackend(): Backend {
       }
     },
     tmdbStatus: async () => tmdb,
+    // The demo library is never sent to TMDB, so nothing waits to be looked up.
+    searchLookupsLeft: async () => (tmdb.configured ? 0 : null),
     tmdbSetKey: async (key) => {
       const trimmed = key.trim();
       if (trimmed && !/^[0-9a-f]{32}$|^eyJ[\w-]+\.[\w-]+\.[\w-]+$/.test(trimmed)) throw new Error("TMDB didn't accept that key. Copy the API key or the read access token from themoviedb.org › Settings › API.");
@@ -1484,7 +1524,7 @@ export function createMockBackend(): Backend {
     search: async (text) => {
       await sleep(30);
       const q = text.trim().toLowerCase();
-      if (!q) return { channels: [], movies: [], series: [], programs: [] };
+      if (!q) return { channels: [], movies: [], series: [], programs: [], people: [], reasons: {} };
       const out = excluded();
       const programs = [];
       for (const [channelId, list] of guideByChannel) {
@@ -1492,11 +1532,25 @@ export function createMockBackend(): Backend {
         if (channelOut(channel, out)) continue;
         for (const p of list) if (p.title.toLowerCase().includes(q) && p.end > now() && programs.length < 300) programs.push({ program: p, channel: named(channel) });
       }
+      const shown = <T extends Movie | Series>(item: T) => !out.has(item.categoryId ?? "") && !out.has(item.id);
+      const named_ = <T extends Movie | Series>(item: T) => item.title.toLowerCase().includes(q);
+      const movies = films.filter((m) => shown(m) && named_(m));
+      const series = shows.filter((s) => shown(s) && named_(s));
+      const movieTerms = termMatches(text, films.filter((m) => shown(m) && !named_(m)));
+      const seriesTerms = termMatches(text, shows.filter((s) => shown(s) && !named_(s)));
+      const people = new Map<string, SearchPerson>();
+      for (const [name, fromId] of [...movieTerms.people, ...seriesTerms.people]) {
+        const known = people.get(name);
+        if (known) known.titles += 1;
+        else people.set(name, { name, photoUrl: null, tmdbId: null, fromId, titles: 1 });
+      }
       return {
         channels: channelList.map(named).filter((c) => c.name.toLowerCase().includes(q) && !channelOut(c, out)),
-        movies: films.filter((m) => m.title.toLowerCase().includes(q) && !out.has(m.categoryId ?? "") && !out.has(m.id)),
-        series: shows.filter((s) => s.title.toLowerCase().includes(q) && !out.has(s.categoryId ?? "") && !out.has(s.id)),
+        movies: [...movies, ...movieTerms.found.map(([m]) => m)].slice(0, 40),
+        series: [...series, ...seriesTerms.found.map(([s]) => s)].slice(0, 40),
         programs,
+        people: [...people.values()].sort((a, b) => b.titles - a.titles).slice(0, 12),
+        reasons: Object.fromEntries([...movieTerms.found, ...seriesTerms.found].map(([item, why]) => [item.id, why])),
       };
     },
 

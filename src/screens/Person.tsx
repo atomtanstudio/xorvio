@@ -28,7 +28,7 @@ export function PersonScreen({ name, tmdbId, fromId }: { name: string; tmdbId?: 
   }, [name, tmdbId, fromId]);
 
   if (person === undefined) return <div className="content" />;
-  if (person === null) return <SearchScreen query={name} />;
+  if (person === null) return <SearchScreen query={name} withPeople={false} />;
   const nothing = !person.movies.length && !person.series.length;
 
   return (

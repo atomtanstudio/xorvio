@@ -11,6 +11,7 @@
 
 mod api;
 mod posters;
+mod terms;
 #[cfg(test)]
 mod tests;
 
@@ -65,6 +66,10 @@ pub(crate) struct Tmdb {
     turns: ProviderTurns,
     /// Posters for lists are looked for one batch at a time.
     filling_posters: tokio::sync::Mutex<()>,
+    /// Settings › Details allows looking every title up for search.
+    search_lookups: AtomicBool,
+    /// Titles are looked up for search one batch at a time.
+    filling_terms: tokio::sync::Mutex<()>,
 }
 
 impl Tmdb {
@@ -85,6 +90,8 @@ impl Tmdb {
             failures: Mutex::default(),
             turns: ProviderTurns::with(4, Duration::from_millis(60)),
             filling_posters: tokio::sync::Mutex::new(()),
+            search_lookups: AtomicBool::new(true),
+            filling_terms: tokio::sync::Mutex::new(()),
         }
     }
 
