@@ -15,6 +15,10 @@ import time
 ROOT, PORT, CLIP_SECONDS = sys.argv[1], int(sys.argv[2]), float(sys.argv[3])
 # How far ahead of real time a reader may get, as a tuner's buffer would.
 LEAD_SECONDS = 1.0
+# Seven transport stream packets, as a broadcast sends them: the clips are
+# small, so larger writes would arrive as bursts of seconds, which players
+# take for falling behind live.
+WRITE = 7 * 188
 
 
 class Handler(http.server.SimpleHTTPRequestHandler):
@@ -36,7 +40,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         try:
             while True:
                 with open(clip, "rb") as source:
-                    while chunk := source.read(64 * 1024):
+                    while chunk := source.read(WRITE):
                         self.wfile.write(chunk)
                         sent += len(chunk)
                         ahead = sent / rate - (time.monotonic() - started)
