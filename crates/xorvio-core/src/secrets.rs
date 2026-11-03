@@ -47,6 +47,7 @@ pub struct KeyringSecrets {
 enum Found {
     Value(Option<String>),
     /// There's an entry, but macOS would ask the person before Xorvio may read it.
+    #[cfg_attr(not(target_os = "macos"), allow(dead_code))]
     WouldAsk,
 }
 
