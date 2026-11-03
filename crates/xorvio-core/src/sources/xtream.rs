@@ -269,11 +269,7 @@ pub(crate) async fn fetch_catalog(
     snapshot.server_time_zone = account.server_time_zone;
     snapshot.capabilities.guide = true;
     for kind in kept {
-        match kind {
-            KeptKind::Movies => snapshot.capabilities.movies = true,
-            KeptKind::Series => snapshot.capabilities.series = true,
-        }
-        snapshot.kept_kinds.insert(kind);
+        snapshot.keep(kind);
     }
     snapshot.warnings = warnings;
     Ok(snapshot)

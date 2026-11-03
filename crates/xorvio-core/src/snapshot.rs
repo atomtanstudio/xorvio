@@ -4,9 +4,10 @@
 //! download that fails half-way never damages the last usable catalog.
 
 use std::collections::{BTreeMap, BTreeSet};
-use xorvio_model::{Category, CategoryKind, Channel, Episode, Movie, Series, SourceCapabilities, Timestamp};
+use xorvio_model::{Category, CategoryKind, Channel, Episode, Movie, Program, Series, SourceCapabilities, Timestamp};
 
 use crate::details::DetailsRecord;
+use crate::sources::xmltv::ChannelName;
 
 /// Request headers a playlist asks for when playing one of its links
 /// (`#EXTVLCOPT:http-user-agent=…`).
@@ -41,6 +42,17 @@ pub(crate) struct CatalogSnapshot {
     /// What a media server remembers watching, merged into Xorvio's own
     /// progress once the catalog is stored.
     pub progress: Vec<crate::sources::server::ServerProgress>,
+    /// A guide that comes with the catalog (a media server's), imported as
+    /// the source's own guide once the catalog is stored.
+    pub listings: Option<Listings>,
+}
+
+/// A guide sent along with a catalog: its channels and their programmes,
+/// under the channels' `epg_id`s.
+#[derive(Debug, Clone, Default, PartialEq)]
+pub(crate) struct Listings {
+    pub channels: Vec<ChannelName>,
+    pub programs: Vec<Program>,
 }
 
 /// The parts of a catalog that can be kept from an earlier refresh.
@@ -48,6 +60,8 @@ pub(crate) struct CatalogSnapshot {
 pub(crate) enum KeptKind {
     Movies,
     Series,
+    /// A media server's live channels (and so their guide).
+    Channels,
 }
 
 impl KeptKind {
@@ -55,6 +69,7 @@ impl KeptKind {
         match self {
             Self::Movies => CategoryKind::Movie,
             Self::Series => CategoryKind::Series,
+            Self::Channels => CategoryKind::Live,
         }
     }
 }
@@ -83,6 +98,21 @@ impl CatalogSnapshot {
                 grouped(previous_series)
             ));
         }
+    }
+
+    /// Keeps the previous rows of a kind that couldn't be downloaded, and
+    /// what they let the source do.
+    pub fn keep(&mut self, kind: KeptKind) {
+        match kind {
+            KeptKind::Movies => self.capabilities.movies = true,
+            KeptKind::Series => self.capabilities.series = true,
+            // The channels' guide stays with them.
+            KeptKind::Channels => {
+                self.capabilities.live = true;
+                self.capabilities.guide = true;
+            }
+        }
+        self.kept_kinds.insert(kind);
     }
 
     /// Capabilities read from what the snapshot holds.
