@@ -40,8 +40,7 @@ import {
   canInset,
   focusAfterAdd,
   focusAfterRemove,
-  hideChanges,
-  insetChanges,
+  heardInInset,
   limitTitle,
   listenTo,
   MAX_TILES,
@@ -52,8 +51,6 @@ import {
   toggleExpanded,
   usesConnection,
   watchingFrom,
-  type InsetTile,
-  type PauseChange,
 } from "./multiviewRules";
 import { bufferRange, watchedEnough } from "./playerRules";
 
@@ -68,10 +65,8 @@ export interface Tile {
   error: string | null;
   /** Each try at a stream. One that arrives after a swap, a retry or removal is let go. */
   attempt: number;
-  /** Paused by someone (the tile's own button or keys, or Pause All), or by the inset. */
+  /** Paused by someone: the tile's own button or keys, or Pause All. */
   paused: boolean;
-  /** Paused by going small in the inset, so it plays again when it's big. */
-  insetPaused: boolean;
   /** Moving onto its buffer after a pause; the direct stream ends meanwhile. */
   startingBuffer: boolean;
   /** Its buffer opens where the pause was, at the buffer's start. */
@@ -125,7 +120,7 @@ export function sameItem(a: NowPlaying, b: NowPlaying) {
 }
 
 /** A tile starting, as it does and after a swap, retry or Go Live: playing, live, from the start of its stream. */
-const fresh = { error: null, paused: false, insetPaused: false, startingBuffer: false, holdAtStart: false, retune: false, behind: 0, ended: false };
+const fresh = { error: null, paused: false, startingBuffer: false, holdAtStart: false, retune: false, behind: 0, ended: false };
 
 let seq = 0;
 function newTile(item: NowPlaying, stream: ResolvedStream | null = null): Tile {
@@ -415,23 +410,11 @@ export function moveTile(id: string, by: 1 | -1) {
 
 // MARK: The inset
 
-const insetTile = (tile: Tile): InsetTile => ({ id: tile.id, live: !!tileChannel(tile), paused: tile.paused, insetPaused: tile.insetPaused });
-
-function applyPauses(changes: PauseChange[]) {
-  for (const { id, paused, insetPaused } of changes) {
-    const tile = tileById(id);
-    if (!tile) continue;
-    if (paused && !tile.paused) saveProgress(tile);
-    update(id, { paused, insetPaused });
-  }
-}
-
-/** The big one heard and playing, the small one as the inset leaves it (insetChanges). */
+/** The big one heard; the small one plays on silently. Neither is paused or played: that's the person's to do. */
 function settleInset() {
-  const [big, small] = state().tiles;
-  if (!big || !small) return;
-  useMultiview.setState({ audio: big.id, expanded: null });
-  applyPauses(insetChanges(insetTile(big), insetTile(small)));
+  const ids = state().tiles.map((t) => t.id);
+  if (ids.length < 2) return;
+  useMultiview.setState({ audio: heardInInset(ids), expanded: null });
 }
 
 /** The two side by side, or as an inset: the one heard fills the view, the other goes small. */
@@ -446,8 +429,7 @@ export function toggleInset() {
 
 /**
  * X: the big picture and the inset change places, and the sound goes with
- * the big one. A film or episode going small pauses; one the inset paused
- * plays again when it's big. A hidden inset shows again.
+ * the big one. Both carry on playing, and a hidden inset shows again.
  */
 export function swapInset() {
   const { tiles, inset } = state();
@@ -456,13 +438,12 @@ export function swapInset() {
   settleInset();
 }
 
-/** The inset out of sight, or back: a film or episode in it waits meanwhile, and a channel plays on. */
+/** The inset out of sight, or back. It plays on meanwhile, unheard. */
 export function toggleInsetHidden() {
   const { tiles, inset, insetHidden, audio } = state();
   const [big, small] = tiles;
   if (!inset || !small) return;
   if (insetHidden) return useMultiview.setState({ insetHidden: false });
-  applyPauses(hideChanges(insetTile(small)));
   // What's out of sight isn't heard.
   useMultiview.setState({ insetHidden: true, audio: audio === small.id ? big.id : audio });
 }
@@ -490,11 +471,10 @@ async function startInset(item: NowPlaying) {
  */
 export function setTilePaused(id: string, paused: boolean) {
   const tile = tileById(id);
-  if (!tile || tile.error || (tile.paused === paused && !tile.insetPaused)) return;
+  if (!tile || tile.error || tile.paused === paused) return;
   if (!paused && tile.retune) return restart(id);
   if (paused) saveProgress(tile);
-  // Played or paused by someone now, so the inset leaves it be.
-  update(id, { paused, insetPaused: false, ended: paused && tile.ended });
+  update(id, { paused, ended: paused && tile.ended });
   // Played again at its end: from the start.
   if (!paused && tile.ended) seekTile(id, 0);
   if (paused && buffersOnPause(app().settings.liveBuffer, tile.stream)) startBuffer(id);
@@ -597,7 +577,7 @@ export function endTile(id: string) {
   const tile = tileById(id);
   if (!tile) return;
   saveProgress(tile, true);
-  update(id, { ended: true, paused: true, insetPaused: false });
+  update(id, { ended: true, paused: true });
 }
 
 /** The tile heard, which the keys and the menu bar's Playback items act on. */
