@@ -21,9 +21,12 @@ use crate::{AppState, show_main_window};
 /// Often enough that "5 minutes before" goes out at 4½ minutes at the latest.
 const CHECK_EVERY: Duration = Duration::from_secs(30);
 
-/// How often new episodes are looked for: the check itself runs when six
-/// hours have passed since the last (xorvio-core keeps the time).
+/// How often new episodes are looked for: the check itself runs when an hour
+/// has passed since the last (xorvio-core keeps the time).
 const NEW_EPISODES_EVERY: Duration = Duration::from_secs(30 * 60);
+
+/// Between one add-on series and the next in a new-episode check.
+const ADDON_PAUSE: Duration = Duration::from_millis(500);
 
 /// Where a reminder carries its channel, for the click.
 const CHANNEL_KEY: &str = "channelId";
@@ -139,8 +142,8 @@ fn allowed(app: &AppHandle, asked: &mut bool) -> bool {
 // MARK: New episodes
 
 /// Looks for new episodes of followed series a little after launch (once the
-/// first refreshes are under way) and then whenever six hours have passed,
-/// as Xorvio for Mac does. Badges are always kept; notifications go out
+/// first refreshes are under way) and then whenever an hour has passed.
+/// Badges and Home's New Episodes row are always kept; notifications go out
 /// while "Tell me when new episodes arrive" is on.
 pub fn spawn_new_episode_checks(app: AppHandle) {
     tauri::async_runtime::spawn(async move {
@@ -153,12 +156,23 @@ pub fn spawn_new_episode_checks(app: AppHandle) {
 }
 
 async fn check_new_episodes(app: &AppHandle) {
-    let core = app.state::<AppState>().core.clone();
+    let state = app.state::<AppState>();
+    let core = state.core.clone();
     let now = unix_now();
     if !core.new_episodes_due(now).unwrap_or(false) {
         return;
     }
-    let found = match core.check_new_episodes(now).await {
+    // Followed add-on series, asked of their add-on one at a time.
+    let mut addon_shows = Vec::new();
+    for id in core.followed_addon_series(now).unwrap_or_default() {
+        if !addon_shows.is_empty() {
+            tokio::time::sleep(ADDON_PAUSE).await;
+        }
+        if let Some(show) = crate::commands::fresh_addon_series(&state, &id).await {
+            addon_shows.push(show);
+        }
+    }
+    let found = match core.check_new_episodes(now, addon_shows).await {
         Ok(found) if !found.is_empty() => found,
         Ok(_) => return,
         Err(e) => {
