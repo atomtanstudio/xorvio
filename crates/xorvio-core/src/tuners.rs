@@ -29,6 +29,7 @@ use futures_util::StreamExt;
 use serde::{Deserialize, Serialize};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpStream;
+use tokio::time::Instant;
 
 use crate::error::SourceError;
 use crate::http::{ApiCall, Http, IDLE_TIMEOUT};
@@ -343,10 +344,10 @@ impl TunerRelay {
 
 /// The server's stream: a transport stream read as it comes, or an HLS
 /// playlist whose segments are read in turn and passed on one after another
-/// (MPEG-TS segments make one transport stream joined end to end).
+/// as they play (MPEG-TS segments make one transport stream joined end to end).
 enum Upstream {
     Transport(futures_util::stream::BoxStream<'static, reqwest::Result<Vec<u8>>>),
-    Playlist(Box<Follower>),
+    Playlist(Box<Follower>, Paced),
 }
 
 impl Upstream {
@@ -354,7 +355,7 @@ impl Upstream {
         if tuned.playlist {
             let mut follower = Follower::new(http.clone(), &tuned.url, tuned.headers.clone())?;
             follower.load().await?;
-            return Ok(Self::Playlist(Box::new(follower)));
+            return Ok(Self::Playlist(Box::new(follower), Paced::default()));
         }
         let response = http.open_live(&tuned.url, &tuned.headers).await?;
         Ok(Self::Transport(response.bytes_stream().map(|chunk| chunk.map(Vec::from)).boxed()))
@@ -368,7 +369,17 @@ impl Upstream {
                 Ok(Some(Err(_))) => Some(Err(SourceError::Network("The connection to the server was interrupted.".into()))),
                 Ok(Some(Ok(bytes))) => Some(Ok(bytes)),
             },
-            Self::Playlist(follower) => follower.next().await.transpose(),
+            Self::Playlist(follower, paced) => loop {
+                match paced.ready(Instant::now()) {
+                    Ready::Bytes(bytes) => return Some(Ok(bytes)),
+                    Ready::At(when) => tokio::time::sleep_until(when).await,
+                    Ready::Empty => match follower.next().await {
+                        Ok(Some(segment)) => paced.push(segment),
+                        Ok(None) => return None,
+                        Err(error) => return Some(Err(error)),
+                    },
+                }
+            },
         }
     }
 }
@@ -473,6 +484,121 @@ impl Follower {
             waits += 1;
         }
     }
+}
+
+// MARK: - Passing segments on as they play
+
+/// A transport stream packet's length.
+const PACKET: usize = 188;
+/// How far ahead of the stream's clock its bytes are passed on, as a tuner's buffer would be.
+const PACE_LEAD: Duration = Duration::from_secs(1);
+/// How far the stream may fall behind its clock (a segment slow to come)
+/// before it carries on from now, rather than catching up in a burst.
+const PACE_SLACK: Duration = Duration::from_secs(1);
+/// A clock reading this far on from the last (a second, at 90 kHz), or any
+/// before it, is a new clock: a segment missed, or the server's transcoder
+/// started again. Its time follows straight on.
+const CLOCK_JUMP: u64 = 90_000;
+
+/// An HLS stream's segments passed on as they play, by the stream's own
+/// clock (its PCR), as a tuner sends a broadcast. Passed on whole, a segment
+/// reaches the player as a burst of seconds, which it takes for falling
+/// behind live: it skips to the end, then waits for the next. Segments that
+/// aren't transport streams are passed on as they are.
+#[derive(Default)]
+struct Paced {
+    segment: Vec<u8>,
+    /// How much of the segment has been passed on.
+    sent: usize,
+    /// The packets whose clock is followed: the first seen carrying one.
+    pid: Option<u16>,
+    /// A reading of the stream's clock and the moment it's due.
+    clock: Option<(u64, Instant)>,
+    /// The last reading and its moment.
+    last: Option<(u64, Instant)>,
+}
+
+#[derive(Debug, PartialEq)]
+enum Ready {
+    Bytes(Vec<u8>),
+    /// Nothing more until then.
+    At(Instant),
+    /// The segment's all been passed on.
+    Empty,
+}
+
+impl Paced {
+    fn push(&mut self, segment: Vec<u8>) {
+        self.segment = segment;
+        self.sent = 0;
+    }
+
+    /// What can be passed on at `now`: the segment up to its next packet that isn't due yet.
+    fn ready(&mut self, now: Instant) -> Ready {
+        let start = self.sent;
+        let mut wait = None;
+        while self.sent < self.segment.len() {
+            let Some(packet) = self.segment.get(self.sent..self.sent + PACKET).filter(|packet| packet[0] == 0x47) else {
+                // Not a transport stream, or not in whole packets: as it is.
+                self.sent = self.segment.len();
+                break;
+            };
+            if let Some((pid, clock)) = clock_reading(packet)
+                && *self.pid.get_or_insert(pid) == pid
+            {
+                let due = self.due(clock, now);
+                if due > now + PACE_LEAD {
+                    wait = Some(due - PACE_LEAD);
+                    break;
+                }
+            }
+            self.sent += PACKET;
+        }
+        match wait {
+            _ if self.sent > start => Ready::Bytes(self.segment[start..self.sent].to_vec()),
+            Some(when) => Ready::At(when),
+            None => Ready::Empty,
+        }
+    }
+
+    /// When the packet whose clock reads `clock` is due, at `now`.
+    fn due(&mut self, clock: u64, now: Instant) -> Instant {
+        let due = match (self.clock, self.last) {
+            (Some((base, at)), Some((last, last_due))) => {
+                if clock < last || clock - last > CLOCK_JUMP {
+                    self.clock = Some((clock, last_due));
+                    last_due
+                } else {
+                    at + Duration::from_micros((clock - base) * 100 / 9)
+                }
+            }
+            _ => {
+                self.clock = Some((clock, now));
+                now
+            }
+        };
+        let due = if due + PACE_SLACK < now {
+            self.clock = Some((clock, now));
+            now
+        } else {
+            due
+        };
+        self.last = Some((clock, due));
+        due
+    }
+}
+
+/// A transport stream packet's clock reading (its PCR, in 90 kHz ticks) and
+/// whose packets carry it, when it has one.
+fn clock_reading(packet: &[u8]) -> Option<(u16, u64)> {
+    let adapted = packet[3] & 0x20 != 0;
+    if !adapted || packet[4] < 7 || packet[5] & 0x10 == 0 {
+        return None;
+    }
+    let pid = (u16::from(packet[1] & 0x1f) << 8) | u16::from(packet[2]);
+    let pcr = &packet[6..11];
+    let base = (u64::from(pcr[0]) << 25) | (u64::from(pcr[1]) << 17) | (u64::from(pcr[2]) << 9) | (u64::from(pcr[3]) << 1) | (u64::from(pcr[4]) >> 7);
+    Some((pid, base))
 }
 
 /// What a playlist lists.
@@ -656,6 +782,90 @@ mod tests {
         assert_eq!(parse_playlist(master).variant.as_deref(), Some("low/index.m3u8"));
         assert!(!parse_playlist("<html>busy</html>").is_playlist);
         assert!(parse_playlist("#EXTM3U\n#EXTINF:2,\na.ts\n#EXT-X-ENDLIST\n").ended);
+    }
+
+    /// A transport stream packet of `pid`, with the clock reading `pcr` (90 kHz ticks) when given.
+    fn packet(pid: u16, pcr: Option<u64>) -> Vec<u8> {
+        let mut packet = vec![0xff; PACKET];
+        packet[..3].copy_from_slice(&[0x47, (pid >> 8) as u8 & 0x1f, pid as u8]);
+        packet[3] = 0x10;
+        if let Some(pcr) = pcr {
+            packet[3] = 0x30;
+            packet[4..12].copy_from_slice(&[7, 0x10, (pcr >> 25) as u8, (pcr >> 17) as u8, (pcr >> 9) as u8, (pcr >> 1) as u8, ((pcr & 1) << 7) as u8 | 0x7e, 0]);
+        }
+        packet
+    }
+
+    /// `seconds` of a stream from `from` seconds on its clock: the clock in a
+    /// packet each tenth of a second, with three more packets after each.
+    fn segment(from: f64, seconds: f64) -> Vec<u8> {
+        let start = (from * 90_000.0) as u64;
+        (0..(seconds * 10.0).round() as u64)
+            .flat_map(|tenth| [packet(256, Some(start + tenth * 9_000)), packet(256, None), packet(256, None), packet(256, None)].concat())
+            .collect()
+    }
+
+    const TENTH: usize = 4 * PACKET;
+
+    fn bytes(ready: Ready) -> usize {
+        match ready {
+            Ready::Bytes(bytes) => bytes.len(),
+            other => panic!("nothing to pass on: {other:?}"),
+        }
+    }
+
+    #[test]
+    fn segments_are_passed_on_as_they_play() {
+        let start = Instant::now();
+        let ms = Duration::from_millis;
+        let mut paced = Paced::default();
+        paced.push(segment(0.0, 3.0));
+        assert_eq!(bytes(paced.ready(start)), 11 * TENTH, "the first second at once, as a tuner's buffer has it");
+        assert_eq!(paced.ready(start), Ready::At(start + ms(100)));
+        assert_eq!(bytes(paced.ready(start + ms(100))), TENTH, "then each tenth as it plays");
+        assert_eq!(bytes(paced.ready(start + ms(2000))), 18 * TENTH);
+        assert_eq!(paced.ready(start + ms(2000)), Ready::Empty, "the segment's all passed on");
+
+        // The next segment follows on its clock; one slow to come carries on from now, rather than in a burst.
+        paced.push(segment(3.0, 3.0));
+        let late = start + ms(6000);
+        assert_eq!(bytes(paced.ready(late)), 11 * TENTH);
+        assert_eq!(paced.ready(late), Ready::At(late + ms(100)));
+    }
+
+    #[test]
+    fn a_new_clock_follows_straight_on() {
+        let start = Instant::now();
+        let ms = Duration::from_millis;
+        let mut paced = Paced::default();
+        paced.push(segment(0.0, 1.0));
+        assert_eq!(bytes(paced.ready(start)), 10 * TENTH);
+        // The server's transcoder started again, with a clock of its own.
+        paced.push(segment(500.0, 2.0));
+        assert_eq!(bytes(paced.ready(start + ms(500))), 7 * TENTH, "from 0.9 s on, not 500 s later");
+        assert_eq!(paced.ready(start + ms(500)), Ready::At(start + ms(600)));
+        // And back to an earlier reading.
+        paced.push(segment(10.0, 1.0));
+        assert_eq!(bytes(paced.ready(start + ms(2700))), 10 * TENTH);
+    }
+
+    #[test]
+    fn only_one_clock_is_followed_and_anything_else_passes_as_it_is() {
+        let start = Instant::now();
+        let mut paced = Paced::default();
+        let mut two = segment(0.0, 2.0);
+        // Another program's packet, on a clock of its own.
+        two.splice(TENTH..TENTH, packet(300, Some(5_000 * 90_000)));
+        paced.push(two);
+        assert_eq!(bytes(paced.ready(start)), 11 * TENTH + PACKET);
+
+        paced.push(b"segment 7|".to_vec());
+        assert_eq!(paced.ready(start), Ready::Bytes(b"segment 7|".to_vec()));
+        assert_eq!(paced.ready(start), Ready::Empty);
+        // A segment that stops partway through a packet.
+        let mut paced = Paced::default();
+        paced.push(segment(0.0, 0.5)[..PACKET + 10].to_vec());
+        assert_eq!(bytes(paced.ready(start)), PACKET + 10);
     }
 
     #[test]
@@ -896,6 +1106,40 @@ mod tests {
         assert_eq!(stand.count("GET /:/timeline"), after.iter().filter(|line| line.starts_with("GET /:/timeline")).count(), "no pings once let go");
         let noted = lock(&notes).clone();
         assert!(matches!(&noted[0][0].release, Release::PlexSession { grab: Some(grab), .. } if grab == "5.1-xorviotestsession"));
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn a_playlists_segments_reach_the_reader_as_they_play() {
+        // Three one-second segments, listed at once.
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let base = format!("http://{}", listener.local_addr().unwrap());
+        tokio::spawn(async move {
+            while let Ok((mut socket, _)) = listener.accept().await {
+                let mut head = [0u8; 2048];
+                let count = socket.read(&mut head).await.unwrap_or(0);
+                let path = String::from_utf8_lossy(&head[..count]).split_whitespace().nth(1).unwrap_or_default().to_string();
+                let body = match path.strip_prefix("/s").and_then(|name| name.strip_suffix(".ts")?.parse::<u32>().ok()) {
+                    Some(n) => segment(f64::from(n), 1.0),
+                    None => b"#EXTM3U\n#EXT-X-TARGETDURATION:1\n#EXTINF:1,\ns0.ts\n#EXTINF:1,\ns1.ts\n#EXTINF:1,\ns2.ts\n#EXT-X-ENDLIST\n".to_vec(),
+                };
+                let _ = socket.write_all(format!("HTTP/1.1 200 OK\r\nContent-Length: {}\r\nConnection: close\r\n\r\n", body.len()).as_bytes()).await;
+                let _ = socket.write_all(&body).await;
+            }
+        });
+        let release = Release::LiveStream { live_stream_id: "ls".into(), play_session: None };
+        let tuned = Tuned { url: format!("{base}/index.m3u8"), headers: Vec::new(), playlist: true, release };
+        let mut upstream = Upstream::open(&Http::new().unwrap(), &tuned).await.unwrap();
+        let opened = Instant::now();
+        let (mut total, mut early) = (0, 0);
+        while let Some(bytes) = upstream.next().await {
+            total += bytes.unwrap().len();
+            if opened.elapsed() < Duration::from_millis(500) {
+                early = total;
+            }
+        }
+        assert_eq!(total, 30 * TENTH, "all of it");
+        assert!((10 * TENTH..=16 * TENTH).contains(&early), "a second ahead, not all three at once: {early}");
+        assert!(opened.elapsed() >= Duration::from_millis(1800), "the rest as it plays: {:?}", opened.elapsed());
     }
 
     #[tokio::test(flavor = "multi_thread")]
