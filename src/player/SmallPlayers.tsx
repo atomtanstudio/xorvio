@@ -107,9 +107,9 @@ export function MiniStrip({ video, paused, onClose, onPopOut }: SmallProps) {
   );
 }
 
-function savedCorner(): Corner {
+function savedCorner(key: string): Corner {
   try {
-    return parseCorner(localStorage.getItem(CORNER_KEY));
+    return parseCorner(localStorage.getItem(key));
   } catch {
     return "bottomRight";
   }
@@ -119,9 +119,11 @@ function savedCorner(): Corner {
  * Dragging the mini player (by its picture or its strip) to a corner. It
  * follows the pointer, then settles in the corner it's heading for, sliding
  * there from where it was let go; a press that hardly moves is a click.
+ * Multiview's inset is dragged the same way, its corner kept under its own
+ * `storageKey`.
  */
-export function useMiniPlayerCorner(element: RefObject<HTMLDivElement | null>, active: boolean) {
-  const [corner, setCorner] = useState<Corner>(savedCorner);
+export function useMiniPlayerCorner(element: RefObject<HTMLDivElement | null>, active: boolean, storageKey = CORNER_KEY) {
+  const [corner, setCorner] = useState<Corner>(() => savedCorner(storageKey));
   const [offset, setOffset] = useState<{ x: number; y: number } | null>(null);
   // Where it was let go, for sliding from there into the corner (the same one, too).
   const dropped = useRef<DOMRect | null>(null);
@@ -164,7 +166,7 @@ export function useMiniPlayerCorner(element: RefObject<HTMLDivElement | null>, a
         setCorner(next);
         setDrops((n) => n + 1);
         try {
-          localStorage.setItem(CORNER_KEY, next);
+          localStorage.setItem(storageKey, next);
         } catch {
           // Not remembered; it still goes there.
         }
@@ -172,7 +174,7 @@ export function useMiniPlayerCorner(element: RefObject<HTMLDivElement | null>, a
       window.addEventListener("pointermove", move);
       window.addEventListener("pointerup", up);
     },
-    [active, element],
+    [active, element, storageKey],
   );
 
   // Slides from where it was let go into its corner, rather than jumping.

@@ -15,6 +15,7 @@ import {
   reconnectStatus,
   resumePoint,
   snapCorner,
+  watchedEnough,
   STEADY_MS,
   stepChannel,
   subtitlesFor,
@@ -162,5 +163,10 @@ check("an add-on's file in the language", subtitlesFor({ subtitles: { kind: "tra
 check("picture subtitles aren't drawn in by themselves", subtitlesFor({ subtitles: { kind: "track", language: "spa", label: "Spanish" } }, subs), null);
 check("nothing in the language yet", subtitlesFor({ subtitles: { kind: "track", language: "ger", label: "German" } }, subs), null);
 check("nothing remembered leaves it to the settings", subtitlesFor({ audioLanguage: "spa" }, subs), null);
+
+// Progress
+check("most of a film is watched", watchedEnough(5600, 6000), true);
+check("half isn't", watchedEnough(3000, 6000), false);
+check("no length, not watched", watchedEnough(100, 0), false);
 
 console.log(`Player rules: ${checks} checks passed`);

@@ -42,6 +42,8 @@ export type Command =
   | "playback.lastChannel"
   | "playback.mute"
   | "playback.multiview"
+  | "playback.inset"
+  | "playback.swapInset"
   | "playback.popOut"
   /** Not in the menu: the player's own way back, which Back uses while it fills the window. */
   | "player.back";
