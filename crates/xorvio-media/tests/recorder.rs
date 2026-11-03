@@ -6,7 +6,7 @@ mod common;
 
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicUsize, Ordering};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, OnceLock};
 use std::time::{Duration, Instant};
 
 use axum::Router;
@@ -91,13 +91,30 @@ struct Setup {
     dir: tempfile::TempDir,
 }
 
+/// The generated stream, made once for every test here. Each making its
+/// own, all at the same moment, starved a small CI machine (Windows most)
+/// enough that a recording's ffmpeg started seconds late, and a recording
+/// of a few seconds was rightly judged Partial.
+fn source_stream(tools: &Tools) -> Arc<Vec<u8>> {
+    static STREAM: OnceLock<Arc<Vec<u8>>> = OnceLock::new();
+    STREAM
+        .get_or_init(|| {
+            let dir = tempfile::tempdir().unwrap();
+            let path = dir.path().join("source.ts");
+            make_ts(tools, &path, 20);
+            Arc::new(std::fs::read(&path).unwrap())
+        })
+        .clone()
+}
+
 async fn setup() -> Option<Setup> {
     let tools = tools()?;
     let dir = tempfile::tempdir().unwrap();
     let source = dir.path().join("source.ts");
-    make_ts(&tools, &source, 20);
+    let bytes = source_stream(&tools);
+    std::fs::write(&source, bytes.as_slice()).unwrap();
     let archive = Archive {
-        bytes: Arc::new(std::fs::read(&source).unwrap()),
+        bytes,
         asked: Arc::default(),
         flaky_requests: Arc::default(),
     };
@@ -166,6 +183,15 @@ fn request(channel: &str, start: i64, end: i64) -> ScheduleRequest {
         end,
         padding_before_seconds: 0,
         padding_after_seconds: 0,
+    }
+}
+
+/// Waits for a deleted recording's file to go.
+async fn gone(path: &str) {
+    let started = Instant::now();
+    while std::path::Path::new(path).exists() {
+        assert!(started.elapsed() < Duration::from_secs(5), "{path} wasn't deleted");
+        tokio::time::sleep(Duration::from_millis(100)).await;
     }
 }
 
@@ -297,7 +323,9 @@ async fn stop_keeps_the_recording_and_delete_removes_it() {
     assert!(std::fs::metadata(&path).unwrap().len() > 0);
     recorder.delete(&recording.id, true).unwrap();
     assert!(find(recorder, &recording.id).is_none());
-    assert!(!std::path::Path::new(&path).exists());
+    // Its ad breaks may be being looked for: the file goes once ffmpeg has
+    // let go of it, since Windows can't delete a file another program has open.
+    gone(&path).await;
 
     // Deleting one while it records stops ffmpeg and removes its file.
     let running = recorder.record_now(request("one", now, now + 600)).unwrap();
