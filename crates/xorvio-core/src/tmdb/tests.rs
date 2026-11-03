@@ -500,6 +500,70 @@ async fn lists_fill_missing_posters_from_tmdb_once() {
 }
 
 #[tokio::test]
+async fn titles_are_looked_up_for_search_once() {
+    let stand_in = StandIn::start().await;
+    let (_folder, core, _) = open_with_playlist(&stand_in).await;
+    assert_eq!(core.fill_search_terms().await.unwrap(), 0, "nothing without a key");
+    assert_eq!(core.search_lookups_left().unwrap(), None);
+    assert!(stand_in.calls().is_empty());
+    assert!(core.search("keanu", 20).unwrap().movies.is_empty());
+
+    core.tmdb_set_key(API_KEY).await.unwrap();
+    // Five films and a series, none of which the playlist names anyone in.
+    assert_eq!(core.search_lookups_left().unwrap(), Some(6));
+    assert_eq!(core.fill_search_terms().await.unwrap(), 6);
+    assert_eq!(core.search_lookups_left().unwrap(), Some(0));
+
+    // Found by TMDB's cast, saying why, with who.
+    let matrix = movie(&core, "The Matrix");
+    let found = core.search("keanu", 20).unwrap();
+    assert_eq!(found.movies.iter().map(|movie| movie.id.as_str()).collect::<Vec<_>>(), [matrix.id.as_str()]);
+    assert_eq!(found.reasons[&matrix.id], "With Keanu Reeves");
+    let keanu = &found.people[0];
+    assert_eq!((keanu.name.as_str(), keanu.tmdb_id.as_deref(), keanu.from_id.as_str()), ("Keanu Reeves", Some("6384"), matrix.id.as_str()));
+    assert!(keanu.photo_url.as_deref().is_some_and(|photo| photo.ends_with("/keanu.jpg")));
+    let story = core.search("hacker", 20).unwrap();
+    assert!(story.reasons[&matrix.id].contains("hacker"), "{:?}", story.reasons);
+    let harbor = series(&core, "Harbor Lights");
+    assert_eq!(core.search("mara ellison", 20).unwrap().series.iter().map(|s| s.id.as_str()).collect::<Vec<_>>(), [harbor.id.as_str()]);
+
+    // Only genres, story and credits are asked for, never the page's lot.
+    let asked = stand_in.calls().into_iter().find(|call| call.path == "/3/movie/603").unwrap();
+    assert_eq!(asked.query.get("append_to_response").map(String::as_str), Some("credits"));
+    let asked = stand_in.calls().into_iter().find(|call| call.path == "/3/tv/1399").unwrap();
+    assert_eq!(asked.query.get("append_to_response").map(String::as_str), Some("aggregate_credits"));
+
+    // Settled, found or not: nothing is asked again.
+    let calls = stand_in.calls().len();
+    assert_eq!(core.fill_search_terms().await.unwrap(), 0);
+    assert_eq!(stand_in.calls().len(), calls);
+}
+
+#[tokio::test]
+async fn looking_up_for_search_stops_when_switched_off_or_tmdb_fails() {
+    let stand_in = StandIn::start().await;
+    let (_folder, core, _) = open_with_playlist(&stand_in).await;
+    core.tmdb_set_key(API_KEY).await.unwrap();
+
+    core.set_search_lookups(false);
+    assert_eq!(core.fill_search_terms().await.unwrap(), 0);
+    assert_eq!(core.search_lookups_left().unwrap(), None);
+    core.set_search_lookups(true);
+    core.set_tmdb_enabled(false);
+    assert_eq!(core.fill_search_terms().await.unwrap(), 0, "TMDB switched off");
+    core.set_tmdb_enabled(true);
+    assert!(stand_in.calls().iter().all(|call| call.path == "/3/configuration"));
+
+    // TMDB unreachable: nothing is kept, everything waits for later, and
+    // the batch stops after a few tries rather than asking about each.
+    stand_in.fail_with(500);
+    let asked = stand_in.calls().len();
+    assert_eq!(core.fill_search_terms().await.unwrap(), 0);
+    assert_eq!(core.search_lookups_left().unwrap(), Some(6));
+    assert!(stand_in.calls().len() - asked <= 3, "{}", stand_in.calls().len() - asked);
+}
+
+#[tokio::test]
 async fn the_demo_library_never_has_its_posters_looked_for() {
     let stand_in = StandIn::start().await;
     let folder = tempfile::tempdir().unwrap();

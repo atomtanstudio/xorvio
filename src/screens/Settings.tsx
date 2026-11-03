@@ -202,7 +202,7 @@ export function SettingsScreen() {
 
         <HiddenSettings />
 
-        <DetailsSettings tmdb={settings.tmdb} onTmdb={set("tmdb")} tvmaze={settings.tvmaze} onTvmaze={set("tvmaze")} />
+        <DetailsSettings tmdb={settings.tmdb} onTmdb={set("tmdb")} tmdbSearch={settings.tmdbSearch} onTmdbSearch={set("tmdbSearch")} tvmaze={settings.tvmaze} onTvmaze={set("tvmaze")} />
 
         <AddonsSettings />
 
@@ -680,8 +680,27 @@ function StorageSettings() {
  * Trakt: connecting with a code entered at trakt.tv/activate, what's synced,
  * and (for builds without one) the Trakt app to connect through.
  */
-function DetailsSettings({ tmdb, onTmdb, tvmaze, onTvmaze }: { tmdb: boolean; onTmdb: (on: boolean) => void; tvmaze: boolean; onTvmaze: (on: boolean) => void }) {
+/** How often Settings asks how many titles are left to look up for search, while it's open. */
+const LOOKUPS_EVERY_MS = 15_000;
+
+function DetailsSettings({
+  tmdb,
+  onTmdb,
+  tmdbSearch,
+  onTmdbSearch,
+  tvmaze,
+  onTvmaze,
+}: {
+  tmdb: boolean;
+  onTmdb: (on: boolean) => void;
+  tmdbSearch: boolean;
+  onTmdbSearch: (on: boolean) => void;
+  tvmaze: boolean;
+  onTvmaze: (on: boolean) => void;
+}) {
   const [status, setStatus] = useState<TmdbStatus | null>(null);
+  // Titles still to look up for search; null when they aren't being looked up.
+  const [lookupsLeft, setLookupsLeft] = useState<number | null>(null);
   const [key, setKey] = useState("");
   const [editing, setEditing] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -690,6 +709,17 @@ function DetailsSettings({ tmdb, onTmdb, tvmaze, onTvmaze }: { tmdb: boolean; on
   useEffect(() => {
     api.tmdbStatus().then(setStatus).catch(() => {});
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    const ask = () => api.searchLookupsLeft().then((left) => !cancelled && setLookupsLeft(left)).catch(() => {});
+    ask();
+    const timer = setInterval(ask, LOOKUPS_EVERY_MS);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
+  }, [tmdb, tmdbSearch, status]);
 
   const save = async (value: string) => {
     setBusy(true);
@@ -711,7 +741,7 @@ function DetailsSettings({ tmdb, onTmdb, tvmaze, onTvmaze }: { tmdb: boolean; on
   return (
     <SettingsGroup
       title="Details"
-      note={`TMDB and TVmaze fill in what your sources don't send. Only a title's name and year, or its TMDB or IMDb id, are sent, never the source it came from. TVmaze is asked about series only when TMDB can't help. Switched off, neither is asked anything, and what they said before still shows. ${TMDB_NOTICE}`}
+      note={`TMDB and TVmaze fill in what your sources don't send. Only a title's name and year, or its TMDB or IMDb id, are sent, never the source it came from. With search lookups on, every film and series your sources name no one in is looked up once in the background, so search finds it by its cast, director, genre and story too. TVmaze is asked about series only when TMDB can't help. Switched off, neither is asked anything, and what they said before still shows. ${TMDB_NOTICE}`}
     >
       <Row label="TMDB">
         <Toggle on={tmdb} onChange={onTmdb} label="Look up details, artwork and cast" />
@@ -731,6 +761,16 @@ function DetailsSettings({ tmdb, onTmdb, tvmaze, onTvmaze }: { tmdb: boolean; on
                   </button>
                 )}
               </span>
+            )}
+          </div>
+        </Row>
+      )}
+      {tmdb && using && (
+        <Row label="Search">
+          <div className="search-lookups">
+            <Toggle on={tmdbSearch} onChange={onTmdbSearch} label="Look up cast and stories for every title" />
+            {tmdbSearch && lookupsLeft != null && (
+              <span className="muted small">{lookupsLeft === 0 ? "Every title has been looked up." : `${lookupsLeft.toLocaleString()} title${lookupsLeft === 1 ? "" : "s"} still to look up, in the background.`}</span>
             )}
           </div>
         </Row>

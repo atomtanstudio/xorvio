@@ -44,6 +44,7 @@ mod source_sheet;
 mod sources;
 mod store;
 pub mod sync;
+mod terms;
 mod titles;
 mod tmdb;
 mod track_choices;

@@ -16,6 +16,7 @@ use crate::{BrowseQuery, BrowseSort, ChannelFilter, Core, MemorySecrets, now};
 
 mod home;
 mod profiles;
+mod search_terms;
 mod titles;
 mod source_controls;
 
