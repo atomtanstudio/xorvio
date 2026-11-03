@@ -6,7 +6,7 @@
 
 Xorvio brings M3U playlists, Xtream Codes accounts, XMLTV guides, Plex, Jellyfin and Emby servers, your own video folders and Stremio-protocol add-ons into one library, with one search and one watchlist across all of them:
 
-- **Live TV with a full guide**: a preview that keeps playing while you browse, catch-up wherever your provider keeps an archive, and up to two hours of live TV to pause and rewind.
+- **Live TV with a full guide**, from your playlists and providers or the tuners on your Plex, Jellyfin or Emby server: a preview that keeps playing while you browse, catch-up wherever your provider keeps an archive, and up to two hours of live TV to pause and rewind.
 - **A built-in DVR**: record what's on now or schedule it from the guide, record a series' new episodes, and skip the ad breaks.
 - **Film and series pages** with full-window artwork, cast and ratings, Up Next, and one watchlist for films, series and upcoming programmes (synced with Trakt if you like).
 - **One search across every source**: channels, guide listings, and films and series by title, cast, director, genre or story.
@@ -123,6 +123,8 @@ XORVIO_FFMPEG_DIR=$PWD/src-tauri/binaries cargo test -p xorvio-media   # the med
 ```
 
 GitHub Actions runs them on macOS, Ubuntu and Windows for every push and pull request, the tests against Xorvio's own ffmpeg (`.github/workflows/ci.yml`).
+
+The media server sources also have tests against real servers, ignored unless asked for. `Scripts/test-servers/jellyfin-emby.sh` starts throwaway Jellyfin and Emby servers in Docker with made-up films, a series and, on Jellyfin, live TV (an M3U tuner with three test channels and an XMLTV guide; Emby's live TV needs Emby Premiere), and prints how to run `crates/xorvio-core/tests/media_servers_docker.rs` against them. `Scripts/test-servers/plex.sh` does the same for Plex's films and series; Plex's live TV needs a tuner and a claimed server, so it's tested against stand-in replies shaped like a real server's.
 
 To try a build without touching your own library or keychain, give it another identifier and keep its logins in memory (debug builds only): `npx tauri build --debug --bundles app --config '{"identifier":"com.xorvio.desktop.test","productName":"Xorvio Test"}'`, then `open -n --env XORVIO_MEMORY_SECRETS=1 "target/debug/bundle/macos/Xorvio Test.app"`. Delete its data folder (`com.xorvio.desktop.test`) afterwards.
 

@@ -1,0 +1,10 @@
+{
+  "MediaContainer": {
+    "size": 3,
+    "Channel": [
+      { "id": "2", "gridKey": "2", "vcn": "2", "title": "North Test News", "callSign": "NTN", "thumb": "/library/metadata/900/thumb/1793454568" },
+      { "id": "5.1", "gridKey": "5.1", "vcn": "5.1", "title": "Harbor Test One", "callSign": "HTO", "isHd": true },
+      { "id": "9", "gridKey": "9", "vcn": "9", "title": "Meadow Test Radio", "callSign": "MTR" }
+    ]
+  }
+}

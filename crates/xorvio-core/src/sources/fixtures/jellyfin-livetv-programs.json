@@ -1,0 +1,229 @@
+{
+  "Items": [
+    {
+      "Name": "Harbor Lights",
+      "ServerId": "f509df84f9ea447da68868a9fa6964c2",
+      "Id": "7282915c216b962f357aa8053c28fce0",
+      "ChannelId": "8257e7e68de2a0b6ab2f9d5837674226",
+      "Overview": "Episode 1 of a made-up drama about a harbour town.",
+      "Genres": [
+        "Drama"
+      ],
+      "RunTimeTicks": 18000000000,
+      "IndexNumber": 1,
+      "ParentIndexNumber": 2,
+      "Type": "Program",
+      "GenreItems": [
+        {
+          "Name": "Drama",
+          "Id": "090eac6e9de4fe1fbc194e5b96691277"
+        }
+      ],
+      "ImageTags": {},
+      "ImageBlurHashes": {},
+      "MediaType": "Unknown",
+      "EndDate": "2026-11-02T19:30:00.0000000Z",
+      "StartDate": "2026-11-02T19:00:00.0000000Z",
+      "EpisodeTitle": "Tide 12",
+      "IsSeries": true
+    },
+    {
+      "Name": "Meadow Sessions",
+      "ServerId": "f509df84f9ea447da68868a9fa6964c2",
+      "Id": "dd3b70771f51e4b49933ba0760a911ec",
+      "ChannelId": "2ba279fd1349e1be62846298d5eb757f",
+      "Overview": "Made-up music.",
+      "Genres": [
+        "Music"
+      ],
+      "RunTimeTicks": 18000000000,
+      "Type": "Program",
+      "GenreItems": [
+        {
+          "Name": "Music",
+          "Id": "f67b77276f76b0e5413abcedbe777bbe"
+        }
+      ],
+      "ImageTags": {},
+      "ImageBlurHashes": {},
+      "MediaType": "Unknown",
+      "EndDate": "2026-11-02T19:30:00.0000000Z",
+      "StartDate": "2026-11-02T19:00:00.0000000Z"
+    },
+    {
+      "Name": "North Bulletin",
+      "ServerId": "f509df84f9ea447da68868a9fa6964c2",
+      "Id": "2ed0dddcdb0f03932221c50ea2963b54",
+      "ChannelId": "b3237568e82c476ca89e17a3ff6a1fee",
+      "Overview": "Made-up news on the half hour.",
+      "Genres": [
+        "News"
+      ],
+      "RunTimeTicks": 18000000000,
+      "Type": "Program",
+      "GenreItems": [
+        {
+          "Name": "News",
+          "Id": "ed1edc90e96b1ecda3342a652ebf213b"
+        }
+      ],
+      "ImageTags": {},
+      "ImageBlurHashes": {},
+      "MediaType": "Unknown",
+      "EndDate": "2026-11-02T19:30:00.0000000Z",
+      "StartDate": "2026-11-02T19:00:00.0000000Z",
+      "IsNews": true
+    },
+    {
+      "Name": "Harbor Lights",
+      "ServerId": "f509df84f9ea447da68868a9fa6964c2",
+      "Id": "6b8bdbc6409718b95f2fe1fc2dd841cb",
+      "ChannelId": "8257e7e68de2a0b6ab2f9d5837674226",
+      "Overview": "Episode 2 of a made-up drama about a harbour town.",
+      "Genres": [
+        "Drama"
+      ],
+      "RunTimeTicks": 18000000000,
+      "IndexNumber": 2,
+      "ParentIndexNumber": 2,
+      "Type": "Program",
+      "GenreItems": [
+        {
+          "Name": "Drama",
+          "Id": "090eac6e9de4fe1fbc194e5b96691277"
+        }
+      ],
+      "ImageTags": {},
+      "ImageBlurHashes": {},
+      "MediaType": "Unknown",
+      "EndDate": "2026-11-02T20:00:00.0000000Z",
+      "StartDate": "2026-11-02T19:30:00.0000000Z",
+      "IsRepeat": true,
+      "EpisodeTitle": "Tide 13",
+      "IsSeries": true
+    },
+    {
+      "Name": "Meadow Sessions",
+      "ServerId": "f509df84f9ea447da68868a9fa6964c2",
+      "Id": "0dbee5d34ddb0b7ff91f4cb8dfba05ab",
+      "ChannelId": "2ba279fd1349e1be62846298d5eb757f",
+      "Overview": "Made-up music.",
+      "Genres": [
+        "Music"
+      ],
+      "RunTimeTicks": 18000000000,
+      "Type": "Program",
+      "GenreItems": [
+        {
+          "Name": "Music",
+          "Id": "f67b77276f76b0e5413abcedbe777bbe"
+        }
+      ],
+      "ImageTags": {},
+      "ImageBlurHashes": {},
+      "MediaType": "Unknown",
+      "EndDate": "2026-11-02T20:00:00.0000000Z",
+      "StartDate": "2026-11-02T19:30:00.0000000Z"
+    },
+    {
+      "Name": "North Bulletin",
+      "ServerId": "f509df84f9ea447da68868a9fa6964c2",
+      "Id": "911d09bc3845e200dfca634d6c88937a",
+      "ChannelId": "b3237568e82c476ca89e17a3ff6a1fee",
+      "Overview": "Made-up news on the half hour.",
+      "Genres": [
+        "News"
+      ],
+      "RunTimeTicks": 18000000000,
+      "Type": "Program",
+      "GenreItems": [
+        {
+          "Name": "News",
+          "Id": "ed1edc90e96b1ecda3342a652ebf213b"
+        }
+      ],
+      "ImageTags": {},
+      "ImageBlurHashes": {},
+      "MediaType": "Unknown",
+      "EndDate": "2026-11-02T20:00:00.0000000Z",
+      "StartDate": "2026-11-02T19:30:00.0000000Z",
+      "IsNews": true
+    },
+    {
+      "Name": "Harbor Lights",
+      "ServerId": "f509df84f9ea447da68868a9fa6964c2",
+      "Id": "5a49e5d118eeee736288781da8ce8bb1",
+      "ChannelId": "8257e7e68de2a0b6ab2f9d5837674226",
+      "Overview": "Episode 3 of a made-up drama about a harbour town.",
+      "Genres": [
+        "Drama"
+      ],
+      "RunTimeTicks": 18000000000,
+      "IndexNumber": 3,
+      "ParentIndexNumber": 2,
+      "Type": "Program",
+      "GenreItems": [
+        {
+          "Name": "Drama",
+          "Id": "090eac6e9de4fe1fbc194e5b96691277"
+        }
+      ],
+      "ImageTags": {},
+      "ImageBlurHashes": {},
+      "MediaType": "Unknown",
+      "EndDate": "2026-11-02T20:30:00.0000000Z",
+      "StartDate": "2026-11-02T20:00:00.0000000Z",
+      "EpisodeTitle": "Tide 14",
+      "IsSeries": true
+    },
+    {
+      "Name": "Meadow Sessions",
+      "ServerId": "f509df84f9ea447da68868a9fa6964c2",
+      "Id": "1bdb1c9b5cdafbaf96934fb3f129c0e6",
+      "ChannelId": "2ba279fd1349e1be62846298d5eb757f",
+      "Overview": "Made-up music.",
+      "Genres": [
+        "Music"
+      ],
+      "RunTimeTicks": 18000000000,
+      "Type": "Program",
+      "GenreItems": [
+        {
+          "Name": "Music",
+          "Id": "f67b77276f76b0e5413abcedbe777bbe"
+        }
+      ],
+      "ImageTags": {},
+      "ImageBlurHashes": {},
+      "MediaType": "Unknown",
+      "EndDate": "2026-11-02T20:30:00.0000000Z",
+      "StartDate": "2026-11-02T20:00:00.0000000Z"
+    },
+    {
+      "Name": "North Bulletin",
+      "ServerId": "f509df84f9ea447da68868a9fa6964c2",
+      "Id": "a83f2508382ab7d57388d0456f4b9ae6",
+      "ChannelId": "b3237568e82c476ca89e17a3ff6a1fee",
+      "Overview": "Made-up news on the half hour.",
+      "Genres": [
+        "News"
+      ],
+      "RunTimeTicks": 18000000000,
+      "Type": "Program",
+      "GenreItems": [
+        {
+          "Name": "News",
+          "Id": "ed1edc90e96b1ecda3342a652ebf213b"
+        }
+      ],
+      "ImageTags": {},
+      "ImageBlurHashes": {},
+      "MediaType": "Unknown",
+      "EndDate": "2026-11-02T20:30:00.0000000Z",
+      "StartDate": "2026-11-02T20:00:00.0000000Z",
+      "IsNews": true
+    }
+  ],
+  "TotalRecordCount": 288,
+  "StartIndex": 0
+}

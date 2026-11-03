@@ -13,6 +13,11 @@
 //!   unless they're asked for by name; Jellyfin ignores names it doesn't
 //!   know, so both are asked for the same fields.
 //!
+//! - Live TV is the same on both (Emby wants Emby Premiere for it, and lists
+//!   no channels without). A channel plays once it's opened as a "live
+//!   stream", which holds a tuner until it's closed; Xorvio's tuner relay
+//!   opens and closes them (tuners.rs).
+//!
 //! The token never goes into an address: requests carry it in a header, and
 //! artwork is kept as the server's own path behind a `xorvio-server` address
 //! ([`artwork_url`]), which the app fetches with the header added.
@@ -25,11 +30,14 @@ use futures_util::{StreamExt, stream};
 use reqwest::Method;
 use serde_json::{Value, json};
 use xorvio_model::{
-    CastMember, Category, CategoryKind, Episode, MediaKind, Movie, SeasonInfo, Series, SourceKind, StreamLocator,
-    StreamTarget, Timestamp, VideoFormat,
+    CastMember, Category, CategoryKind, Channel, Episode, MediaKind, Movie, Program, ProgramFlags, SeasonInfo, Series,
+    SourceKind, StreamLocator, StreamTarget, Timestamp, VideoFormat,
 };
 
-use super::server::{ServerLogin, ServerProgress, ServerSession, artwork_url};
+use super::server::{
+    self, LiveTv, Release, ServerLogin, ServerProgress, ServerSession, Tuned, artwork_url, episode_label,
+};
+use super::xmltv::ChannelName;
 use super::{ids, phase, xtream, xtream_details};
 use crate::details::DetailsRecord;
 use crate::error::SourceError;
@@ -67,6 +75,9 @@ const EPISODE_FIELDS: &str =
 const DETAIL_FIELDS: &str = "Overview,Genres,ProviderIds,DateCreated,PremiereDate,ProductionYear,CommunityRating,\
     OfficialRating,Studios,Taglines,ProductionLocations,RemoteTrailers,OriginalTitle,MediaSources,Container,People";
 const SEASON_FIELDS: &str = "Overview,PremiereDate,ChildCount";
+/// Channels whose programmes are asked for in one request: a week of a
+/// busy channel's guide is a few hundred programmes.
+const GUIDE_CHANNELS_AT_ONCE: usize = 20;
 
 // MARK: - Which server
 
@@ -376,6 +387,19 @@ impl<'a> Client<'a> {
         Ok(self.http.api(call).await?.bytes)
     }
 
+    /// A request at a path both servers share (live TV's), for the signed-in user.
+    async fn send_at(&self, method: Method, segments: &[&str], query: &[(&str, &str)], body: Option<&Value>) -> Result<Value, SourceError> {
+        let mut query = query.to_vec();
+        query.push(("UserId", self.user_id));
+        let url = endpoint(&self.session.base_url, segments, &query)?;
+        let call = ApiCall { method, url: &url, headers: &self.headers, json: body };
+        let bytes = self.http.api(call).await?.bytes;
+        if bytes.iter().all(u8::is_ascii_whitespace) {
+            return Ok(Value::Null);
+        }
+        read_json(&bytes)
+    }
+
     /// One page of an item query, and how many items there are in all.
     async fn page(&self, query: &[(&str, &str)], start: usize) -> Result<(Vec<Object>, Option<usize>), SourceError> {
         let (start, limit) = (start.to_string(), PAGE_SIZE.to_string());
@@ -544,11 +568,7 @@ pub(crate) async fn fetch_catalog(
     }
     let mut snapshot = build(source_id, &lists);
     for (name, kind, error) in failures {
-        match kind {
-            KeptKind::Movies => snapshot.capabilities.movies = true,
-            KeptKind::Series => snapshot.capabilities.series = true,
-        }
-        snapshot.kept_kinds.insert(kind);
+        snapshot.keep(kind);
         snapshot.warnings.push(format!(
             "The library “{name}” couldn't be read ({}), so its titles from the last refresh are still shown.",
             error.to_string().trim_end_matches('.')
@@ -939,6 +959,274 @@ pub(crate) async fn set_played(http: &Http, session: &ServerSession, key: &str, 
     let client = Client::new(http, session)?;
     let method = if played { Method::POST } else { Method::DELETE };
     client.call(method, Route::Played(key), &[], None).await.map(drop)
+}
+
+// MARK: - Live TV
+
+/// The server's live channels (TV, then radio, in its own order), their
+/// guide, and how many tuners it has. `None` when it lists no channels.
+pub(crate) async fn fetch_live_tv(http: &Http, session: &ServerSession, source_id: &str) -> Result<Option<LiveTv>, SourceError> {
+    let client = Client::new(http, session)?;
+    let mut raw_channels = Vec::new();
+    let size = PAGE_SIZE.to_string();
+    loop {
+        let start = raw_channels.len().to_string();
+        let query = [
+            ("EnableImages", "true"),
+            ("EnableImageTypes", "Primary"),
+            ("ImageTypeLimit", "1"),
+            ("EnableUserData", "false"),
+            ("AddCurrentProgram", "false"),
+            ("EnableFavoriteSorting", "false"),
+            ("Fields", "Tags"),
+            ("StartIndex", start.as_str()),
+            ("Limit", size.as_str()),
+        ];
+        let page = client.send_at(Method::GET, &["LiveTv", "Channels"], &query, None).await?;
+        let items = json::objects(page.get("Items"));
+        let count = items.len();
+        raw_channels.extend(items.into_iter().cloned());
+        let total = json::int(page.get("TotalRecordCount")).and_then(|total| usize::try_from(total).ok());
+        let more = match total {
+            Some(total) => raw_channels.len() < total.min(MAX_ITEMS),
+            None => count == PAGE_SIZE,
+        };
+        if count == 0 || !more {
+            break;
+        }
+    }
+    let mut live = live_channels(source_id, &raw_channels);
+    if live.channels.is_empty() {
+        return Ok(None);
+    }
+    let now = crate::now();
+    let window = (now - server::GUIDE_HOURS_BACK * 3600, now + server::GUIDE_DAYS_AHEAD * 86_400);
+    let keys: Vec<String> = live.channels.iter().filter_map(|channel| channel.epg_id.clone()).collect();
+    let mut pages = stream::iter(keys.chunks(GUIDE_CHANNELS_AT_ONCE).map(<[String]>::to_vec))
+        .map(|batch| {
+            let client = &client;
+            async move { guide_page(client, &batch, window).await }
+        })
+        .buffered(PAGES_AT_ONCE);
+    while let Some(page) = pages.next().await {
+        live.listings.programs.extend(page?.iter().filter_map(|raw| live_program(source_id, raw)));
+    }
+    live.tuners = tuner_count(&client).await;
+    Ok(Some(live))
+}
+
+/// Programmes on `channels` that end after the window opens and start before it closes.
+async fn guide_page(client: &Client<'_>, channels: &[String], window: (Timestamp, Timestamp)) -> Result<Vec<Object>, SourceError> {
+    let date = |at: Timestamp| DateTime::from_timestamp(at, 0).unwrap_or_default().to_rfc3339_opts(SecondsFormat::Secs, true);
+    let (from, to, ids) = (date(window.0), date(window.1), channels.join(","));
+    let query = [
+        ("ChannelIds", ids.as_str()),
+        ("MinEndDate", from.as_str()),
+        ("MaxStartDate", to.as_str()),
+        ("SortBy", "StartDate"),
+        ("EnableImages", "true"),
+        ("EnableImageTypes", "Primary"),
+        ("ImageTypeLimit", "1"),
+        ("EnableUserData", "false"),
+        ("EnableTotalRecordCount", "false"),
+        ("Fields", "Overview,Genres"),
+    ];
+    let reply = client.send_at(Method::GET, &["LiveTv", "Programs"], &query, None).await?;
+    Ok(json::objects(reply.get("Items")).into_iter().cloned().collect())
+}
+
+/// How many channels the server's tuners play at once: their counts added
+/// up. Unknown when any tuner has no count (an M3U tuner's 0 means no limit)
+/// or the settings can't be read.
+async fn tuner_count(client: &Client<'_>) -> Option<i64> {
+    let settings = client.send_at(Method::GET, &["System", "Configuration", "livetv"], &[], None).await.ok()?;
+    tuners_in(&settings)
+}
+
+fn tuners_in(settings: &Value) -> Option<i64> {
+    let hosts = json::objects(settings.get("TunerHosts"));
+    if hosts.is_empty() {
+        return None;
+    }
+    hosts.iter().map(|host| json::int(host.get("TunerCount")).filter(|count| *count > 0)).sum()
+}
+
+/// The catalog's channels from the server's list, each keeping the
+/// server's order: grouped by their first tag where the server tags them
+/// (Emby keeps an M3U tuner's groups as tags; Jellyfin drops them), else
+/// TV channels in one category and radio stations in another.
+pub(crate) fn live_channels(source_id: &str, raw_channels: &[Object]) -> LiveTv {
+    let mut live = LiveTv::default();
+    let tagged = raw_channels.iter().any(|raw| !strings(raw.get("Tags")).is_empty());
+    let group = |raw: &Object| -> (String, String) {
+        let radio = json::string(raw.get("ChannelType")).is_some_and(|kind| kind.eq_ignore_ascii_case("radio"));
+        match strings(raw.get("Tags")).into_iter().next() {
+            Some(tag) if tagged => (format!("tag:{}", tag.to_lowercase()), tag),
+            _ if radio => ("radio".into(), server::RADIO_CATEGORY.into()),
+            _ => ("tv".into(), server::TV_CATEGORY.into()),
+        }
+    };
+    let mut groups: Vec<(String, String)> = Vec::new();
+    for raw in raw_channels {
+        let found = group(raw);
+        if !groups.iter().any(|(key, _)| *key == found.0) {
+            groups.push(found);
+        }
+    }
+    // Radio after TV, as the server's own apps list them.
+    groups.sort_by_key(|(key, _)| key == "radio");
+    for (key, name) in groups {
+        let category_id = ids::category(source_id, CategoryKind::Live, &key);
+        live.categories.push(Category {
+            id: category_id.clone(),
+            source_id: source_id.to_string(),
+            kind: CategoryKind::Live,
+            name,
+            sort_index: live.categories.len() as i64,
+        });
+        for raw in raw_channels.iter().filter(|raw| group(raw).0 == key) {
+            let Some(channel) = live_channel(source_id, &category_id, live.channels.len() as i64, raw) else { continue };
+            if live.channels.iter().any(|other| other.id == channel.id) {
+                continue;
+            }
+            live.listings.channels.push(ChannelName { epg_id: channel.epg_id.clone().unwrap_or_default(), display_name: channel.name.clone() });
+            live.channels.push(channel);
+        }
+    }
+    live
+}
+
+fn live_channel(source_id: &str, category_id: &str, sort_index: i64, raw: &Object) -> Option<Channel> {
+    let key = text(raw.get("Id"))?;
+    let name = text(raw.get("Name"))?;
+    // "5.1" (a broadcast subchannel) isn't a whole number; the server's order keeps its place.
+    let number = text(raw.get("ChannelNumber")).or_else(|| text(raw.get("Number"))).and_then(|number| number.parse().ok());
+    let logo = text(json::object(raw, "ImageTags").and_then(|tags| tags.get("Primary")))
+        .map(|tag| image(source_id, &key, "Primary", None, &tag, 300));
+    Some(Channel {
+        id: ids::channel(source_id, &key),
+        source_id: source_id.to_string(),
+        name,
+        number,
+        logo_url: logo,
+        category_id: Some(category_id.to_string()),
+        epg_id: Some(key.clone()),
+        stream: StreamLocator::ServerChannel { key, dvr: None },
+        catchup_days: 0,
+        catchup_source: None,
+        sort_index,
+        catchup_offset_minutes: 0,
+        versions: Vec::new(),
+    })
+}
+
+/// A guide programme from the server's, under its channel's id.
+pub(crate) fn live_program(source_id: &str, raw: &Object) -> Option<Program> {
+    let epg_id = text(raw.get("ChannelId"))?;
+    let start = timestamp(raw.get("StartDate"))?;
+    let end = timestamp(raw.get("EndDate")).filter(|end| *end > start)?;
+    let title = text(raw.get("Name"))?;
+    let flag = |name: &str| raw.get(name).and_then(Value::as_bool).unwrap_or(false);
+    // The server's own kinds, for guides without genres.
+    let kind = [("IsMovie", "Movie"), ("IsSports", "Sports"), ("IsNews", "News"), ("IsKids", "Children")]
+        .into_iter()
+        .find(|(name, _)| flag(name))
+        .map(|(_, kind)| kind.to_string());
+    let image_url = text(json::object(raw, "ImageTags").and_then(|tags| tags.get("Primary")))
+        .zip(text(raw.get("Id")))
+        .map(|(tag, id)| image(source_id, &id, "Primary", None, &tag, 600));
+    Some(Program {
+        id: Program::make_id(source_id, &epg_id, start),
+        source_id: source_id.to_string(),
+        start,
+        end,
+        title,
+        subtitle: text(raw.get("EpisodeTitle")),
+        summary: text(raw.get("Overview")),
+        category: genres(raw).into_iter().next().or(kind),
+        image_url,
+        episode: episode_label(json::int(raw.get("ParentIndexNumber")), json::int(raw.get("IndexNumber"))),
+        flags: ProgramFlags {
+            is_new: flag("IsNew"),
+            is_live: flag("IsLive"),
+            is_premiere: flag("IsPremiere"),
+            is_repeat: flag("IsRepeat"),
+        },
+        age_rating: text(raw.get("OfficialRating")),
+        star_rating: rating(raw),
+        year: json::int(raw.get("ProductionYear")).filter(|year| (1870..=2200).contains(year)),
+        genre: None,
+        epg_id,
+    })
+}
+
+/// Opens the channel as a live stream on the server (which takes a tuner,
+/// or joins the stream already open for it) and reads it as it comes in:
+/// the server's own stream, unconverted.
+pub(crate) async fn tune(http: &Http, session: &ServerSession, key: &str) -> Result<Tuned, SourceError> {
+    let client = Client::new(http, session)?;
+    let body = json!({
+        "UserId": client.user_id,
+        "AutoOpenLiveStream": true,
+        "EnableDirectPlay": true,
+        "EnableDirectStream": true,
+        "EnableTranscoding": false,
+    });
+    // Emby reads the request from the address, Jellyfin from either.
+    let query = [("AutoOpenLiveStream", "true"), ("IsPlayback", "true")];
+    let reply = match client.send_at(Method::POST, &["Items", key, "PlaybackInfo"], &query, Some(&body)).await {
+        Ok(reply) => reply,
+        // The servers answer a channel they can't open (every tuner busy, the tuner unreachable) with a 500.
+        Err(SourceError::Http(500 | 503)) => return Err(busy()),
+        Err(error) => return Err(error),
+    };
+    opened(session, key, &reply)
+}
+
+fn busy() -> SourceError {
+    SourceError::Unavailable("The server couldn't open this channel. Its tuners may all be in use.".into())
+}
+
+/// The stream of a channel the server has opened, from its `PlaybackInfo` reply.
+fn opened(session: &ServerSession, key: &str, reply: &Value) -> Result<Tuned, SourceError> {
+    if let Some(problem) = text(reply.get("ErrorCode")) {
+        tracing::info!("the server wouldn't open a channel: {problem}");
+        return Err(busy());
+    }
+    let source = media_sources(reply.as_object().ok_or_else(busy)?).into_iter().find(|source| text(source.get("LiveStreamId")).is_some()).ok_or_else(busy)?;
+    let live_stream_id = text(source.get("LiveStreamId")).ok_or_else(busy)?;
+    // A tuner channel that's an HLS playlist upstream isn't buffered as a
+    // transport stream: the server is asked to copy it into one instead.
+    let hls_upstream = text(source.get("Path")).is_some_and(|path| path.to_lowercase().split('?').next().unwrap_or_default().contains(".m3u"));
+    let mut query = if hls_upstream {
+        vec![("VideoCodec", "copy"), ("AudioCodec", "copy")]
+    } else {
+        vec![("static", "true")]
+    };
+    query.push(("LiveStreamId", live_stream_id.as_str()));
+    let source_id = text(source.get("Id"));
+    if let Some(id) = source_id.as_deref() {
+        query.push(("MediaSourceId", id));
+    }
+    let play_session = text(reply.get("PlaySessionId"));
+    if let Some(play_session) = play_session.as_deref() {
+        query.push(("PlaySessionId", play_session));
+    }
+    Ok(Tuned {
+        url: endpoint(&session.base_url, &["Videos", key, "stream.ts"], &query)?,
+        headers: auth_headers(session),
+        playlist: false,
+        release: Release::LiveStream { live_stream_id, play_session },
+    })
+}
+
+/// Closes a live stream the channel was opened as: the server lets its
+/// tuner go once everyone who opened it has.
+pub(crate) async fn release(http: &Http, session: &ServerSession, live_stream_id: &str, play_session: Option<&str>) -> Result<(), SourceError> {
+    let mut query = vec![("LiveStreamId", live_stream_id)];
+    query.extend(play_session.map(|id| ("PlaySessionId", id)));
+    let url = endpoint(&session.base_url, &["LiveStreams", "Close"], &query)?;
+    http.api(ApiCall::post(&url, &auth_headers(session), None)).await.map(drop)
 }
 
 // MARK: - Reading fields
@@ -1472,6 +1760,86 @@ mod tests {
         assert!(jellyfin.headers[0].1.contains(TOKEN));
     }
 
+    #[test]
+    fn live_tv_from_real_replies() {
+        let live = live_channels("src", &items(&fixture("jellyfin-livetv-channels")));
+        let shown: Vec<(&str, Option<i64>)> = live.channels.iter().map(|channel| (channel.name.as_str(), channel.number)).collect();
+        assert_eq!(shown, [("North Test News", Some(2)), ("Harbor Test One", Some(5)), ("Meadow Test Radio", Some(9))]);
+        assert_eq!(live.categories.iter().map(|category| category.name.as_str()).collect::<Vec<_>>(), ["Live TV"]);
+        let north = &live.channels[0];
+        assert_eq!(north.id, "src|ch|b3237568e82c476ca89e17a3ff6a1fee");
+        assert_eq!(north.epg_id.as_deref(), Some("b3237568e82c476ca89e17a3ff6a1fee"));
+        assert_eq!(north.stream, StreamLocator::ServerChannel { key: "b3237568e82c476ca89e17a3ff6a1fee".into(), dvr: None });
+        assert!(server_path(north.logo_url.as_deref().unwrap()).starts_with("/Items/b3237568e82c476ca89e17a3ff6a1fee/Images/Primary?tag="));
+        assert_eq!(live.channels[2].logo_url, None, "no logo, none made up");
+        assert_eq!(live.listings.channels.iter().map(|name| name.display_name.as_str()).collect::<Vec<_>>(), [
+            "North Test News",
+            "Harbor Test One",
+            "Meadow Test Radio"
+        ]);
+
+        let programs: Vec<Program> = items(&fixture("jellyfin-livetv-programs")).iter().filter_map(|raw| live_program("src", raw)).collect();
+        assert_eq!(programs.len(), 9);
+        let drama = &programs[0];
+        assert_eq!(drama.epg_id, "8257e7e68de2a0b6ab2f9d5837674226");
+        assert_eq!((drama.title.as_str(), drama.subtitle.as_deref(), drama.episode.as_deref()), ("Harbor Lights", Some("Tide 12"), Some("S2 E1")));
+        assert_eq!((drama.end - drama.start, drama.category.as_deref()), (1800, Some("Drama")));
+        assert_eq!(drama.id, Program::make_id("src", &drama.epg_id, drama.start));
+        assert_eq!(drama.summary.as_deref(), Some("Episode 1 of a made-up drama about a harbour town."));
+        assert!(!drama.flags.is_repeat && programs[3].flags.is_repeat, "a repeat is marked");
+        let news = programs.iter().find(|program| program.title == "North Bulletin").unwrap();
+        assert_eq!((news.category.as_deref(), news.episode.as_deref()), (Some("News"), None));
+
+        assert_eq!(tuners_in(&fixture("jellyfin-livetv-config")), Some(2));
+        assert_eq!(tuners_in(&json!({"TunerHosts": [{"TunerCount": 2}, {"TunerCount": 0}]})), None, "an M3U tuner's 0 is no limit");
+        assert_eq!(tuners_in(&json!({"TunerHosts": [{"TunerCount": 2}, {"TunerCount": 4}]})), Some(6));
+        assert_eq!(tuners_in(&json!({})), None);
+    }
+
+    #[test]
+    fn emby_groups_channels_by_their_tags() {
+        let channels = [
+            object(json!({"Id": "1", "Name": "Alpha", "Tags": ["News"], "ChannelType": "TV"})),
+            object(json!({"Id": "2", "Name": "Beta", "Tags": ["Films", "News"], "ChannelType": "TV"})),
+            object(json!({"Id": "3", "Name": "Gamma", "ChannelType": "TV"})),
+            object(json!({"Id": "4", "Name": "Delta", "ChannelType": "Radio"})),
+        ];
+        let live = live_channels("src", &channels);
+        assert_eq!(live.categories.iter().map(|category| category.name.as_str()).collect::<Vec<_>>(), ["News", "Films", "Live TV", "Radio"]);
+        let category_of = |name: &str| live.channels.iter().find(|channel| channel.name == name).unwrap().category_id.clone().unwrap();
+        assert_eq!(category_of("Alpha"), "src|livecat|tag:news");
+        assert_eq!(category_of("Beta"), "src|livecat|tag:films");
+        assert_eq!(category_of("Delta"), "src|livecat|radio");
+        let untagged = live_channels("src", &channels[2..]);
+        assert_eq!(untagged.categories.iter().map(|category| category.name.as_str()).collect::<Vec<_>>(), ["Live TV", "Radio"]);
+        // A channel number with a subchannel keeps its place by the server's order.
+        let sub = live_channels("src", &[object(json!({"Id": "5", "Name": "Five", "ChannelNumber": "5.1"}))]);
+        assert_eq!(sub.channels[0].number, None);
+    }
+
+    #[test]
+    fn an_opened_channel_is_read_as_the_server_sends_it() {
+        let jellyfin = session(SourceKind::Jellyfin, "http://nas:8096");
+        let tuned = opened(&jellyfin, "b3237568e82c476ca89e17a3ff6a1fee", &fixture("jellyfin-livetv-playbackinfo")).unwrap();
+        let url = url::Url::parse(&tuned.url).unwrap();
+        assert_eq!(url.path(), "/Videos/b3237568e82c476ca89e17a3ff6a1fee/stream.ts");
+        let query: HashMap<String, String> = url.query_pairs().map(|(name, value)| (name.into_owned(), value.into_owned())).collect();
+        assert_eq!(query["static"], "true");
+        assert_eq!(query["MediaSourceId"], "e6c96939e3d045dda738acd61cbed83a");
+        assert!(query["LiveStreamId"].ends_with("_e6c96939e3d045dda738acd61cbed83a"));
+        assert!(!tuned.url.contains(TOKEN) && tuned.headers[0].1.contains(TOKEN) && !tuned.playlist);
+        assert!(matches!(&tuned.release, Release::LiveStream { live_stream_id, play_session: Some(_) } if *live_stream_id == query["LiveStreamId"]));
+
+        // A tuner channel that's HLS upstream is copied into a transport stream by the server.
+        let hls = json!({"PlaySessionId": "p", "MediaSources": [{"Id": "m", "LiveStreamId": "l", "Path": "https://iptv.example/live/7.M3U8?token=x"}]});
+        let copied = opened(&jellyfin, "k", &hls).unwrap();
+        assert!(copied.url.contains("VideoCodec=copy&AudioCodec=copy") && !copied.url.contains("static"));
+        // Refused, or opened without a live stream.
+        for refused in [json!({"ErrorCode": "NoCompatibleStream"}), json!({"MediaSources": [{"Id": "m"}]}), json!([])] {
+            assert_eq!(opened(&jellyfin, "k", &refused).unwrap_err(), busy(), "{refused}");
+        }
+    }
+
     // MARK: Against a stand-in server
 
     fn session(kind: SourceKind, base: &str) -> ServerSession {
@@ -1711,6 +2079,90 @@ mod tests {
         assert_eq!(details.network.as_deref(), Some("Northwind Broadcasting"));
         let item = requests(&log).into_iter().find(|request| request.path == "/Users/u1/Items/21").unwrap();
         assert!(item.query["Fields"].contains("People"));
+    }
+
+    #[tokio::test]
+    async fn live_tv_from_a_stand_in() {
+        let (base, log) = serve(|request| match (request.method.as_str(), request.path.as_str()) {
+            ("GET", "/LiveTv/Channels") => (200, fixture("jellyfin-livetv-channels")),
+            ("GET", "/LiveTv/Programs") => {
+                // Only the channels asked for.
+                let asked: Vec<&str> = request.query["ChannelIds"].split(',').collect();
+                let mut page = fixture("jellyfin-livetv-programs");
+                let now = crate::now();
+                let mut items = page["Items"].as_array().cloned().unwrap();
+                items.retain(|item| asked.contains(&item["ChannelId"].as_str().unwrap()));
+                for item in &mut items {
+                    // Moved to now, so the window keeps them.
+                    let at = |offset: i64| chrono::DateTime::from_timestamp(now + offset, 0).unwrap().to_rfc3339();
+                    item["StartDate"] = json!(at(0));
+                    item["EndDate"] = json!(at(1800));
+                }
+                page["Items"] = json!(items);
+                (200, page)
+            }
+            ("GET", "/System/Configuration/livetv") => (200, fixture("jellyfin-livetv-config")),
+            _ => (404, Value::Null),
+        })
+        .await;
+        let http = Http::new().unwrap();
+        let live = fetch_live_tv(&http, &session(SourceKind::Jellyfin, &base), "src").await.unwrap().unwrap();
+        assert_eq!(live.channels.len(), 3);
+        assert_eq!(live.tuners, Some(2));
+        assert_eq!(live.listings.programs.len(), 9);
+        let sent = requests(&log);
+        for request in &sent {
+            assert_eq!(request.query.get("UserId").map(String::as_str), Some("u1"));
+            assert!(!request.target().contains(TOKEN) && request.headers["authorization"].contains(TOKEN));
+        }
+        let guide = sent.iter().find(|request| request.path == "/LiveTv/Programs").unwrap();
+        assert_eq!(guide.query["ChannelIds"].split(',').count(), 3);
+        let (from, to) = (timestamp(Some(&json!(guide.query["MinEndDate"]))).unwrap(), timestamp(Some(&json!(guide.query["MaxStartDate"]))).unwrap());
+        assert_eq!(to - from, server::GUIDE_HOURS_BACK * 3600 + server::GUIDE_DAYS_AHEAD * 86_400);
+        assert!(guide.query["Fields"].contains("Overview"));
+
+        // A server without live TV, and an account that may not watch it.
+        let (empty, _) = serve(|request| match request.path.as_str() {
+            "/LiveTv/Channels" => (200, json!({"Items": [], "TotalRecordCount": 0})),
+            _ => (404, Value::Null),
+        })
+        .await;
+        assert!(fetch_live_tv(&http, &session(SourceKind::Emby, &empty), "src").await.unwrap().is_none());
+        let (refused, _) = serve(|_| (403, Value::Null)).await;
+        let session = session(SourceKind::Jellyfin, &refused);
+        assert!(server::fetch_live_tv(&http, &session, "src").await.unwrap().is_none(), "no live TV, not a problem");
+    }
+
+    #[tokio::test]
+    async fn tuning_and_letting_go_on_both_servers() {
+        for kind in [SourceKind::Jellyfin, SourceKind::Emby] {
+            let (base, log) = serve(|request| match (request.method.as_str(), request.path.as_str()) {
+                ("POST", "/Items/ch1/PlaybackInfo") => (200, fixture("jellyfin-livetv-playbackinfo")),
+                ("POST", "/Items/busy/PlaybackInfo") => (500, json!("Error processing request.")),
+                ("POST", "/LiveStreams/Close") => (204, Value::Null),
+                _ => (404, Value::Null),
+            })
+            .await;
+            let http = Http::new().unwrap();
+            let session = session(kind, &base);
+            let tuned = tune(&http, &session, "ch1").await.unwrap();
+            assert!(tuned.url.starts_with(&format!("{base}/Videos/ch1/stream.ts?")));
+            let sent = requests(&log);
+            let open = &sent[0];
+            assert_eq!((open.query["AutoOpenLiveStream"].as_str(), open.query["IsPlayback"].as_str()), ("true", "true"));
+            let body: Value = serde_json::from_str(&open.body).unwrap();
+            assert_eq!((body["AutoOpenLiveStream"].as_bool(), body["EnableTranscoding"].as_bool()), (Some(true), Some(false)));
+            assert_eq!(tune(&http, &session, "busy").await.unwrap_err(), busy());
+
+            server::release(&http, &session, &tuned.release).await.unwrap();
+            let close = requests(&log).into_iter().find(|request| request.path == "/LiveStreams/Close").unwrap();
+            assert_eq!(close.method, "POST");
+            assert_eq!(close.query["PlaySessionId"], "f8fbe60a9a524496953ddc3e71e6cdb8", "Emby wants the playback session too");
+            assert!(close.query["LiveStreamId"].ends_with("_e6c96939e3d045dda738acd61cbed83a"));
+            // Nothing to keep alive on these servers.
+            server::keep_alive(&http, &session, &tuned.release).await.unwrap();
+            assert_eq!(requests(&log).len(), 3, "{kind:?}");
+        }
     }
 
     #[tokio::test]

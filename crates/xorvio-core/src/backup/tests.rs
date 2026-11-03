@@ -40,6 +40,7 @@ impl Computer {
             created_at: 1,
             sort_index: 0,
             guide_offset_minutes: 0,
+            include_live_tv: true,
         };
         fs::write(data.path().join("sources.json"), serde_json::to_vec_pretty(&[source]).unwrap()).unwrap();
         fs::write(data.path().join("settings.json"), format!(r#"{{"launchScreen":"{name}"}}"#)).unwrap();

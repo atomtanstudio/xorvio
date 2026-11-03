@@ -32,8 +32,9 @@ export function canPreview(movie: Movie) {
       return PLAYABLE.has(extensionOf(stream.path));
     case "server":
       return !!stream.extension && PLAYABLE.has(stream.extension.toLowerCase());
-    // An add-on film has no stream until a copy is chosen.
+    // An add-on film has no stream until a copy is chosen; a server's channel isn't a film.
     case "addon":
+    case "serverChannel":
       return false;
   }
 }
