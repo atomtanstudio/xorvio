@@ -212,6 +212,10 @@ struct Entry {
     /// provider at a time, a new one ending the one before first (ffmpeg
     /// opens the next before closing the last when it seeks).
     feed: Option<Arc<tokio::sync::Semaphore>>,
+    /// Where the player of a remuxed stream says it is, in seconds of the
+    /// stream, for the ffmpeg serving it to keep only a little ahead
+    /// (pace.rs). A fresh one for each ffmpeg, which starts from 0.
+    played: Mutex<Option<watch::Sender<f64>>>,
 }
 
 impl Entry {
@@ -236,6 +240,7 @@ impl Entry {
             timeshift: None,
             failure: AtomicU16::new(0),
             feed: None,
+            played: Mutex::default(),
         }
     }
 
@@ -506,6 +511,19 @@ impl Gateway {
     pub fn failure_status(&self, stream_url: &str) -> Option<u16> {
         let entry = self.shared.entry(&self.shared.id_in(stream_url)?)?;
         Some(entry.failure.load(Ordering::Relaxed)).filter(|status| *status != 0)
+    }
+
+    /// Where the player is in a remuxed stream, in seconds from where the
+    /// stream starts (as `currentTime` counts them). Its ffmpeg runs only a
+    /// minute or so ahead of the last position heard, so the web view's
+    /// Media Source never fills; with none heard yet, a minute from the start.
+    pub fn report_position(&self, stream_url: &str, seconds: f64) {
+        let Some(entry) = self.shared.id_in(stream_url).and_then(|id| self.shared.entry(&id)) else {
+            return;
+        };
+        if let Some(played) = lock(&entry.played).as_ref() {
+            played.send_replace(seconds);
+        }
     }
 
     /// Forgets a stream and stops any ffmpeg serving it.
@@ -1429,7 +1447,9 @@ async fn serve_playlist(
 }
 
 /// Starts ffmpeg for this request and streams MPEG-TS back. Only one
-/// ffmpeg runs per stream: a new request stops the one before.
+/// ffmpeg runs per stream: a new request stops the one before. Its output
+/// keeps a little ahead of where the player reports it is
+/// ([`Gateway::report_position`]), not the whole film ahead.
 fn serve_remux(shared: &Shared, id: &str, entry: &Entry, method: &Method) -> Response<Body> {
     let Some(tools) = &shared.tools else {
         return plain(StatusCode::INTERNAL_SERVER_ERROR, FFMPEG_MISSING);
@@ -1450,7 +1470,9 @@ fn serve_remux(shared: &Shared, id: &str, entry: &Entry, method: &Method) -> Res
     let subtitle_dir = shared.subtitle_root.join(id);
     let subtitle_dir = std::fs::create_dir_all(&subtitle_dir).is_ok().then_some(subtitle_dir.as_path());
     let args = plan.args(&entry.target, &input, entry.offset, subtitle_dir);
-    match remux::spawn(&tools.ffmpeg, args, entry.stop.subscribe(), generation) {
+    let (report, played) = watch::channel(0.0);
+    *lock(&entry.played) = Some(report);
+    match remux::spawn(&tools.ffmpeg, args, entry.stop.subscribe(), generation, Some(played)) {
         Ok(stream) => builder.body(Body::from_stream(stream)).unwrap_or_default(),
         Err(error) => {
             tracing::error!("ffmpeg couldn't be started: {error:#}");

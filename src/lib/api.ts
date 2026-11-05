@@ -263,6 +263,8 @@ export interface Backend {
   restream(url: string, offsetSeconds: number, options: StreamOptions): Promise<ResolvedStream>;
   /** The error status the player was last answered with for a stream (a provider's 403 or 404, the gateway's 502); null while all is well. */
   streamFailure(url: string): Promise<number | null>;
+  /** Where the player is in a remuxed stream (its own `currentTime`), so the gateway keeps only a minute or so ahead. */
+  streamPosition(url: string, seconds: number): Promise<void>;
   /** The audio and subtitles chosen for a series, for its other episodes. */
   trackChoice(seriesId: string): Promise<TrackChoice | null>;
   /** Remembers them for the series; null forgets. */
@@ -631,6 +633,7 @@ async function createTauriBackend(): Promise<Backend> {
     releaseStream: call("releaseStream", "url"),
     restream: call("restream", "url", "offsetSeconds", "options"),
     streamFailure: call("streamFailure", "url"),
+    streamPosition: call("streamPosition", "url", "seconds"),
     trackChoice: call("trackChoice", "seriesId"),
     setTrackChoice: call("setTrackChoice", "seriesId", "choice"),
     startTimeshift: call("startTimeshift", "url"),

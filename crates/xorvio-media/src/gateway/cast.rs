@@ -467,7 +467,7 @@ fn serve_mp4(shared: &Shared, cast: &CastEntry, plan: &CastPlan, method: &Method
     cast.entry.halt();
     let generation = *cast.entry.stop.borrow();
     let args = plan.args(&cast.entry.target, &input, cast.offset);
-    match remux::spawn(&tools.ffmpeg, args, cast.entry.stop.subscribe(), generation) {
+    match remux::spawn(&tools.ffmpeg, args, cast.entry.stop.subscribe(), generation, None) {
         Ok(stream) => builder.body(Body::from_stream(stream)).unwrap_or_default(),
         Err(error) => {
             tracing::error!("ffmpeg couldn't be started for the TV: {error:#}");

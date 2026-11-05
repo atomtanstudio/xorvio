@@ -17,6 +17,7 @@ use tokio::sync::watch;
 use xorvio_model::StreamTarget;
 
 use crate::gateway::PlaybackSupport;
+use crate::pace::Pacer;
 use crate::probe::{Probe, VideoStream};
 use crate::process::{Input, drain_stderr, web_input_args, tool_command};
 
@@ -344,12 +345,16 @@ fn decodes_audio(codec: &str, support: PlaybackSupport) -> bool {
 
 /// Starts ffmpeg and returns its output as a byte stream. ffmpeg is killed
 /// when the stream is dropped (the player disconnected) or when `stop`
-/// moves past `generation` (the stream was released or seeked).
+/// moves past `generation` (the stream was released or seeked). With
+/// `played` (where the player says it is, in seconds of this stream), the
+/// output is held a little ahead of it (pace.rs); without, it comes as fast
+/// as ffmpeg makes it (a TV, which buffers what it wants itself).
 pub(crate) fn spawn(
     ffmpeg: &Path,
     args: Vec<String>,
     stop: watch::Receiver<u64>,
     generation: u64,
+    played: Option<watch::Receiver<f64>>,
 ) -> anyhow::Result<impl Stream<Item = Result<Bytes, std::io::Error>> + Send + 'static> {
     let mut child = tool_command(ffmpeg)
         .args(&args)
@@ -369,16 +374,43 @@ pub(crate) fn spawn(
         child: Child,
         stdout: ChildStdout,
         buffer: Vec<u8>,
+        pace: Option<(Pacer, watch::Receiver<f64>)>,
     }
     let state = State {
         child,
         stdout,
         buffer: vec![0; 64 * 1024],
+        pace: played.map(|played| (Pacer::default(), played)),
     };
     Ok(futures_util::stream::unfold(Some(state), move |state| {
         let mut stop = stop.clone();
         async move {
             let mut state = state?;
+            // Far enough ahead: ffmpeg waits (its output pipe fills) until
+            // the player moves on.
+            let mut unpaced = false;
+            if let Some((pacer, played)) = &mut state.pace {
+                loop {
+                    pacer.heard(*played.borrow_and_update());
+                    if !pacer.is_ahead() {
+                        break;
+                    }
+                    tokio::select! {
+                        changed = played.changed() => if changed.is_err() {
+                            // The stream's reports ended with it.
+                            unpaced = true;
+                            break;
+                        },
+                        _ = stop.wait_for(|current| *current != generation) => {
+                            let _ = state.child.start_kill();
+                            return None;
+                        }
+                    }
+                }
+            }
+            if unpaced {
+                state.pace = None;
+            }
             let read = tokio::select! {
                 read = state.stdout.read(&mut state.buffer) => read,
                 _ = stop.wait_for(|current| *current != generation) => {
@@ -389,6 +421,9 @@ pub(crate) fn spawn(
             match read {
                 Ok(0) => None,
                 Ok(n) => {
+                    if let Some((pacer, _)) = &mut state.pace {
+                        pacer.wrote(&state.buffer[..n]);
+                    }
                     let chunk = Bytes::copy_from_slice(&state.buffer[..n]);
                     Some((Ok(chunk), Some(state)))
                 }

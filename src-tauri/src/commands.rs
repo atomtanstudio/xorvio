@@ -135,6 +135,7 @@ pub fn handler() -> impl Fn(tauri::ipc::Invoke) -> bool + Send + Sync + 'static 
         release_stream,
         restream,
         stream_failure,
+        stream_position,
         track_choice,
         set_track_choice,
         thumbnails,
@@ -1487,6 +1488,13 @@ pub async fn release_stream(state: State<'_, AppState>, url: String) -> CmdResul
 #[tauri::command]
 pub fn stream_failure(state: State<'_, AppState>, url: String) -> Option<u16> {
     state.gateway.failure_status(&url)
+}
+
+/// Where the player is in a remuxed stream, in the stream's own seconds, so
+/// its ffmpeg keeps only a minute or so ahead.
+#[tauri::command]
+pub fn stream_position(state: State<'_, AppState>, url: String, seconds: f64) {
+    state.gateway.report_position(&url, seconds);
 }
 
 /// The audio and subtitles chosen for a series, for its other episodes.

@@ -391,6 +391,69 @@ async fn mkv_with_ac3_is_remuxed_to_mpegts_and_seeks() {
     assert!(gateway.seek(&seeked.url, 1.0).await.is_err());
 }
 
+/// Reads a response until nothing more comes for `quiet` (false) or it ends (true).
+async fn read_until_quiet(response: &mut reqwest::Response, into: &mut Vec<u8>, quiet: Duration) -> bool {
+    loop {
+        match tokio::time::timeout(quiet, response.chunk()).await {
+            Ok(Ok(Some(chunk))) => into.extend_from_slice(&chunk),
+            Ok(Ok(None)) => return true,
+            Ok(Err(error)) => panic!("the stream broke off: {error}"),
+            Err(_) => return false,
+        }
+    }
+}
+
+#[tokio::test]
+async fn a_remuxed_film_keeps_only_a_minute_ahead_of_the_player() {
+    let Some(tools) = tools() else { return };
+    if !has_encoder(&tools, "libx264") {
+        eprintln!("ffmpeg has no libx264; skipping");
+        return;
+    }
+    let dir = tempfile::tempdir().unwrap();
+    let file = dir.path().join("film.mkv");
+    let mut args: Vec<&str> = VIDEO_SOURCE.to_vec();
+    args.extend(AUDIO_SOURCE);
+    let path = file.to_string_lossy();
+    args.extend(["-t", "150", "-c:v", "libx264", "-preset", "ultrafast", "-g", "25", "-c:a", "aac", &path]);
+    ffmpeg(&tools, &args);
+    let origin = serve(dir.path(), Router::new()).await;
+    let gateway = Gateway::start(Some(tools.clone())).await.unwrap();
+    let stream = gateway
+        .prepare(target(&format!("{origin}/files/film.mkv"), false), PlayHint::default())
+        .await
+        .unwrap();
+    assert_eq!(stream.mode, PlaybackMode::Remux);
+    let sent = dir.path().join("sent.ts");
+    let seconds = |bytes: &[u8]| {
+        std::fs::write(&sent, bytes).unwrap();
+        probe(&tools, &sent.to_string_lossy()).duration
+    };
+
+    // ffmpeg copies the whole film in moments; a minute of it comes, then
+    // the gateway waits to hear where the player is.
+    let mut response = client().get(&stream.url).send().await.unwrap();
+    let mut got = Vec::new();
+    assert!(!read_until_quiet(&mut response, &mut got, Duration::from_secs(2)).await, "it waits for the player");
+    let first = seconds(&got);
+    assert!((58.0..68.0).contains(&first), "a minute ahead of the start: {first}");
+
+    gateway.report_position(&stream.url, 50.0);
+    assert!(!read_until_quiet(&mut response, &mut got, Duration::from_secs(2)).await);
+    let second = seconds(&got);
+    assert!((108.0..118.0).contains(&second), "a minute ahead of 50 s: {second}");
+
+    // A position past what was sent isn't this player's.
+    gateway.report_position(&stream.url, 1000.0);
+    assert!(!read_until_quiet(&mut response, &mut got, Duration::from_secs(1)).await);
+    assert!((seconds(&got) - second).abs() < 0.5);
+
+    gateway.report_position(&stream.url, 100.0);
+    assert!(read_until_quiet(&mut response, &mut got, Duration::from_secs(10)).await, "the rest comes, to the end");
+    let whole = seconds(&got);
+    assert!((whole - 150.0).abs() < 1.0, "{whole}");
+}
+
 /// A one-caption PGS (Blu-ray subtitle) file: a white 400×80 box at
 /// (760, 900) on a 1920×1080 canvas, shown from 1 s to 3 s. ffmpeg can read
 /// PGS but not write it.
