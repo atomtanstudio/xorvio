@@ -136,10 +136,21 @@ export async function attachStream(
         report({ message: "This system can't play MPEG-TS streams." });
         return nothing;
       }
+      const remux = stream.mode === "remux";
       const player = mpegts.createPlayer(
         { type: "mpegts", isLive: stream.isLive, url: stream.url },
-        { enableWorker: true, liveBufferLatencyChasing: stream.isLive, lazyLoad: false, autoCleanupSourceBuffer: true, ...mpegtsLatency(latency) },
+        {
+          enableWorker: true,
+          liveBufferLatencyChasing: stream.isLive,
+          lazyLoad: false,
+          autoCleanupSourceBuffer: true,
+          // A remuxed film seeks by starting ffmpeg again, never into what's
+          // already played, so less of that is kept (the default is 3 minutes).
+          ...(remux ? { autoCleanupMaxBackwardDuration: 60, autoCleanupMinBackwardDuration: 30 } : {}),
+          ...mpegtsLatency(latency),
+        },
       );
+      const stopReporting = remux ? reportPosition(video, stream.url) : () => {};
       player.on(mpegts.Events.ERROR, (type: string, detail: string, info?: { code?: number }) =>
         report({ message: `${type}: ${detail}`, status: typeof info?.code === "number" && info.code >= 400 ? info.code : null }),
       );
@@ -150,6 +161,7 @@ export async function attachStream(
       player.load();
       return {
         destroy: () => {
+          stopReporting();
           player.pause();
           player.unload();
           player.detachMediaElement();
@@ -160,6 +172,27 @@ export async function attachStream(
       };
     }
   }
+}
+
+/**
+ * Tells the gateway where a remuxed stream has got to, about once a second
+ * while it plays. ffmpeg copies a film far faster than it plays, and Media
+ * Source holds only a couple of hundred megabytes: mpegts.js, told it's
+ * full, drops the connection and never asks again, so the film would stop a
+ * few minutes in. The gateway keeps ffmpeg a minute or so ahead of what it
+ * hears instead (crates/xorvio-media/src/pace.rs). Paused, nothing is
+ * reported and ffmpeg waits where it is.
+ */
+function reportPosition(video: HTMLVideoElement, url: string) {
+  let last = -Infinity;
+  const report = () => {
+    const now = performance.now();
+    if (now - last < 1000) return;
+    last = now;
+    api.streamPosition(url, video.currentTime).catch(() => {});
+  };
+  video.addEventListener("timeupdate", report);
+  return () => video.removeEventListener("timeupdate", report);
 }
 
 /** WebKit exposes a file's or HLS stream's audio tracks on the element itself. */

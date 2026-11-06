@@ -1819,6 +1819,7 @@ export function createMockBackend(): Backend {
     }),
     // The demo's streams are files that never refuse anything.
     streamFailure: async () => null,
+    streamPosition: async () => {},
     trackChoice: async (seriesId) => trackChoices.get(seriesId) ?? null,
     setTrackChoice: async (seriesId, choice) => {
       if (choice) trackChoices.set(seriesId, choice);

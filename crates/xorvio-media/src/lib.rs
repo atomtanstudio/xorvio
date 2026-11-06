@@ -20,6 +20,7 @@ mod adbreaks;
 mod facts;
 mod gateway;
 mod hls;
+mod pace;
 mod probe;
 mod process;
 mod recorder;
