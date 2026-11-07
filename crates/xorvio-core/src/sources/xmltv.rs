@@ -6,10 +6,11 @@ use std::io::{BufRead, BufReader, Read};
 use std::path::Path;
 
 use flate2::read::MultiGzDecoder;
-use quick_xml::Reader;
-use quick_xml::events::{BytesStart, BytesText, Event};
+use quick_xml::events::{BytesStart, Event};
+use quick_xml::{Reader, XmlVersion};
 use xorvio_model::{Program, ProgramFlags, Timestamp};
 
+use super::xml::{Utf8, entity};
 use crate::error::SourceError;
 use crate::names;
 
@@ -85,7 +86,7 @@ impl<'a> XmltvParser<'a> {
     }
 
     pub fn parse(&mut self, input: impl BufRead) -> anyhow::Result<()> {
-        let mut reader = Reader::from_reader(input);
+        let mut reader = Reader::from_reader(Utf8::new(input)?);
         let config = reader.config_mut();
         config.check_end_names = false;
         config.trim_text(false);
@@ -115,18 +116,19 @@ impl<'a> XmltvParser<'a> {
                 Event::Eof => break,
                 Event::Start(element) => {
                     text.clear();
-                    saw_root |= element.local_name().as_ref() == b"tv";
-                    self.start(&reader, &element, &mut channel_id, &mut current, &mut image_type, &mut episode_system, &mut value_parent);
+                    saw_root |= element.local_name().as_ref() == "tv";
+                    self.start(&element, &mut channel_id, &mut current, &mut image_type, &mut episode_system, &mut value_parent);
                 }
                 Event::Empty(element) => {
                     text.clear();
-                    saw_root |= element.local_name().as_ref() == b"tv";
-                    self.start(&reader, &element, &mut channel_id, &mut current, &mut image_type, &mut episode_system, &mut value_parent);
+                    saw_root |= element.local_name().as_ref() == "tv";
+                    self.start(&element, &mut channel_id, &mut current, &mut image_type, &mut episode_system, &mut value_parent);
                     let name = element.local_name();
                     self.end(name.as_ref(), "", &mut channels, &mut channel_id, &mut current, &mut batch, &mut image_type, &mut episode_system, &mut value_parent)?;
                 }
-                Event::Text(content) => text.push_str(&unescaped(&content)),
-                Event::CData(content) => text.push_str(&String::from_utf8_lossy(&content)),
+                Event::Text(content) => text.push_str(&content.xml10_content()),
+                Event::GeneralRef(reference) => text.push_str(&entity(&reference)),
+                Event::CData(content) => text.push_str(&content.xml10_content()),
                 Event::End(element) => {
                     let value = text.trim().to_string();
                     text.clear();
@@ -160,9 +162,8 @@ impl<'a> XmltvParser<'a> {
     }
 
     #[allow(clippy::too_many_arguments)]
-    fn start<R>(
+    fn start(
         &self,
-        reader: &Reader<R>,
         element: &BytesStart<'_>,
         channel_id: &mut Option<String>,
         current: &mut Option<Current>,
@@ -170,50 +171,48 @@ impl<'a> XmltvParser<'a> {
         episode_system: &mut Option<String>,
         value_parent: &mut Option<&'static str>,
     ) {
-        let attribute = |name: &[u8]| -> Option<String> {
+        let attribute = |name: &str| -> Option<String> {
             element.attributes().flatten().find(|attr| attr.key.local_name().as_ref() == name).map(|attr| {
-                attr.decode_and_unescape_value(reader.decoder())
-                    .map(|value| value.into_owned())
-                    .unwrap_or_else(|_| String::from_utf8_lossy(&attr.value).into_owned())
+                attr.normalized_value(XmlVersion::Implicit1_0).map(|value| value.into_owned()).unwrap_or_else(|_| attr.value.into_owned())
             })
         };
         let in_programme = current.is_some();
         match element.local_name().as_ref() {
-            b"channel" if !in_programme => *channel_id = attribute(b"id"),
-            b"programme" => {
+            "channel" if !in_programme => *channel_id = attribute("id"),
+            "programme" => {
                 *current = None;
-                let (Some(channel), Some(start)) = (attribute(b"channel"), attribute(b"start").and_then(|s| parse_date(&s)))
+                let (Some(channel), Some(start)) = (attribute("channel"), attribute("start").and_then(|s| parse_date(&s)))
                 else {
                     return;
                 };
-                let end = attribute(b"stop").and_then(|s| parse_date(&s)).unwrap_or(start + 3600) + self.offset;
+                let end = attribute("stop").and_then(|s| parse_date(&s)).unwrap_or(start + 3600) + self.offset;
                 let start = start + self.offset;
                 if end > self.window.0 && start < self.window.1 && end > start {
                     *current = Some(Current { channel, start, end, ..Default::default() });
                 }
             }
             // Classic programme artwork; newer <image> elements take precedence.
-            b"icon" if in_programme => {
+            "icon" if in_programme => {
                 if let Some(program) = current.as_mut()
                     && program.image_url.is_none()
                 {
-                    program.image_url = attribute(b"src").and_then(|src| http_url(&src));
+                    program.image_url = attribute("src").and_then(|src| http_url(&src));
                 }
             }
-            b"image" if in_programme => {
-                *image_type = attribute(b"type").or_else(|| {
-                    Some(if attribute(b"orient").as_deref() == Some("L") { "backdrop" } else { "poster" }.into())
+            "image" if in_programme => {
+                *image_type = attribute("type").or_else(|| {
+                    Some(if attribute("orient").as_deref() == Some("L") { "backdrop" } else { "poster" }.into())
                 });
             }
-            b"episode-num" if in_programme => *episode_system = attribute(b"system"),
-            b"rating" if in_programme => *value_parent = Some("rating"),
-            b"star-rating" if in_programme => *value_parent = Some("star-rating"),
-            b"new" | b"premiere" | b"live" | b"previously-shown" if in_programme => {
+            "episode-num" if in_programme => *episode_system = attribute("system"),
+            "rating" if in_programme => *value_parent = Some("rating"),
+            "star-rating" if in_programme => *value_parent = Some("star-rating"),
+            "new" | "premiere" | "live" | "previously-shown" if in_programme => {
                 if let Some(program) = current.as_mut() {
                     match element.local_name().as_ref() {
-                        b"new" => program.flags.is_new = true,
-                        b"premiere" => program.flags.is_premiere = true,
-                        b"live" => program.flags.is_live = true,
+                        "new" => program.flags.is_new = true,
+                        "premiere" => program.flags.is_premiere = true,
+                        "live" => program.flags.is_live = true,
                         _ => program.flags.is_repeat = true,
                     }
                 }
@@ -225,7 +224,7 @@ impl<'a> XmltvParser<'a> {
     #[allow(clippy::too_many_arguments)]
     fn end(
         &mut self,
-        name: &[u8],
+        name: &str,
         value: &str,
         channels: &mut Vec<ChannelName>,
         channel_id: &mut Option<String>,
@@ -235,21 +234,21 @@ impl<'a> XmltvParser<'a> {
         episode_system: &mut Option<String>,
         value_parent: &mut Option<&'static str>,
     ) -> anyhow::Result<()> {
-        if name == b"display-name" {
+        if name == "display-name" {
             if let Some(id) = channel_id.as_ref().filter(|_| current.is_none() && !value.is_empty()) {
                 channels.push(ChannelName { epg_id: id.clone(), display_name: value.to_string() });
             }
             return Ok(());
         }
-        if name == b"channel" {
+        if name == "channel" {
             *channel_id = None;
             return Ok(());
         }
-        if name == b"rating" || name == b"star-rating" {
+        if name == "rating" || name == "star-rating" {
             *value_parent = None;
             return Ok(());
         }
-        if name == b"programme" {
+        if name == "programme" {
             if let Some(program) = current.take() {
                 self.finish(program, batch)?;
             }
@@ -258,13 +257,13 @@ impl<'a> XmltvParser<'a> {
         let Some(program) = current.as_mut() else { return Ok(()) };
         let non_empty = || (!value.is_empty()).then(|| value.to_string());
         match name {
-            b"title" if program.title.is_none() => program.title = non_empty(),
-            b"sub-title" if program.subtitle.is_none() => program.subtitle = non_empty(),
+            "title" if program.title.is_none() => program.title = non_empty(),
+            "sub-title" if program.subtitle.is_none() => program.subtitle = non_empty(),
             // The first description goes with the first title; multi-language
             // guides list one per language.
-            b"desc" if program.summary.is_none() => program.summary = non_empty(),
-            b"category" if program.category.is_none() => program.category = non_empty(),
-            b"image" => {
+            "desc" if program.summary.is_none() => program.summary = non_empty(),
+            "category" if program.category.is_none() => program.category = non_empty(),
+            "image" => {
                 // Landscape art (stills, backdrops) suits cards best; posters are a fallback.
                 if let Some(link) = http_url(value) {
                     let landscape = matches!(image_type.as_deref(), Some("still" | "backdrop"));
@@ -275,7 +274,7 @@ impl<'a> XmltvParser<'a> {
                 }
                 *image_type = None;
             }
-            b"episode-num" => {
+            "episode-num" => {
                 match episode_system.as_deref() {
                     Some("onscreen") if !value.is_empty() => {
                         program.episode = Some(value.to_string());
@@ -290,17 +289,17 @@ impl<'a> XmltvParser<'a> {
                 }
                 *episode_system = None;
             }
-            b"value" if *value_parent == Some("rating") => {
+            "value" if *value_parent == Some("rating") => {
                 if program.age_rating.is_none() && !value.is_empty() && value.chars().count() <= 8 {
                     program.age_rating = Some(value.to_string());
                 }
             }
-            b"value" if *value_parent == Some("star-rating") => {
+            "value" if *value_parent == Some("star-rating") => {
                 if program.star_rating.is_none() {
                     program.star_rating = star_rating(value);
                 }
             }
-            b"date" => program.year = value.get(..4).and_then(|year| year.parse().ok()),
+            "date" => program.year = value.get(..4).and_then(|year| year.parse().ok()),
             _ => {}
         }
         Ok(())
@@ -334,24 +333,6 @@ impl<'a> XmltvParser<'a> {
         }
         Ok(())
     }
-}
-
-/// Element text with entities resolved. Guides written by hand use HTML
-/// entities XML doesn't define; those are kept as written rather than lost.
-fn unescaped(content: &BytesText<'_>) -> String {
-    content
-        .unescape_with(|entity| match entity {
-            _ if quick_xml::escape::resolve_predefined_entity(entity).is_some() => {
-                quick_xml::escape::resolve_predefined_entity(entity)
-            }
-            "nbsp" => Some("\u{a0}"),
-            "ndash" => Some("–"),
-            "mdash" => Some("—"),
-            "hellip" => Some("…"),
-            _ => None,
-        })
-        .map(|text| text.into_owned())
-        .unwrap_or_else(|_| String::from_utf8_lossy(content).into_owned())
 }
 
 /// Stops a decompressing reader once it has produced more than it should.
@@ -579,7 +560,21 @@ mod tests {
         let (programs, _, result) = run(xml, EVERYTHING);
         result.unwrap();
         assert_eq!(programs[0].title, "Café\u{a0}Society");
-        assert!(programs[0].summary.as_deref().is_some_and(|s| s.contains("entity")));
+        assert_eq!(programs[0].summary.as_deref(), Some("A &bogus; entity"), "an unknown entity is kept as written");
+
+        let xml = b"<tv><programme channel=\"a\" start=\"20260925100000\"><title>Caf&#233; &amp; Bar&#x2019;s</title></programme></tv>";
+        let (programs, _, result) = run(xml, EVERYTHING);
+        result.unwrap();
+        assert_eq!(programs[0].title, "Café & Bar\u{2019}s");
+    }
+
+    #[test]
+    fn a_stray_byte_doesnt_end_the_guide() {
+        // Declared UTF-8, with one Latin-1 byte early on: everything after it still counts.
+        let xml = b"<?xml version=\"1.0\" encoding=\"UTF-8\"?><tv><programme channel=\"a\" start=\"20260925100000\"><title>Caf\xe9</title></programme><programme channel=\"a\" start=\"20260925110000\"><title>Later</title></programme></tv>";
+        let (programs, _, result) = run(xml, EVERYTHING);
+        result.unwrap();
+        assert_eq!(programs.iter().map(|p| p.title.as_str()).collect::<Vec<_>>(), ["Caf\u{fffd}", "Later"]);
     }
 
     #[test]

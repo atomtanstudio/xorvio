@@ -128,7 +128,7 @@ fn desk_secrets() -> Arc<MemorySecrets> {
 /// Every file in a backup, uncompressed.
 fn contents(path: &Path) -> Vec<(String, Vec<u8>)> {
     let mut archive = ZipArchive::new(File::open(path).unwrap()).unwrap();
-    let names: Vec<String> = archive.file_names().map(str::to_string).collect();
+    let names: Vec<String> = archive.file_names().map(|name| name.unwrap().into_owned()).collect();
     names
         .into_iter()
         .map(|name| {
