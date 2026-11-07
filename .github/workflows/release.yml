@@ -177,7 +177,7 @@ jobs:
           # Names without the version (Xorvio_aarch64.dmg, Xorvio_x64-setup.exe,
           # Xorvio_amd64.AppImage), so the website's releases/latest/download
           # links reach whichever release is newest.
-          assetNamePattern: "[name]_[arch][setup][ext]"
+          releaseAssetNamePattern: "[name]_[arch][setup][ext]"
 
       - name: Keep the ffmpeg build notes
         shell: bash
