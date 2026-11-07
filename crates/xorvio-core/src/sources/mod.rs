@@ -12,6 +12,7 @@ pub mod plex;
 pub mod server;
 pub mod stream;
 pub mod tvmaze;
+mod xml;
 pub mod xmltv;
 pub mod xtream;
 pub mod xtream_details;

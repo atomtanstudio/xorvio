@@ -22,8 +22,11 @@ uuid.workspace = true
 tracing.workspace = true
 futures-util.workspace = true
 regex.workspace = true
-# Streaming XMLTV, with the encodings older guides still declare (ISO-8859-1).
-quick-xml = { version = "0.42.0", features = ["encoding"] }
+# Streaming XMLTV and .nfo files. quick-xml reads only UTF-8; encoding_rs
+# (already built for it) reads the encodings older guides still declare, such
+# as ISO-8859-1 (sources/xml.rs).
+quick-xml = "0.42.0"
+encoding_rs = "0.8.35"
 # Compressed guides (.xml.gz).
 flate2 = "1.1.1"
 # The operating system's keychain. Without a platform feature keyring falls

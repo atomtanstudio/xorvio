@@ -6,13 +6,14 @@
 
 use std::sync::LazyLock;
 
-use quick_xml::Reader;
-use quick_xml::events::{BytesStart, BytesText, Event};
+use quick_xml::events::{BytesStart, Event};
+use quick_xml::{Reader, XmlVersion};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use xorvio_model::{CastMember, Timestamp};
 
 use crate::details::DetailsRecord;
+use crate::sources::xml::{Utf8, entity};
 
 /// Far bigger than any real one; a larger file isn't an NFO.
 pub(crate) const MAX_BYTES: u64 = 1 << 20;
@@ -61,7 +62,7 @@ impl Nfo {
     /// read before an XML error is kept: many files have a link after the XML.
     pub fn parse(bytes: &[u8]) -> Option<Nfo> {
         let mut nfo = Nfo::default();
-        let mut reader = Reader::from_reader(bytes);
+        let mut reader = Reader::from_reader(Utf8::new(bytes).ok()?);
         reader.config_mut().check_end_names = false;
         let mut buffer = Vec::new();
         // Element names from the root down, lowercased.
@@ -81,10 +82,11 @@ impl Nfo {
                 Event::Start(element) => {
                     path.push(local_name(&element));
                     text.clear();
-                    start(&reader, &element, &path, &mut unique_id_type, &mut actor, &mut rating_source);
+                    start(&element, &path, &mut unique_id_type, &mut actor, &mut rating_source);
                 }
-                Event::Text(content) => text.push_str(&unescaped(&content)),
-                Event::CData(content) => text.push_str(&String::from_utf8_lossy(&content)),
+                Event::Text(content) => text.push_str(&content.xml10_content()),
+                Event::GeneralRef(reference) => text.push_str(&entity(&reference)),
+                Event::CData(content) => text.push_str(&content.xml10_content()),
                 Event::End(_) => {
                     let value = text.trim().to_string();
                     text.clear();
@@ -153,19 +155,16 @@ impl Nfo {
 }
 
 fn local_name(element: &BytesStart<'_>) -> String {
-    String::from_utf8_lossy(element.local_name().as_ref()).to_lowercase()
+    element.local_name().as_ref().to_lowercase()
 }
 
-fn attribute<R>(reader: &Reader<R>, element: &BytesStart<'_>, name: &[u8]) -> Option<String> {
+fn attribute(element: &BytesStart<'_>, name: &str) -> Option<String> {
     element.attributes().flatten().find(|attr| attr.key.local_name().as_ref() == name).map(|attr| {
-        attr.decode_and_unescape_value(reader.decoder())
-            .map(|value| value.into_owned())
-            .unwrap_or_else(|_| String::from_utf8_lossy(&attr.value).into_owned())
+        attr.normalized_value(XmlVersion::Implicit1_0).map(|value| value.into_owned()).unwrap_or_else(|_| attr.value.into_owned())
     })
 }
 
-fn start<R>(
-    reader: &Reader<R>,
+fn start(
     element: &BytesStart<'_>,
     path: &[String],
     unique_id_type: &mut Option<String>,
@@ -173,12 +172,12 @@ fn start<R>(
     rating_source: &mut Option<RatingSource>,
 ) {
     match path {
-        [_, child] if child == "uniqueid" => *unique_id_type = attribute(reader, element, b"type").map(|kind| kind.to_lowercase()),
+        [_, child] if child == "uniqueid" => *unique_id_type = attribute(element, "type").map(|kind| kind.to_lowercase()),
         [_, child] if child == "actor" => *actor = Some(CastMember::default()),
         [_, ratings, rating] if ratings == "ratings" && rating == "rating" => {
             *rating_source = Some(RatingSource {
-                max: attribute(reader, element, b"max").and_then(|max| max.trim().parse().ok()),
-                default: attribute(reader, element, b"default").is_some_and(|value| value.eq_ignore_ascii_case("true")),
+                max: attribute(element, "max").and_then(|max| max.trim().parse().ok()),
+                default: attribute(element, "default").is_some_and(|value| value.eq_ignore_ascii_case("true")),
             });
         }
         _ => {}
@@ -296,21 +295,6 @@ fn age_rating(text: &str) -> Option<String> {
 /// A photo at a web address; a path on someone else's computer is no use here.
 fn web_link(text: &str) -> Option<String> {
     url::Url::parse(text.trim()).ok().filter(|link| matches!(link.scheme(), "http" | "https")).map(|link| link.to_string())
-}
-
-/// Element text with entities resolved; HTML ones XML doesn't define are kept as written.
-fn unescaped(content: &BytesText<'_>) -> String {
-    content
-        .unescape_with(|entity| match entity {
-            _ if quick_xml::escape::resolve_predefined_entity(entity).is_some() => quick_xml::escape::resolve_predefined_entity(entity),
-            "nbsp" => Some("\u{a0}"),
-            "ndash" => Some("–"),
-            "mdash" => Some("—"),
-            "hellip" => Some("…"),
-            _ => None,
-        })
-        .map(|text| text.into_owned())
-        .unwrap_or_else(|_| String::from_utf8_lossy(content).into_owned())
 }
 
 #[cfg(test)]

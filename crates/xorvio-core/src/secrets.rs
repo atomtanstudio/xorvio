@@ -169,7 +169,6 @@ mod macos {
     use std::sync::{Mutex, MutexGuard};
 
     use security_framework::item::{ItemClass, ItemSearchOptions, Reference, SearchResult};
-    use security_framework::os::macos::item::ItemSearchOptionsExt;
     use security_framework::os::macos::keychain::{KeychainUserInteractionLock, SecKeychain};
     use security_framework::os::macos::keychain_item::SecKeychainItem;
     use security_framework::os::macos::passwords::find_generic_password;
