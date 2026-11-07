@@ -3,7 +3,7 @@
 // the stylesheet and script fingerprinted. Run images.mjs first when captures change.
 import { createHash } from "node:crypto";
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { join, basename } from "node:path";
+import { join, basename, extname } from "node:path";
 
 const ROOT = new URL(".", import.meta.url).pathname;
 const SRC = join(ROOT, "src");
@@ -25,6 +25,30 @@ function fingerprint(file, ext) {
 }
 const css = fingerprint("styles.css", ".css");
 const js = fingerprint("site.js", ".js");
+
+// Files in src/assets (the launch film's poster and social image) go to /img with a
+// content hash in the name, so they're cached for a year; pages say {{asset:film-poster.jpg}}.
+const assets = {};
+const ASSETS = join(SRC, "assets");
+mkdirSync(join(OUT, "img"), { recursive: true });
+for (const file of existsSync(ASSETS) ? readdirSync(ASSETS).filter((f) => !f.startsWith(".")) : []) {
+  const ext = extname(file);
+  const body = readFileSync(join(ASSETS, file));
+  const name = `/img/${basename(file, ext)}.${createHash("sha1").update(body).digest("hex").slice(0, 10)}${ext}`;
+  writeFileSync(join(OUT, name), body);
+  assets[file] = name;
+}
+const asset = (name) => {
+  if (!assets[name]) throw new Error(`no such asset: src/assets/${name}`);
+  return assets[name];
+};
+// Large media (the launch film) lives in the xorvio-media R2 bucket and is served at
+// /media/<file> by the Worker; src/media.json names the files. Pages say {{media:launch-film}}.
+const media = JSON.parse(read(join(SRC, "media.json")));
+const mediaUrl = (name) => {
+  if (!media[name]) throw new Error(`no such media: ${name} (src/media.json)`);
+  return `/media/${media[name].file}`;
+};
 mkdirSync(join(OUT, "fonts"), { recursive: true });
 copyFileSync(join(ROOT, "node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2"), join(OUT, "fonts/inter-latin-wght-normal.woff2"));
 
@@ -84,6 +108,7 @@ const GLYPHS = {
   profiles: '<path d="M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Zm7.5 0a3 3 0 1 0 0-6M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6m2.5-6c2.5.4 4.5 2.7 4.5 5.5"/>',
   lock: '<rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5M12 14.5v2.5"/>',
   play: '<rect x="3" y="5" width="18" height="14" rx="3"/><path d="m10 9.2 5 2.8-5 2.8z"/>',
+  film: '<circle cx="12" cy="12" r="9"/><path d="m10 8.6 5 3.4-5 3.4z"/>',
   keyboard: '<rect x="2.5" y="6" width="19" height="12" rx="2.5"/><path d="M6.5 10h1m3 0h1m3 0h1m3 0h.5M6.5 14h11"/>',
   sparkle: '<path d="M12 3.5 13.6 9l5.4 1.6-5.4 1.6L12 17.6l-1.6-5.4L5 10.6 10.4 9zM18.5 15.5l.7 2.1 2.1.7-2.1.7-.7 2.1-.7-2.1-2.1-.7 2.1-.7z"/>',
   access: '<circle cx="12" cy="4.8" r="1.8"/><path d="M5 8.5c2.3.8 4.6 1.2 7 1.2s4.7-.4 7-1.2M12 9.7v4.8m0 0-3 6.3m3-6.3 3 6.3"/>',
@@ -136,9 +161,21 @@ function render(file, meta, body) {
   const preload = meta.preloadShot && images.shots[meta.preloadShot]
     ? `<link rel="preload" as="image" type="image/avif" imagesrcset="${srcset(images.shots[meta.preloadShot].avif)}" imagesizes="(min-width: 1360px) 1280px, 100vw" fetchpriority="high">`
     : "";
+  // A page about a film (meta.film names an entry in src/media.json) tells link previews about it.
+  const film = meta.film ? media[meta.film] : null;
+  const head = film
+    ? [`<meta property="og:video" content="https://xorvio.com/media/${film.file}">`,
+       `<meta property="og:video:secure_url" content="https://xorvio.com/media/${film.file}">`,
+       `<meta property="og:video:type" content="video/mp4">`,
+       `<meta property="og:video:width" content="${film.width}">`,
+       `<meta property="og:video:height" content="${film.height}">`].join("\n  ")
+    : "";
   const html = layout
     .replace(/{{title}}/g, meta.title)
     .replace(/{{ogTitle}}/g, meta.ogTitle || meta.title)
+    .replace(/{{ogType}}/g, meta.ogType || "website")
+    .replace(/{{ogImage}}/g, meta.ogImage ? asset(meta.ogImage) : "/og.jpg")
+    .replace(/{{head}}/g, head)
     .replace(/{{description}}/g, meta.description)
     .replace(/{{path}}/g, meta.path)
     .replace(/{{bodyClass}}/g, meta.bodyClass || "page")
@@ -149,7 +186,9 @@ function render(file, meta, body) {
     .replace(/{{body}}/g, () => expand(body))
     .replace(/{{download}}/g, DOWNLOAD)
     .replace(/{{github}}/g, GITHUB)
-    .replace(/<x-github><\/x-github>/g, GITHUB_MARK);
+    .replace(/<x-github><\/x-github>/g, GITHUB_MARK)
+    .replace(/{{asset:([^}]+)}}/g, (_, name) => asset(name))
+    .replace(/{{media:([^}]+)}}/g, (_, name) => mediaUrl(name));
   writeFileSync(join(OUT, file), html);
   console.log("page", file);
 }

@@ -2,7 +2,7 @@
 
 **Live TV, films and series from the sources you already have, in one calm, fast app.** Free and open source for macOS, Windows and Linux.
 
-![Xorvio's Home screen](Docs/images/home.webp)
+[![Watch the Xorvio launch film (two minutes)](Docs/images/launch-film.webp)](https://xorvio.com/film)
 
 Xorvio brings M3U playlists, Xtream Codes accounts, XMLTV guides, Plex, Jellyfin and Emby servers, your own video folders and Stremio-protocol add-ons into one library, with one search and one watchlist across all of them:
 
@@ -13,6 +13,8 @@ Xorvio brings M3U playlists, Xtream Codes accounts, XMLTV guides, Plex, Jellyfin
 - **Multiview** with up to four channels, films or episodes side by side, each one to pause, rewind and catch up on, or one kept small in a corner of another and swapped in with X (a film through the ad breaks, the game waiting in the corner), plus a mini player, a pop-out window, Picture in Picture, AirPlay and Chromecast.
 - **Plays the hard ones**: MKV, HEVC, AV1, DTS and Dolby audio, through its own bundled FFmpeg.
 - **No account, ads or tracking.** Your library stays on your computer, and logins stay in your system's keychain.
+
+![Xorvio's Home screen](Docs/images/home.webp)
 
 Download it from [xorvio.com](https://xorvio.com) or the [releases page](https://github.com/atomtanstudio/xorvio/releases).
 

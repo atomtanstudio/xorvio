@@ -1,0 +1,31 @@
+---
+title: The launch film — Xorvio
+ogTitle: Xorvio, in two minutes
+description: Two minutes with Xorvio: live TV with a guide that feels like home, pause and rewind, four channels at once, films and series in their best light, and no account, ads or tracking. Free and open source for Mac, Windows and Linux.
+path: /film
+bodyClass: film-page
+ogType: video.other
+ogImage: film-og.jpg
+film: launch-film
+---
+<section class="film" aria-labelledby="film-title">
+  <div class="hero__copy">
+    <p class="eyebrow reveal">The launch film · 2 min</p>
+    <h1 id="film-title" class="hero__title reveal">Xorvio,<br> in two minutes.</h1>
+    <p class="hero__lede reveal">Live TV with a guide that feels like home. Pause it, rewind it, or watch four channels at once. Films and series in their best light. No account, no ads, no tracking.</p>
+  </div>
+  <figure class="film__player reveal reveal--late" data-film>
+    <div class="glow" aria-hidden="true"></div>
+    <div class="film__frame">
+      <video controls preload="metadata" playsinline poster="{{asset:film-poster.jpg}}" width="1920" height="1080" aria-label="The Xorvio launch film">
+        <source src="{{media:launch-film}}" type="video/mp4">
+        Your browser can't play this video. <a href="{{media:launch-film}}">Download the film</a> (MP4, 1080p, 53 MB).
+      </video>
+    </div>
+  </figure>
+  <div class="hero__actions reveal">
+    <a class="button button--primary" href="/#download">Download Xorvio</a>
+    <a class="button button--ghost" href="{{github}}"><x-github></x-github> View on GitHub</a>
+  </div>
+  <p class="hero__note reveal">Free and open source for Mac, Windows and Linux, with no account, ads or tracking. Xorvio doesn't include any channels or content; every title, channel and person in the film is fictional.</p>
+</section>
