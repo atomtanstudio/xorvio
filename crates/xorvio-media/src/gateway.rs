@@ -141,8 +141,8 @@ const START_WAIT: Duration = Duration::from_secs(15);
 const FIRST_SEGMENT_WAIT: Duration = Duration::from_secs(10);
 /// A buffer's window, however it's asked for: ten seconds to four hours.
 const WINDOW_RANGE: (f64, f64) = (10.0, 4.0 * 3600.0);
-/// After a stream playing directly is released, a moment for its
-/// connection to close before the buffer opens its own.
+/// After a stream playing directly or an older buffer of the same channel is
+/// released, a moment for its connection to close before a buffer opens its own.
 const SETTLE: Duration = Duration::from_millis(300);
 
 const FFMPEG_MISSING: &str = "This video needs ffmpeg to play, and Xorvio couldn't find it.";
@@ -574,9 +574,12 @@ impl Gateway {
             1800.0
         };
         // A provider allowing one connection would refuse this one while an
-        // older buffer of the same channel holds it; and buffers past the
-        // limit make room before this one opens.
-        self.shared.release_timeshifts(|entry| entry.target.url == target.url);
+        // older buffer of the same channel holds it, so that one is stopped
+        // and given a moment to close; and buffers past the limit make room
+        // before this one opens.
+        if self.shared.release_timeshifts(|entry| entry.target.url == target.url) > 0 {
+            tokio::time::sleep(SETTLE).await;
+        }
         self.shared.limit_timeshifts(MAX_TIMESHIFTS - 1);
         timeshift::sweep(&self.shared.timeshift_root, &self.shared.timeshift_dirs());
         let session = Session::start(
@@ -970,16 +973,18 @@ impl Shared {
     }
 
     /// Releases the buffered streams `which` picks.
-    fn release_timeshifts(&self, which: impl Fn(&Entry) -> bool) {
+    /// Releases the buffered streams `which` picks, saying how many there were.
+    fn release_timeshifts(&self, which: impl Fn(&Entry) -> bool) -> usize {
         let ids: Vec<String> = lock(&self.streams)
             .by_id
             .iter()
             .filter(|(_, entry)| entry.timeshift.is_some() && which(entry))
             .map(|(id, _)| id.clone())
             .collect();
-        for id in ids {
-            self.release(&id);
+        for id in &ids {
+            self.release(id);
         }
+        ids.len()
     }
 
     /// Releases the oldest buffered streams until at most `keep` are left.
