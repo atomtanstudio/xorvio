@@ -442,7 +442,15 @@ elif [[ "$TARGET" == "$HOST" ]]; then
 fi
 
 # What the release notes and the GPL's offer of source need: what went in,
-# from where, and how it was configured.
+# from where, and how it was configured. They're published, so a command
+# line names this computer's folders by placeholders instead (the cross
+# file's, say): <deps>, then <build>, then <repo>.
+command_line() {
+  local args=("${@//$DEPS/<deps>}")
+  args=("${args[@]//$WORK/<build>}")
+  args=("${args[@]//$ROOT/<repo>}")
+  print -r -- "${(@q-)args}"
+}
 {
   print "ffmpeg and ffprobe for $TARGET, built by Scripts/build-ffmpeg.sh on $(date -u '+%Y-%m-%d')"
   print "Compiler: $("$CC" --version 2>/dev/null | head -1)"
@@ -452,9 +460,10 @@ fi
   print "dav1d $DAV1D_VERSION  $DAV1D_URL  sha256 $DAV1D_SHA256"
   [[ "$TARGET" == *-linux-gnu ]] && print "OpenSSL $OPENSSL_VERSION  $OPENSSL_URL  sha256 $OPENSSL_SHA256"
   print
-  print -r -- "x264: ./configure ${(@q-)X264_CONFIGURE//$DEPS/<deps>}"
-  print -r -- "dav1d: meson setup build ${(@q-)DAV1D_CONFIGURE//$DEPS/<deps>}"
-  print -r -- "ffmpeg: ./configure ${(@q-)FFMPEG_CONFIGURE}"
+  print "Folders: <repo> is Xorvio's source, <build> its build/ffmpeg, and <deps> <build>/$TARGET/deps, where x264 and dav1d were installed."
+  print -r -- "x264: ./configure $(command_line "${X264_CONFIGURE[@]}")"
+  print -r -- "dav1d: meson setup build $(command_line "${DAV1D_CONFIGURE[@]}")"
+  print -r -- "ffmpeg: ./configure $(command_line "${FFMPEG_CONFIGURE[@]}")"
 } >"$BUILD/BUILDINFO.txt"
 print -r -- "$SCRIPT_SUM" >"$STAMP"
 
