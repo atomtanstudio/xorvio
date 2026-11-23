@@ -14,7 +14,7 @@ tokio.workspace = true
 tracing.workspace = true
 uuid.workspace = true
 # mDNS browsing for _googlecast._tcp, on a thread of its own (no runtime needed).
-mdns-sd = { version = "0.21.6", default-features = false, features = ["async"] }
+mdns-sd = { version = "0.22.0", default-features = false, features = ["async"] }
 # The receiver speaks TLS on port 8009 with a self-signed certificate. ring is
 # the provider reqwest already brings, so nothing new is compiled for TLS.
 rustls = { version = "0.23.46", default-features = false, features = ["ring", "std", "tls12"] }
